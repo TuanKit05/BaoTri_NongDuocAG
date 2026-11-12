@@ -12,8 +12,7 @@ namespace CuahangNongduoc.DataLayer
 
         public void LoadSchema()
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM DU_NO_KH WHERE ID_KHACH_HANG='-1'");
-            m_Ds.Load(cmd);
+            m_Ds.Load(new OleDbCommand("SELECT * FROM DU_NO_KH WHERE ID_KHACH_HANG='-1'"));
 
         }
 
@@ -42,17 +41,10 @@ namespace CuahangNongduoc.DataLayer
 
         public static long LayDuNo(String kh, int thang, int nam)
         {
-            DataService ds = new DataService();
             OleDbCommand cmd = new OleDbCommand("SELECT CUOI_KY FROM DU_NO_KH WHERE ID_KHACH_HANG = @kh AND THANG=@thang AND NAM=@nam");
             cmd.Parameters.Add("kh", OleDbType.VarChar, 50).Value = kh;
-            cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
-            cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
-
-            object obj = ds.ExecuteScalar(cmd);
-            if (obj == null)
-                return 0;
-            else
-                return Convert.ToInt64(obj);
+            ThuChiScalarQuery.ThemThamSoThangNam(cmd, thang, nam);
+            return ThuChiScalarQuery.LaySoTien(cmd);
 
         }
 

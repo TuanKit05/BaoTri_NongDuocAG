@@ -39,18 +39,10 @@ namespace CuahangNongduoc.DataLayer
 
         public static long LayTongTien(String kh, int thang, int nam)
         {
-            DataService ds = new DataService();
             OleDbCommand cmd = new OleDbCommand("SELECT SUM(TONG_TIEN) FROM PHIEU_THANH_TOAN WHERE ID_KHACH_HANG = @kh AND MONTH(NGAY_THANH_TOAN)=@thang AND YEAR(NGAY_THANH_TOAN)= @nam");
             cmd.Parameters.Add("kh", OleDbType.VarChar, 50).Value = kh;
-            cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
-            cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
-
-            object obj = ds.ExecuteScalar(cmd);
-
-            if (obj == null)
-                return 0;
-            else
-                return Convert.ToInt64(obj);
+            ThuChiScalarQuery.ThemThamSoThangNam(cmd, thang, nam);
+            return ThuChiScalarQuery.LaySoTien(cmd);
         }
 
         public DataRow NewRow()

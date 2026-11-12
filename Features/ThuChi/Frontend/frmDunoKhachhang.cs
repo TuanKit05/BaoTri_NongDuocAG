@@ -13,6 +13,9 @@ namespace CuahangNongduoc
 {
     public partial class frmDunoKhachhang : Form
     {
+        private const int NamNhoNhat = 2000;
+        private const int NamLonNhat = 9999;
+
         public frmDunoKhachhang()
         {
             InitializeComponent();
@@ -30,36 +33,32 @@ namespace CuahangNongduoc
 
         private void btnTongHop_Click(object sender, EventArgs e)
         {
-            
-            
+
+
+        }
+
+        // Decompose Conditional: dieu kien hop le duoc dat ten theo nghiep vu.
+        private static bool NamHopLe(String giaTriNam)
+        {
+            int nam;
+            return Int32.TryParse(giaTriNam, out nam) &&
+                nam >= NamNhoNhat && nam <= NamLonNhat;
         }
 
         private void toolNam_Validating(object sender, CancelEventArgs e)
         {
-            bool ok = true;
-            try
-            {
-                long nam = Convert.ToInt32(toolNam.Text);
-                if (nam < 2000 || nam > 9999)
-                {
-                    ok = false;
-                }
-            }
-            catch
-            {
-                ok = false;
-            }
-            if (!ok)
-            {
-                MessageBox.Show("Thông tin năm không hợp lệ!", "Tong Hop Du No", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                e.Cancel = true;
-            }
+            if (NamHopLe(toolNam.Text))
+                return;
+
+            MessageBox.Show("Thông tin năm không hợp lệ!", "Tong Hop Du No",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            e.Cancel = true;
         }
 
         private void toolTongHop_Click(object sender, EventArgs e)
         {
             toolProgress.Visible = true;
-            ctrl.Tonghop(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text), toolProgress, dataGridView, bindingNavigator);
+            ctrl.TongHop(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text), toolProgress, dataGridView, bindingNavigator);
             toolProgress.Visible = false;
         }
 

@@ -28,7 +28,7 @@ namespace CuahangNongduoc
         private void toolAdd_Click(object sender, EventArgs e)
         {
             long maphieu = ThamSo.PhieuChi;
-            ThamSo.PhieuChi=maphieu+1;
+            ThamSo.PhieuChi = maphieu + 1;
 
             DataRow row = ctrl.NewRow();
             row["ID"] = maphieu;
@@ -40,7 +40,7 @@ namespace CuahangNongduoc
 
         private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
-            if (MessageBox.Show("Bạn chắc chắn xóa phiếu chi này không?", "Phieu Chi",   MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show("Bạn chắc chắn xóa phiếu chi này không?", "Phieu Chi", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
             {
                 e.Cancel = true;
             }
@@ -97,8 +97,11 @@ namespace CuahangNongduoc
             Tim.ShowDialog();
             if (Tim.DialogResult == DialogResult.OK)
             {
-                ctrl.TimPhieuChi(bindingNavigator, dataGridView, cmbLyDoChi, txtMaPhieu, dtNgayChi, numTongTien, txtGhiChu, Convert.ToInt32(Tim.cmbLyDo.SelectedValue), dtNgayChi.Value.Date);
-                
+                int maLyDo = Convert.ToInt32(Tim.cmbLyDo.SelectedValue);
+                DateTime ngayTim = dtNgayChi.Value.Date;
+                ctrl.TimPhieuChi(bindingNavigator, dataGridView, cmbLyDoChi, txtMaPhieu,
+                    dtNgayChi, numTongTien, txtGhiChu, maLyDo, ngayTim);
+
             }
         }
     }

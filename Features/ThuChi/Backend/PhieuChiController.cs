@@ -1,99 +1,57 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Data;
+using System.Windows.Forms;
 using CuahangNongduoc.DataLayer;
 using CuahangNongduoc.BusinessObject;
-using System.Windows.Forms;
-using System.Data;
 
 namespace CuahangNongduoc.Controller
 {
-
     public class PhieuChiController
     {
-        PhieuChiFactory factory = new PhieuChiFactory();
+        private readonly PhieuChiFactory factory = new PhieuChiFactory();
 
-
-        public DataRow NewRow()
-        {
-            return factory.NewRow();
-        }
-        public void Add(DataRow row)
-        {
-            factory.Add(row);
-        }
-        public void Save()
-        {
-            factory.Save();
-        }
+        public DataRow NewRow() { return factory.NewRow(); }
+        public void Add(DataRow row) { factory.Add(row); }
+        public void Save() { factory.Save(); }
 
         public PhieuChi LayPhieuChi(String id)
         {
-            PhieuChi ph = null;
-            DataTable tbl = factory.LayPhieuChi(id);
-            if (tbl.Rows.Count > 0)
-            {
-                ph = new PhieuChi();
-                ph.Id = Convert.ToString(tbl.Rows[0]["ID"]);
-                LyDoChiController ctrlLyDo = new LyDoChiController();
-                ph.LyDoChi = ctrlLyDo.LayLyDoChi(Convert.ToInt64(tbl.Rows[0]["ID_LY_DO_CHI"]));
-                ph.NgayChi = Convert.ToDateTime(tbl.Rows[0]["NGAY_CHI"]);
-                ph.TongTien = Convert.ToInt64(tbl.Rows[0]["TONG_TIEN"]);
-                ph.GhiChu = Convert.ToString(tbl.Rows[0]["GHI_CHU"]);
-            }
-            return ph;
+            DataTable bang = factory.LayPhieuChi(id);
+            if (bang.Rows.Count == 0)
+                return null; // Replace Nested Conditional with Guard Clauses
+
+            return TaoPhieuChi(bang.Rows[0]);
         }
 
-        public void HienthiPhieuChi(BindingNavigator bn, DataGridView dg, ComboBox cmb, TextBox txt, DateTimePicker dt, NumericUpDown numTongTien, TextBox txtGhichu)
+        // Extract Method: chuyen mapping DataRow thanh nghiep vu rieng.
+        private static PhieuChi TaoPhieuChi(DataRow row)
         {
-            BindingSource bs = new BindingSource();
-            bs.DataSource = factory.DanhsachPhieuChi();
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-
-            txt.DataBindings.Clear();
-            txt.DataBindings.Add("Text", bs, "ID");
-
-            cmb.DataBindings.Clear();
-            cmb.DataBindings.Add("SelectedValue", bs, "ID_LY_DO_CHI");
-
-            dt.DataBindings.Clear();
-            dt.DataBindings.Add("Value", bs, "NGAY_CHI");
-
-            numTongTien.DataBindings.Clear();
-            numTongTien.DataBindings.Add("Value", bs, "TONG_TIEN");
-
-            txtGhichu.DataBindings.Clear();
-            txtGhichu.DataBindings.Add("Text", bs, "GHI_CHU");
-
-
+            PhieuChi phieu = new PhieuChi(Convert.ToString(row["ID"]));
+            LyDoChiController lyDo = new LyDoChiController();
+            phieu.LyDoChi = lyDo.LayLyDoChi(Convert.ToInt64(row["ID_LY_DO_CHI"]));
+            phieu.NgayChi = Convert.ToDateTime(row["NGAY_CHI"]);
+            phieu.TongTien = Convert.ToInt64(row["TONG_TIEN"]);
+            phieu.GhiChu = Convert.ToString(row["GHI_CHU"]);
+            return phieu;
         }
 
-        public void TimPhieuChi(BindingNavigator bn, DataGridView dg, ComboBox cmb, TextBox txt, DateTimePicker dt, NumericUpDown numTongTien, TextBox txtGhichu,
+        public void HienthiPhieuChi(BindingNavigator bn, DataGridView dg,
+            ComboBox cmb, TextBox txt, DateTimePicker dt,
+            NumericUpDown numTongTien, TextBox txtGhichu)
+        {
+            ThuChiBinding.HienThi(
+                new ThuChiControls(bn, dg, cmb, txt, dt, numTongTien, txtGhichu),
+                factory.DanhsachPhieuChi(), "ID_LY_DO_CHI", "NGAY_CHI");
+        }
+
+        public void TimPhieuChi(BindingNavigator bn, DataGridView dg,
+            ComboBox cmb, TextBox txt, DateTimePicker dt,
+            NumericUpDown numTongTien, TextBox txtGhichu,
             int lydo, DateTime ngay)
         {
-
-            BindingSource bs = new BindingSource();
-            bs.DataSource = factory.TimPhieuChi(lydo, ngay);
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-
-            txt.DataBindings.Clear();
-            txt.DataBindings.Add("Text", bs, "ID");
-
-            cmb.DataBindings.Clear();
-            cmb.DataBindings.Add("SelectedValue", bs, "ID_LY_DO_CHI");
-
-            dt.DataBindings.Clear();
-            dt.DataBindings.Add("Value", bs, "NGAY_CHI");
-
-            numTongTien.DataBindings.Clear();
-            numTongTien.DataBindings.Add("Value", bs, "TONG_TIEN");
-
-            txtGhichu.DataBindings.Clear();
-            txtGhichu.DataBindings.Add("Text", bs, "GHI_CHU");
+            ThuChiBinding.HienThi(
+                new ThuChiControls(bn, dg, cmb, txt, dt, numTongTien, txtGhichu),
+                factory.TimPhieuChi(lydo, ngay), "ID_LY_DO_CHI", "NGAY_CHI");
         }
     }
 }

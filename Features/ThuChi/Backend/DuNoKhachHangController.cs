@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Data;
 using System.Windows.Forms;
 using CuahangNongduoc.BusinessObject;
@@ -10,57 +8,73 @@ namespace CuahangNongduoc.Controller
 {
     public class DuNoKhachHangController
     {
-        DuNoKhachHangFactory factory = new DuNoKhachHangFactory();
+        private readonly DuNoKhachHangFactory factory = new DuNoKhachHangFactory();
 
-        public void Tonghop(int thang, int nam,
-            ToolStripProgressBar bar, DataGridView dg, BindingNavigator bn)
+        // Rename Method: Tonghop -> TongHop; cac noi goi da duoc cap nhat.
+        public void TongHop(int thang, int nam, ToolStripProgressBar bar,
+            DataGridView dg, BindingNavigator bn)
         {
-
-            int ThangTruoc = 0, NamTruoc = 0;
-            ThamSo.PreMonth(ref ThangTruoc, ref NamTruoc, thang, nam);
+            int thangTruoc = 0;
+            int namTruoc = 0;
+            ThamSo.PreMonth(ref thangTruoc, ref namTruoc, thang, nam);
             factory.Clear(thang, nam);
 
+            BindingSource source = new BindingSource();
+            source.DataSource = factory.LayDuNoKhachHang("-1", 0, 0);
+            bn.BindingSource = source;
+            dg.DataSource = source;
 
-            BindingSource bs = new BindingSource();
-            bs.DataSource = factory.LayDuNoKhachHang("-1", 0, 0);
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-            KhachHangFactory factoryKH = new KhachHangFactory();
-            DataTable tbl = factoryKH.DanhsachKhachHang();
-            long dauky = 0, phatsinh = 0, datra = 0, cuoiky = 0;
-
+            KhachHangFactory khachHang = new KhachHangFactory();
+            DataTable danhSach = khachHang.DanhsachKhachHang();
             bar.Minimum = 0;
             bar.Value = 0;
-            bar.Maximum = tbl.Rows.Count;
+            bar.Maximum = danhSach.Rows.Count;
 
-            foreach (DataRow row in tbl.Rows)
+            foreach (DataRow khRow in danhSach.Rows)
             {
-                DataRow r = factory.NewRow();
-                String kh = Convert.ToString(row["ID"]);
-
-
-                dauky = DuNoKhachHangFactory.LayDuNo(kh, ThangTruoc, NamTruoc);
-                phatsinh = PhieuBanFactory.LayConNo(kh, thang, nam);
-                datra = PhieuThanhToanFactory.LayTongTien(kh, thang, nam);
-                cuoiky = (dauky + phatsinh - datra);
-
-                r["ID_KHACH_HANG"] = kh;
-                r["THANG"] = thang;
-                r["NAM"] = nam;
-                r["DAU_KY"] = dauky;
-                r["PHAT_SINH"] = phatsinh;
-                r["DA_TRA"] = datra;
-                r["CUOI_KY"] = cuoiky;
-
-
-                factory.Add(r);
-
+                String maKhachHang = Convert.ToString(khRow["ID"]);
+                DuNoKhachHang congNo = TinhCongNo(maKhachHang,
+                    thangTruoc, namTruoc, thang, nam);
+                DataRow dongDuNo = factory.NewRow();
+                GhiDuNo(dongDuNo, maKhachHang, thang, nam, congNo);
+                factory.Add(dongDuNo);
                 bar.Value++;
             }
-
-
         }
+
+        // Separate Query from Modifier: lay so lieu, tinh cong no, khong ghi DataRow.
+        private static DuNoKhachHang TinhCongNo(String maKhachHang,
+            int thangTruoc, int namTruoc, int thang, int nam)
+        {
+            DuNoKhachHang result = new DuNoKhachHang();
+            result.DauKy = DuNoKhachHangFactory.LayDuNo(maKhachHang, thangTruoc, namTruoc);
+            result.PhatSinh = PhieuBanFactory.LayConNo(maKhachHang, thang, nam);
+            result.DaTra = PhieuThanhToanFactory.LayTongTien(maKhachHang, thang, nam);
+            result.CuoiKy = result.TinhCuoiKy();
+            return result;
+        }
+
+        // Modifier tach rieng: chi thay doi DataRow dinh gui vao DataService.
+        private static void GhiDuNo(DataRow row, String maKhachHang,
+            int thang, int nam, DuNoKhachHang congNo)
+        {
+            row["ID_KHACH_HANG"] = maKhachHang;
+            row["THANG"] = thang;
+            row["NAM"] = nam;
+            row["DAU_KY"] = congNo.DauKy;
+            row["PHAT_SINH"] = congNo.PhatSinh;
+            row["DA_TRA"] = congNo.DaTra;
+            row["CUOI_KY"] = congNo.CuoiKy;
+        }
+
+        // Giu ten cu cho cac noi goi ngoai du an co the dang su dung.
+        [Obsolete("Su dung TongHop thay cho Tonghop.")]
+        public void Tonghop(int thang, int nam, ToolStripProgressBar bar,
+            DataGridView dg, BindingNavigator bn)
+        {
+            TongHop(thang, nam, bar, dg, bn);
+        }
+
         public bool Save()
         {
             return factory.Save();

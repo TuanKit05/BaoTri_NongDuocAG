@@ -38,7 +38,7 @@ namespace CuahangNongduoc
             // 
             // DuNoKhachHangBindingSource
             // 
-            this.DuNoKhachHangBindingSource.DataSource = typeof(CuahangNongduoc.BusinessObject.DuNoKhachHang);
+            //this.DuNoKhachHangBindingSource.DataSource = typeof(CuahangNongduoc.BusinessObject.DuNoKhachHang);
             // 
             // reportViewer
             // 
