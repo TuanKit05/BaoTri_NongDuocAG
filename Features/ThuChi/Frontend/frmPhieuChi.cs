@@ -27,13 +27,21 @@ namespace CuahangNongduoc
 
         private void toolAdd_Click(object sender, EventArgs e)
         {
+            if (cmbLyDoChi.SelectedValue == null || cmbLyDoChi.SelectedValue == DBNull.Value)
+            {
+                MessageBox.Show("Vui lòng chọn lý do chi trước khi tạo phiếu.");
+                return;
+            }
             long maphieu = ThamSo.PhieuChi;
             ThamSo.PhieuChi = maphieu + 1;
 
             DataRow row = ctrl.NewRow();
             row["ID"] = maphieu;
-            row["NGAY_CHI"] = dtNgayChi.Value.Date;
-            row["TONG_TIEN"] = numTongTien.Value;
+            row["NGAY_CHI"] = DateTime.Today;
+            row["TONG_TIEN"] = 0m;
+            row["GHI_CHU"] = String.Empty;
+            if (cmbLyDoChi.SelectedValue != null && cmbLyDoChi.SelectedValue != DBNull.Value)
+                row["ID_LY_DO_CHI"] = cmbLyDoChi.SelectedValue;
             ctrl.Add(row);
             bindingNavigator.BindingSource.MoveLast();
         }
@@ -51,15 +59,31 @@ namespace CuahangNongduoc
             if (MessageBox.Show("Bạn chắc chắn xóa phiếu chi này không?", "Phieu Chi", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 bindingNavigator.BindingSource.RemoveCurrent();
-                ctrl.Save();
+                LuuThayDoi();
             }
         }
 
         private void toolSave_Click(object sender, EventArgs e)
         {
-            txtMaPhieu.Focus();
-            bindingNavigator.BindingSource.MoveNext();
-            ctrl.Save();
+            LuuThayDoi();
+        }
+
+        // Extract Method: all save paths commit the current bound row before writing to Access.
+        private void LuuThayDoi()
+        {
+            try
+            {
+                if (!this.ValidateChildren()) return;
+                dataGridView.EndEdit();
+                if (bindingNavigator.BindingSource != null)
+                    bindingNavigator.BindingSource.EndEdit();
+                ctrl.Save();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể lưu phiếu chi: " + ex.Message,
+                    "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void dataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
@@ -69,15 +93,25 @@ namespace CuahangNongduoc
 
         private void toolIn_Click(object sender, EventArgs e)
         {
-            DataRowView row = (DataRowView)bindingNavigator.BindingSource.Current;
-            if (row != null)
+            if (!this.ValidateChildren()) return;
+            dataGridView.EndEdit();
+            if (bindingNavigator.BindingSource == null) return;
+            bindingNavigator.BindingSource.EndEdit();
+            DataRowView row = bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null) return;
+            if (row.Row.RowState != DataRowState.Unchanged)
             {
-                PhieuChiController ctrlChi = new PhieuChiController();
-                String ma_phieu = row["ID"].ToString();
-                CuahangNongduoc.BusinessObject.PhieuChi ph = ctrlChi.LayPhieuChi(ma_phieu);
-                frmInPhieuChi InPhieu = new frmInPhieuChi(ph);
-                InPhieu.Show();
+                MessageBox.Show("Vui lòng lưu phiếu chi trước khi in.");
+                return;
             }
+            CuahangNongduoc.BusinessObject.PhieuChi ph = ctrl.LayPhieuChi(
+                Convert.ToString(row["ID"]));
+            if (ph == null)
+            {
+                MessageBox.Show("Không tìm thấy phiếu chi đã lưu.");
+                return;
+            }
+            new frmInPhieuChi(ph).Show();
         }
 
         private void btnThemLyDoChi_Click(object sender, EventArgs e)
@@ -98,7 +132,7 @@ namespace CuahangNongduoc
             if (Tim.DialogResult == DialogResult.OK)
             {
                 int maLyDo = Convert.ToInt32(Tim.cmbLyDo.SelectedValue);
-                DateTime ngayTim = dtNgayChi.Value.Date;
+                DateTime ngayTim = Tim.dtNgayChi.Value.Date;
                 ctrl.TimPhieuChi(bindingNavigator, dataGridView, cmbLyDoChi, txtMaPhieu,
                     dtNgayChi, numTongTien, txtGhiChu, maLyDo, ngayTim);
 

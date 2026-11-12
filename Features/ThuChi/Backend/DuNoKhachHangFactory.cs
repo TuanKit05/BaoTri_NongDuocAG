@@ -12,13 +12,13 @@ namespace CuahangNongduoc.DataLayer
 
         public void LoadSchema()
         {
-            m_Ds.Load(new OleDbCommand("SELECT * FROM DU_NO_KH WHERE ID_KHACH_HANG='-1'"));
+            m_Ds.Load(new OleDbCommand("SELECT * FROM [DU_NO_KH] WHERE 1=0"));
 
         }
 
         public DataTable DanhsachDuNo(int thang, int nam)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM DU_NO_KH WHERE THANG=@thang AND NAM=@nam");
+            OleDbCommand cmd = new OleDbCommand("SELECT * FROM [DU_NO_KH] WHERE [THANG]=? AND [NAM]=?");
             cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
             cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
 
@@ -29,7 +29,7 @@ namespace CuahangNongduoc.DataLayer
 
         public DataTable LayDuNoKhachHang(String kh, int thang, int nam)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM DU_NO_KH WHERE ID_KHACH_HANG = @kh AND THANG=@thang AND NAM=@nam");
+            OleDbCommand cmd = new OleDbCommand("SELECT * FROM [DU_NO_KH] WHERE [ID_KHACH_HANG]=? AND [THANG]=? AND [NAM]=?");
             cmd.Parameters.Add("kh", OleDbType.VarChar, 50).Value = kh;
             cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
             cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
@@ -41,7 +41,7 @@ namespace CuahangNongduoc.DataLayer
 
         public static long LayDuNo(String kh, int thang, int nam)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT CUOI_KY FROM DU_NO_KH WHERE ID_KHACH_HANG = @kh AND THANG=@thang AND NAM=@nam");
+            OleDbCommand cmd = new OleDbCommand("SELECT [CUOI_KY] FROM [DU_NO_KH] WHERE [ID_KHACH_HANG]=? AND [THANG]=? AND [NAM]=?");
             cmd.Parameters.Add("kh", OleDbType.VarChar, 50).Value = kh;
             ThuChiScalarQuery.ThemThamSoThangNam(cmd, thang, nam);
             return ThuChiScalarQuery.LaySoTien(cmd);
@@ -50,11 +50,16 @@ namespace CuahangNongduoc.DataLayer
 
         public void Clear(int thang, int nam)
         {
-            OleDbCommand cmd = new OleDbCommand("DELETE FROM DU_NO_KH WHERE THANG=@thang AND NAM=@nam");
+            OleDbCommand cmd = new OleDbCommand("DELETE FROM [DU_NO_KH] WHERE [THANG]=? AND [NAM]=?");
             cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
             cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
 
             m_Ds.ExecuteNoneQuery(cmd);
+        }
+
+        public bool HasPendingChanges()
+        {
+            return m_Ds.GetChanges() != null;
         }
 
         public DataRow NewRow()

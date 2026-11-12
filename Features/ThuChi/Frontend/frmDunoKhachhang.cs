@@ -57,15 +57,47 @@ namespace CuahangNongduoc
 
         private void toolTongHop_Click(object sender, EventArgs e)
         {
+            if (!NamHopLe(toolNam.Text) || toolThang.SelectedIndex < 0)
+            {
+                MessageBox.Show("Tháng hoặc năm tổng hợp không hợp lệ.");
+                return;
+            }
             toolProgress.Visible = true;
-            ctrl.TongHop(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text), toolProgress, dataGridView, bindingNavigator);
-            toolProgress.Visible = false;
+            try
+            {
+                ctrl.TongHop(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text),
+                    toolProgress, dataGridView, bindingNavigator);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể tổng hợp dư nợ: " + ex.Message,
+                    "Lỗi tổng hợp", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                toolProgress.Visible = false;
+            }
         }
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
-            toolThang.Focus();
-            ctrl.Save();
+            if (bindingNavigator.BindingSource == null)
+            {
+                MessageBox.Show("Chưa có kết quả tổng hợp dư nợ để lưu.");
+                return;
+            }
+            try
+            {
+                dataGridView.EndEdit();
+                if (bindingNavigator.BindingSource != null)
+                    bindingNavigator.BindingSource.EndEdit();
+                ctrl.Save();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể lưu dư nợ: " + ex.Message,
+                    "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void toolThoat_Click(object sender, EventArgs e)
@@ -75,7 +107,14 @@ namespace CuahangNongduoc
 
         private void toolIn_Click(object sender, EventArgs e)
         {
-            DataRowView row = (DataRowView)bindingNavigator.BindingSource.Current;
+            DataRowView row = bindingNavigator.BindingSource == null ? null :
+                bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null) return;
+            if (row.Row.RowState != DataRowState.Unchanged)
+            {
+                MessageBox.Show("Vui lòng lưu kết quả dư nợ trước khi in.");
+                return;
+            }
             KhachHangController ctrlKH = new KhachHangController();
             DuNoKhachHang dn = new DuNoKhachHang();
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
 using CuahangNongduoc.BusinessObject;
@@ -10,39 +11,61 @@ namespace CuahangNongduoc.Controller
     {
         private readonly DuNoKhachHangFactory factory = new DuNoKhachHangFactory();
 
-        // Rename Method: Tonghop -> TongHop; cac noi goi da duoc cap nhat.
+        // Build a draft in memory; Save commits all new/changed rows together.
+        // Unlike Clear(), merely clicking TongHop no longer erases previously saved balances.
         public void TongHop(int thang, int nam, ToolStripProgressBar bar,
             DataGridView dg, BindingNavigator bn)
         {
+            if (thang < 1 || thang > 12 || nam < 2000 || nam > 9999)
+                throw new ArgumentOutOfRangeException("thang", "Kỳ tổng hợp không hợp lệ.");
+
+            if (factory.HasPendingChanges())
+                throw new InvalidOperationException(
+                    "Kết quả tổng hợp trước chưa được lưu. Hãy lưu trước khi tổng hợp lại.");
+
             int thangTruoc = 0;
             int namTruoc = 0;
             ThamSo.PreMonth(ref thangTruoc, ref namTruoc, thang, nam);
-            factory.Clear(thang, nam);
 
-            BindingSource source = new BindingSource();
-            source.DataSource = factory.LayDuNoKhachHang("-1", 0, 0);
-            bn.BindingSource = source;
-            dg.DataSource = source;
+            DataTable duNoKyNay = factory.DanhsachDuNo(thang, nam);
+            Dictionary<String, DataRow> theoKhachHang = new Dictionary<String, DataRow>(
+                StringComparer.OrdinalIgnoreCase);
+            foreach (DataRow row in duNoKyNay.Rows)
+            {
+                String id = Convert.ToString(row["ID_KHACH_HANG"]);
+                if (id.Length > 0 && !theoKhachHang.ContainsKey(id))
+                    theoKhachHang.Add(id, row);
+            }
 
             KhachHangFactory khachHang = new KhachHangFactory();
             DataTable danhSach = khachHang.DanhsachKhachHang();
             bar.Minimum = 0;
-            bar.Value = 0;
             bar.Maximum = danhSach.Rows.Count;
-
+            bar.Value = 0;
             foreach (DataRow khRow in danhSach.Rows)
             {
                 String maKhachHang = Convert.ToString(khRow["ID"]);
                 DuNoKhachHang congNo = TinhCongNo(maKhachHang,
                     thangTruoc, namTruoc, thang, nam);
-                DataRow dongDuNo = factory.NewRow();
-                GhiDuNo(dongDuNo, maKhachHang, thang, nam, congNo);
-                factory.Add(dongDuNo);
+
+                DataRow row;
+                if (!theoKhachHang.TryGetValue(maKhachHang, out row))
+                {
+                    row = factory.NewRow();
+                    factory.Add(row);
+                    theoKhachHang.Add(maKhachHang, row);
+                }
+                GhiDuNo(row, maKhachHang, thang, nam, congNo);
                 bar.Value++;
             }
+
+            BindingSource source = new BindingSource();
+            source.DataSource = duNoKyNay;
+            bn.BindingSource = source;
+            dg.DataSource = source;
         }
 
-        // Separate Query from Modifier: lay so lieu, tinh cong no, khong ghi DataRow.
+        // Separate Query from Modifier: computing debt never edits the DataTable.
         private static DuNoKhachHang TinhCongNo(String maKhachHang,
             int thangTruoc, int namTruoc, int thang, int nam)
         {
@@ -54,7 +77,6 @@ namespace CuahangNongduoc.Controller
             return result;
         }
 
-        // Modifier tach rieng: chi thay doi DataRow dinh gui vao DataService.
         private static void GhiDuNo(DataRow row, String maKhachHang,
             int thang, int nam, DuNoKhachHang congNo)
         {
@@ -67,17 +89,13 @@ namespace CuahangNongduoc.Controller
             row["CUOI_KY"] = congNo.CuoiKy;
         }
 
-        // Giu ten cu cho cac noi goi ngoai du an co the dang su dung.
-        [Obsolete("Su dung TongHop thay cho Tonghop.")]
+        [Obsolete("Sử dụng TongHop thay cho Tonghop.")]
         public void Tonghop(int thang, int nam, ToolStripProgressBar bar,
             DataGridView dg, BindingNavigator bn)
         {
             TongHop(thang, nam, bar, dg, bn);
         }
 
-        public bool Save()
-        {
-            return factory.Save();
-        }
+        public bool Save() { return factory.Save(); }
     }
 }

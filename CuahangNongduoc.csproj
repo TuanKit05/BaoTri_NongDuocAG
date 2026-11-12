@@ -89,6 +89,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseConnection.cs" />
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
@@ -116,6 +117,9 @@
     <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChiFactory.cs" />
+    <Compile Include="Features\ThuChi\Backend\PhieuThuChiCoBan.cs" />
+    <Compile Include="Features\ThuChi\Backend\ThuChiBinding.cs" />
+    <Compile Include="Features\ThuChi\Backend\ThuChiScarlaQuery.cs" />
     <Compile Include="Features\ThuChi\Frontend\frmInPhieuChi.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -325,6 +329,7 @@
     </Compile>
     <Compile Include="Common\Num2Str.cs" />
     <Compile Include="Common\Program.cs" />
+    <Compile Include="Features\ThuChi\Frontend\ThuChiReportParamaters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Features\ThuChi\Frontend\frmInPhieuChi.resx">
       <SubType>Designer</SubType>
@@ -471,6 +476,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="Features\ThuChi\README.Designer.md" />
+    <None Include="Features\ThuChi\README.md">
+      <SubType>Component</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -536,6 +545,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CuahangNongduoc.ico" />
+    <Content Include="Database\cuahang.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\LyDoChi.png" />
     <None Include="Resources\DonViTinh.png" />
     <None Include="Resources\PhieuChi.png" />
@@ -576,6 +588,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

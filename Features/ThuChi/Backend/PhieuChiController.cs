@@ -28,9 +28,11 @@ namespace CuahangNongduoc.Controller
         {
             PhieuChi phieu = new PhieuChi(Convert.ToString(row["ID"]));
             LyDoChiController lyDo = new LyDoChiController();
-            phieu.LyDoChi = lyDo.LayLyDoChi(Convert.ToInt64(row["ID_LY_DO_CHI"]));
+            if (row["ID_LY_DO_CHI"] != DBNull.Value)
+                phieu.LyDoChi = lyDo.LayLyDoChi(Convert.ToInt64(row["ID_LY_DO_CHI"]));
             phieu.NgayChi = Convert.ToDateTime(row["NGAY_CHI"]);
-            phieu.TongTien = Convert.ToInt64(row["TONG_TIEN"]);
+            phieu.TongTien = row["TONG_TIEN"] == DBNull.Value ? 0L :
+                Convert.ToInt64(row["TONG_TIEN"]);
             phieu.GhiChu = Convert.ToString(row["GHI_CHU"]);
             return phieu;
         }

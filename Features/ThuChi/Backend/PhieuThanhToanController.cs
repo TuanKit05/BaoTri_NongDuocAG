@@ -27,9 +27,11 @@ namespace CuahangNongduoc.Controller
         {
             PhieuThanhToan phieu = new PhieuThanhToan(Convert.ToString(row["ID"]));
             KhachHangController khachHang = new KhachHangController();
-            phieu.KhachHang = khachHang.LayKhachHang(Convert.ToString(row["ID_KHACH_HANG"]));
+            if (row["ID_KHACH_HANG"] != DBNull.Value)
+                phieu.KhachHang = khachHang.LayKhachHang(Convert.ToString(row["ID_KHACH_HANG"]));
             phieu.NgayThanhToan = Convert.ToDateTime(row["NGAY_THANH_TOAN"]);
-            phieu.TongTien = Convert.ToInt64(row["TONG_TIEN"]);
+            phieu.TongTien = row["TONG_TIEN"] == DBNull.Value ? 0L :
+                Convert.ToInt64(row["TONG_TIEN"]);
             phieu.GhiChu = Convert.ToString(row["GHI_CHU"]);
             return phieu;
         }

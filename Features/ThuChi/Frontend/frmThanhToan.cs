@@ -33,13 +33,21 @@ namespace CuahangNongduoc
 
         private void toolAdd_Click(object sender, EventArgs e)
         {
+            if (cmbKhachHang.SelectedValue == null || cmbKhachHang.SelectedValue == DBNull.Value)
+            {
+                MessageBox.Show("Vui lòng chọn khách hàng trước khi tạo phiếu.");
+                return;
+            }
             long maphieu = ThamSo.LayMaPhieuThanhToan(); ;
             ThamSo.GanMaPhieuThanhToan(maphieu + 1);
 
             DataRow row = ctrl.NewRow();
             row["ID"] = maphieu;
-            row["NGAY_THANH_TOAN"] = DateTime.Now.Date;
-            row["TONG_TIEN"] = numTongTien.Value;
+            row["NGAY_THANH_TOAN"] = DateTime.Today;
+            row["TONG_TIEN"] = 0m;
+            row["GHI_CHU"] = String.Empty;
+            if (cmbKhachHang.SelectedValue != null && cmbKhachHang.SelectedValue != DBNull.Value)
+                row["ID_KHACH_HANG"] = cmbKhachHang.SelectedValue;
             ctrl.Add(row);
             bindingNavigator.BindingSource.MoveLast();
         }
@@ -57,15 +65,31 @@ namespace CuahangNongduoc
             if (MessageBox.Show("Bạn chắc chắn xóa phiếu thanh toán này không?", "Phieu Thanh Toan", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 bindingNavigator.BindingSource.RemoveCurrent();
-                ctrl.Save();
+                LuuThayDoi();
             }
         }
 
         private void toolSave_Click(object sender, EventArgs e)
         {
-            txtMaPhieu.Focus();
-            bindingNavigator.BindingSource.MoveNext();
-            ctrl.Save();
+            LuuThayDoi();
+        }
+
+        // Extract Method: all save paths commit edits before writing to the database.
+        private void LuuThayDoi()
+        {
+            try
+            {
+                if (!this.ValidateChildren()) return;
+                dataGridView.EndEdit();
+                if (bindingNavigator.BindingSource != null)
+                    bindingNavigator.BindingSource.EndEdit();
+                ctrl.Save();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể lưu phiếu thanh toán: " + ex.Message,
+                    "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void dataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
@@ -75,15 +99,25 @@ namespace CuahangNongduoc
 
         private void toolIn_Click(object sender, EventArgs e)
         {
-            DataRowView row = (DataRowView)bindingNavigator.BindingSource.Current;
-            if (row != null)
+            if (!this.ValidateChildren()) return;
+            dataGridView.EndEdit();
+            if (bindingNavigator.BindingSource == null) return;
+            bindingNavigator.BindingSource.EndEdit();
+            DataRowView row = bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null) return;
+            if (row.Row.RowState != DataRowState.Unchanged)
             {
-                PhieuThanhToanController ctrlTT = new PhieuThanhToanController();
-                String ma_phieu = row["ID"].ToString();
-                CuahangNongduoc.BusinessObject.PhieuThanhToan ph = ctrlTT.LayPhieuThanhToan(ma_phieu);
-                frmInPhieuThanhToan PhieuThanhToan = new frmInPhieuThanhToan(ph);
-                PhieuThanhToan.Show();
+                MessageBox.Show("Vui lòng lưu phiếu thanh toán trước khi in.");
+                return;
             }
+            CuahangNongduoc.BusinessObject.PhieuThanhToan ph = ctrl.LayPhieuThanhToan(
+                Convert.ToString(row["ID"]));
+            if (ph == null)
+            {
+                MessageBox.Show("Không tìm thấy phiếu thanh toán đã lưu.");
+                return;
+            }
+            new frmInPhieuThanhToan(ph).Show();
         }
 
         private void toolTimKiem_Click(object sender, EventArgs e)
