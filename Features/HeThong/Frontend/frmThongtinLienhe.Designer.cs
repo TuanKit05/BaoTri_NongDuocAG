@@ -124,6 +124,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmThongtinLienhe";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "THONG TIN LIEN HE";
             this.ResumeLayout(false);
             this.PerformLayout();
