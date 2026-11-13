@@ -1,31 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using CuahangNongduoc.Controller;
+using System;
 using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
 {
-    public partial class frmKhachHang : Form
+    /// <summary>
+    /// Form Khách hàng – kế thừa BaseDanhMucForm.
+    /// </summary>
+    public partial class frmKhachHang : BaseDanhMucForm
     {
-        CuahangNongduoc.Controller.KhachHangController ctrl = new CuahangNongduoc.Controller.KhachHangController();
+        private readonly KhachHangController _ctrl = new KhachHangController();
+
+        protected override BaseController Controller => _ctrl;
+        protected override string TenDanhMuc => "Khách hàng";
+
         public frmKhachHang()
         {
             InitializeComponent();
+            this.dataGridView = dataGridView;
+            this.bindingNavigator = bindingNavigator;
+            this.bindingNavigatorPositionItem = bindingNavigatorPositionItem;
+        }
+
+        protected override void LoadData()
+        {
+            // Logic load dữ liệu khách hàng (LoaiKH = false)
+            _ctrl.HienthiKhachHangDataGridview(dataGridView, bindingNavigator);
         }
 
         private void frmKhachHang_Load(object sender, EventArgs e)
         {
-
-            ctrl.HienthiKhachHangDataGridview(dataGridView, bindingNavigator);
+            Base_Load(sender, e);
         }
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
-            bindingNavigatorPositionItem.Focus();
-            ctrl.Save();
+            Luu();
+        }
+
+        private void toolThoat_Click(object sender, EventArgs e)
+        {
+            Thoat();
+        }
+
+        private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
+        {
+            XoaDongHienTai();
+        }
+
+        private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            HuyXoaDong(e);
         }
 
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
@@ -35,29 +62,9 @@ namespace CuahangNongduoc
 
             DataRowView row = (DataRowView)bindingNavigator.BindingSource.AddNew();
             row["ID"] = maso;
-            
         }
 
-        private void toolThoat_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Dai Ly", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                bindingNavigator.BindingSource.RemoveCurrent();
-            }
-        }
-
-        private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
-        {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Khach Hang", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-            {
-                e.Cancel = true;
-            }
-        }
+        // ========== Tìm kiếm ==========
 
         private void toolTimHoTen_Click(object sender, EventArgs e)
         {
@@ -65,7 +72,6 @@ namespace CuahangNongduoc
             toolTimHoTen.Checked = !toolTimDiaChi.Checked;
             toolTimKhachHang.Text = "Tìm theo Họ tên";
             bindingNavigator.Focus();
-
         }
 
         private void toolTimDiaChi_Click(object sender, EventArgs e)
@@ -78,32 +84,29 @@ namespace CuahangNongduoc
 
         private void toolTimKhachHang_Enter(object sender, EventArgs e)
         {
-            toolTimKhachHang.Text = "";
+            toolTimKhachHang.Text = string.Empty;
             toolTimKhachHang.ForeColor = Color.Black;
         }
 
         private void toolTimKhachHang_Leave(object sender, EventArgs e)
         {
-            if (toolTimHoTen.Checked==true)
+            if (toolTimHoTen.Checked)
                 toolTimKhachHang.Text = "Tìm theo Họ tên";
             else
                 toolTimKhachHang.Text = "Tìm theo Địa chỉ";
 
-            toolTimKhachHang.ForeColor = Color.FromArgb(224,224,224);
+            toolTimKhachHang.ForeColor = Color.FromArgb(224, 224, 224);
         }
 
         private void toolTimKhachHang_KeyPress(object sender, KeyPressEventArgs e)
         {
-            
             if (e.KeyChar == 13)
             {
                 if (toolTimHoTen.Checked)
-                    ctrl.TimHoTen(toolTimKhachHang.Text, false);
+                    _ctrl.TimHoTen(toolTimKhachHang.Text, false);
                 else
-                    ctrl.TimDiaChi(toolTimKhachHang.Text, false);
+                    _ctrl.TimDiaChi(toolTimKhachHang.Text, false);
             }
         }
-
-       
     }
 }

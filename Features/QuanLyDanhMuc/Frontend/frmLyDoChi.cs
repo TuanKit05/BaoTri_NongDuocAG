@@ -1,55 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
+using CuahangNongduoc.Controller;
+using System;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
 {
-    public partial class frmLyDoChi : Form
+    public partial class frmLyDoChi : BaseDanhMucForm
     {
-        CuahangNongduoc.Controller.LyDoChiController ctrl = new CuahangNongduoc.Controller.LyDoChiController();
+        private readonly LyDoChiController _ctrl = new LyDoChiController();
+
+        protected override BaseController Controller => _ctrl;
+        protected override string TenDanhMuc => "Lý do chi";
+
         public frmLyDoChi()
         {
             InitializeComponent();
+            this.dataGridView = dataGridView;
+            this.bindingNavigator = bindingNavigator;
+            this.bindingNavigatorPositionItem = bindingNavigatorPositionItem;
         }
 
-        private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        private void frmLyDoChi_Load(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Ly Do Chi", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-            {
-                e.Cancel = true;
-            }
+            Base_Load(sender, e);
         }
-
-        private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Ly Do Chi", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                bindingNavigator.BindingSource.RemoveCurrent();
-            }
-        }
-
-        private void frmNhaCungCap_Load(object sender, EventArgs e)
-        {
-            ctrl.HienthiDataGridview(dataGridView, bindingNavigator);
-        }
-
-      
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
-            bindingNavigatorPositionItem.Focus();
-            ctrl.Save();
-            ctrl.HienthiDataGridview(dataGridView, bindingNavigator);
+            Luu();
+            LoadData();
             bindingNavigator.BindingSource.MoveLast();
         }
 
         private void toolThoat_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Thoat();
+        }
+
+        private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
+        {
+            XoaDongHienTai();
+        }
+
+        private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            HuyXoaDong(e);
         }
     }
 }

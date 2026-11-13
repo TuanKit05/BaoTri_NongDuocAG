@@ -313,7 +313,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "frmDaiLy";
             this.Text = "DAI LY";
-            this.Load += new System.EventHandler(this.frmKhachHang_Load);
+            this.Load += new System.EventHandler(this.frmDaiLy_Load);
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator)).EndInit();
             this.bindingNavigator.ResumeLayout(false);
             this.bindingNavigator.PerformLayout();
