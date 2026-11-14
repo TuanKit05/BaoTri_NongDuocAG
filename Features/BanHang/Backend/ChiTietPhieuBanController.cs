@@ -34,6 +34,21 @@ namespace CuahangNongduoc.Controller
             factory.Save();
         }
 
+        public bool SaveTrongGiaoDich(System.Data.OleDb.OleDbConnection conn, System.Data.OleDb.OleDbTransaction tr)
+        {
+            return factory.SaveTrongGiaoDich(conn, tr);
+        }
+
+        public void XoaTheoPhieuTrongGiaoDich(System.Data.OleDb.OleDbConnection conn, System.Data.OleDb.OleDbTransaction tr, String idPhieuBan)
+        {
+            factory.XoaTheoPhieuTrongGiaoDich(conn, tr, idPhieuBan);
+        }
+
+        public void ChapNhanThayDoi()
+        {
+            factory.ChapNhanThayDoi();
+        }
+
 
         public IList<ChiTietPhieuBan> ChiTietPhieuBan(String idPhieuBan)
         {

@@ -304,7 +304,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.panel2);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.None;
             this.groupBox1.Location = new System.Drawing.Point(0, 240);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(750, 145);
@@ -773,6 +773,7 @@
             this.numTongTien.TabIndex = 45;
             this.numTongTien.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numTongTien.ThousandsSeparator = true;
+            this.numTongTien.ReadOnly = true;
             this.numTongTien.ValueChanged += new System.EventHandler(this.numTongTien_ValueChanged);
             // 
             // numDaTra
@@ -835,9 +836,138 @@
             // 
             // frmBanSi
             // 
+            //
+            // grpPhi (phí phát sinh & giảm giá)
+            //
+            this.grpPhi = new System.Windows.Forms.GroupBox();
+            this.lblPhiVanChuyen = new System.Windows.Forms.Label();
+            this.numPhiVanChuyen = new System.Windows.Forms.NumericUpDown();
+            this.lblPhanTramGiam = new System.Windows.Forms.Label();
+            this.numPhanTramGiam = new System.Windows.Forms.NumericUpDown();
+            this.lblTienGiamTitle = new System.Windows.Forms.Label();
+            this.lblTienGiam = new System.Windows.Forms.Label();
+            this.lblDichVuTitle = new System.Windows.Forms.Label();
+            this.dgvDichVu = new System.Windows.Forms.DataGridView();
+            this.colDichVuTen = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDichVuTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.grpPhi.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).BeginInit();
+            //
+            // grpPhi
+            //
+            this.grpPhi.Controls.Add(this.lblPhiVanChuyen);
+            this.grpPhi.Controls.Add(this.numPhiVanChuyen);
+            this.grpPhi.Controls.Add(this.lblPhanTramGiam);
+            this.grpPhi.Controls.Add(this.numPhanTramGiam);
+            this.grpPhi.Controls.Add(this.lblTienGiamTitle);
+            this.grpPhi.Controls.Add(this.lblTienGiam);
+            this.grpPhi.Controls.Add(this.lblDichVuTitle);
+            this.grpPhi.Controls.Add(this.dgvDichVu);
+            this.grpPhi.Location = new System.Drawing.Point(0, 385);
+            this.grpPhi.Name = "grpPhi";
+            this.grpPhi.Size = new System.Drawing.Size(750, 150);
+            this.grpPhi.TabIndex = 90;
+            this.grpPhi.TabStop = false;
+            this.grpPhi.Text = "Phí phát sinh và giảm giá";
+            //
+            // lblPhiVanChuyen
+            //
+            this.lblPhiVanChuyen.AutoSize = true;
+            this.lblPhiVanChuyen.Location = new System.Drawing.Point(12, 25);
+            this.lblPhiVanChuyen.Name = "lblPhiVanChuyen";
+            this.lblPhiVanChuyen.Text = "Phí vận chuyển";
+            //
+            // numPhiVanChuyen
+            //
+            this.numPhiVanChuyen.Location = new System.Drawing.Point(120, 22);
+            this.numPhiVanChuyen.Maximum = new decimal(new int[] {
+            -727379968,
+            232,
+            0,
+            0});
+            this.numPhiVanChuyen.Name = "numPhiVanChuyen";
+            this.numPhiVanChuyen.Size = new System.Drawing.Size(150, 20);
+            this.numPhiVanChuyen.TabIndex = 91;
+            this.numPhiVanChuyen.ThousandsSeparator = true;
+            this.numPhiVanChuyen.ValueChanged += new System.EventHandler(this.numPhiVanChuyen_ValueChanged);
+            //
+            // lblPhanTramGiam
+            //
+            this.lblPhanTramGiam.AutoSize = true;
+            this.lblPhanTramGiam.Location = new System.Drawing.Point(12, 55);
+            this.lblPhanTramGiam.Name = "lblPhanTramGiam";
+            this.lblPhanTramGiam.Text = "Giảm giá (%)";
+            //
+            // numPhanTramGiam
+            //
+            this.numPhanTramGiam.Location = new System.Drawing.Point(120, 52);
+            this.numPhanTramGiam.Maximum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.numPhanTramGiam.Name = "numPhanTramGiam";
+            this.numPhanTramGiam.Size = new System.Drawing.Size(70, 20);
+            this.numPhanTramGiam.TabIndex = 92;
+            this.numPhanTramGiam.ValueChanged += new System.EventHandler(this.numPhanTramGiam_ValueChanged);
+            //
+            // lblTienGiamTitle
+            //
+            this.lblTienGiamTitle.AutoSize = true;
+            this.lblTienGiamTitle.Location = new System.Drawing.Point(12, 85);
+            this.lblTienGiamTitle.Name = "lblTienGiamTitle";
+            this.lblTienGiamTitle.Text = "Tiền giảm";
+            //
+            // lblTienGiam
+            //
+            this.lblTienGiam.Location = new System.Drawing.Point(120, 85);
+            this.lblTienGiam.Name = "lblTienGiam";
+            this.lblTienGiam.Size = new System.Drawing.Size(150, 20);
+            this.lblTienGiam.Text = "0";
+            this.lblTienGiam.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // lblDichVuTitle
+            //
+            this.lblDichVuTitle.AutoSize = true;
+            this.lblDichVuTitle.Location = new System.Drawing.Point(300, 22);
+            this.lblDichVuTitle.Name = "lblDichVuTitle";
+            this.lblDichVuTitle.Text = "Dịch vụ phát sinh (mỗi dòng một khoản)";
+            //
+            // dgvDichVu
+            //
+            this.dgvDichVu.AllowUserToResizeRows = false;
+            this.dgvDichVu.BackgroundColor = System.Drawing.SystemColors.Window;
+            this.dgvDichVu.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvDichVu.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colDichVuTen,
+            this.colDichVuTien});
+            this.dgvDichVu.Location = new System.Drawing.Point(300, 40);
+            this.dgvDichVu.Name = "dgvDichVu";
+            this.dgvDichVu.RowHeadersVisible = false;
+            this.dgvDichVu.Size = new System.Drawing.Size(430, 100);
+            this.dgvDichVu.TabIndex = 93;
+            this.dgvDichVu.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDichVu_CellValueChanged);
+            this.dgvDichVu.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.dgvDichVu_UserDeletedRow);
+            //
+            // colDichVuTen
+            //
+            this.colDichVuTen.HeaderText = "Tên dịch vụ";
+            this.colDichVuTen.Name = "colDichVuTen";
+            this.colDichVuTen.Width = 260;
+            //
+            // colDichVuTien
+            //
+            this.colDichVuTien.HeaderText = "Số tiền";
+            this.colDichVuTien.Name = "colDichVuTien";
+            this.colDichVuTien.Width = 150;
+            this.grpPhi.ResumeLayout(false);
+            this.grpPhi.PerformLayout();
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(750, 385);
+            this.ClientSize = new System.Drawing.Size(750, 535);
+            this.Controls.Add(this.grpPhi);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.bindingNavigator);
@@ -864,6 +994,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.numConNo)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTongTien)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDaTra)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -936,6 +1069,17 @@
         private System.Windows.Forms.TextBox txtGiaNhap;
         private System.Windows.Forms.Button btnThemSanPham;
         private System.Windows.Forms.Button btnThemDaiLy;
+        private System.Windows.Forms.GroupBox grpPhi;
+        private System.Windows.Forms.Label lblPhiVanChuyen;
+        private System.Windows.Forms.NumericUpDown numPhiVanChuyen;
+        private System.Windows.Forms.Label lblPhanTramGiam;
+        private System.Windows.Forms.NumericUpDown numPhanTramGiam;
+        private System.Windows.Forms.Label lblTienGiamTitle;
+        private System.Windows.Forms.Label lblTienGiam;
+        private System.Windows.Forms.Label lblDichVuTitle;
+        private System.Windows.Forms.DataGridView dgvDichVu;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colDichVuTen;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colDichVuTien;
 
 
 
