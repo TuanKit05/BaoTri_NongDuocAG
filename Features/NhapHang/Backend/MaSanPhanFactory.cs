@@ -69,21 +69,62 @@ namespace CuahangNongduoc.DataLayer
         /// <summary>
         /// Lấy chi tiết tồn kho theo khoảng ngày nhập (chỉ các lô còn số lượng > 0).
         /// </summary>
-        public DataTable LayTonKhoTheoKhoangNgay(DateTime tuNgay, DateTime denNgay)
+
+
+        public DataTable LayTonKhoTheoKhoangNgay(
+            DateTime tuNgay, DateTime denNgay)
         {
-            OleDbCommand cmd = new OleDbCommand(
-                "SELECT MSP.ID AS MA_LO, SP.ID AS MA_SP, SP.TEN_SAN_PHAM, DVT.TEN_DON_VI, " +
-                "MSP.SO_LUONG, MSP.DON_GIA_NHAP, (MSP.SO_LUONG * MSP.DON_GIA_NHAP) AS THANH_TIEN, " +
-                "MSP.NGAY_NHAP, MSP.NGAY_SAN_XUAT, MSP.NGAY_HET_HAN " +
-                "FROM ((MA_SAN_PHAM MSP INNER JOIN SAN_PHAM SP ON MSP.ID_SAN_PHAM = SP.ID) " +
-                "INNER JOIN DON_VI_TINH DVT ON SP.ID_DON_VI_TINH = DVT.ID) " +
-                "WHERE MSP.SO_LUONG > 0 AND MSP.NGAY_NHAP >= @tu AND MSP.NGAY_NHAP <= @den " +
-                "ORDER BY SP.TEN_SAN_PHAM, MSP.NGAY_NHAP");
-            cmd.Parameters.Add("tu", OleDbType.Date).Value = tuNgay.Date;
-            cmd.Parameters.Add("den", OleDbType.Date).Value = denNgay.Date;
+            KiemTraKhoangNgay(tuNgay, denNgay);
+
+            OleDbCommand cmd = TaoLenhThongKeTonKho(
+                tuNgay, denNgay);
+
             m_Ds.Load(cmd);
             return m_Ds;
         }
+
+        private static void KiemTraKhoangNgay(
+            DateTime tuNgay, DateTime denNgay)
+        {
+            if (tuNgay.Date > denNgay.Date)
+            {
+                throw new ArgumentException(
+                    "Từ ngày không được lớn hơn đến ngày.");
+            }
+        }
+
+        private static OleDbCommand TaoLenhThongKeTonKho(
+            DateTime tuNgay, DateTime denNgay)
+        {
+            string sql =
+                "SELECT MSP.ID AS MA_LO, SP.ID AS MA_SP, " +
+                "SP.TEN_SAN_PHAM, DVT.TEN_DON_VI, " +
+                "MSP.SO_LUONG, MSP.DON_GIA_NHAP, " +
+                "(MSP.SO_LUONG * MSP.DON_GIA_NHAP) AS THANH_TIEN, " +
+                "MSP.NGAY_NHAP, MSP.NGAY_SAN_XUAT, " +
+                "MSP.NGAY_HET_HAN " +
+                "FROM ((MA_SAN_PHAM MSP " +
+                "INNER JOIN SAN_PHAM SP " +
+                "ON MSP.ID_SAN_PHAM = SP.ID) " +
+                "INNER JOIN DON_VI_TINH DVT " +
+                "ON SP.ID_DON_VI_TINH = DVT.ID) " +
+                "WHERE MSP.SO_LUONG > 0 " +
+                "AND MSP.NGAY_NHAP >= @tu " +
+                "AND MSP.NGAY_NHAP < @den " +
+                "ORDER BY SP.TEN_SAN_PHAM, MSP.NGAY_NHAP";
+
+            OleDbCommand cmd = new OleDbCommand(sql);
+
+            cmd.Parameters.Add("tu", OleDbType.Date)
+                .Value = tuNgay.Date;
+
+            cmd.Parameters.Add("den", OleDbType.Date)
+                .Value = denNgay.Date.AddDays(1);
+
+            return cmd;
+        }
+
+
 
         public static void CapNhatSoLuong(String masp, int so_luong)
         {
