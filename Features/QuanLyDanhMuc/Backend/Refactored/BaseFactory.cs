@@ -36,12 +36,12 @@ namespace CuahangNongduoc.DataLayer
         }
 
         /// <summary>
-        /// Tìm kiếm bản ghi theo tên cột và từ khóa.
+        /// Tìm kiếm bản ghi theo tên cột và từ khóa (LIKE '%từ khóa%').
         /// </summary>
         public virtual DataTable TimKiem(string columnName, string keyword)
         {
-            OleDbCommand cmd = new OleDbCommand($"SELECT * FROM {TableName} WHERE {columnName} LIKE '%' + @keyword + '%'");
-            cmd.Parameters.AddWithValue("@keyword", keyword ?? string.Empty);
+            OleDbCommand cmd = new OleDbCommand($"SELECT * FROM {TableName} WHERE {columnName} LIKE @keyword");
+            cmd.Parameters.AddWithValue("@keyword", "%" + (keyword ?? string.Empty) + "%");
             Load(cmd);
             return this;
         }
@@ -64,13 +64,23 @@ namespace CuahangNongduoc.DataLayer
         }
 
         /// <summary>
-        /// Lưu các thay đổi xuống cơ sở dữ liệu.
+        /// Lưu các thay đổi của bảng xuống cơ sở dữ liệu.
+        /// Trả về true nếu không có thay đổi hoặc lưu thành công; false nếu lưu thất bại.
+        /// Lưu ý: ExecuteNoneQuery() của DataService nuốt lỗi, nên false chỉ phản ánh
+        /// trường hợp không có dòng nào được cập nhật.
         /// </summary>
         public virtual bool Save()
         {
-            // Implement your own Save logic here or remove this method if not needed.
-            // For now, just return true to avoid compilation error.
-            return true;
+            if (this.GetChanges() == null)
+                return true;
+
+            int soDong = ExecuteNoneQuery();
+            if (soDong > 0)
+            {
+                this.AcceptChanges();
+                return true;
+            }
+            return false;
         }
     }
 }

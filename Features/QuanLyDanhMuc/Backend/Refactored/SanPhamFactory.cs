@@ -32,7 +32,7 @@ namespace CuahangNongduoc.DataLayer
                 "FROM SAN_PHAM SP INNER JOIN MA_SAN_PHAM MA ON SP.ID = MA.ID_SAN_PHAM " +
                 "GROUP BY SP.ID, SP.TEN_SAN_PHAM, SP.DON_GIA_NHAP, SP.GIA_BAN_SI, " +
                 "SP.GIA_BAN_LE, SP.ID_DON_VI_TINH, SP.SO_LUONG");
-            
+
             Load(cmd); // Gọi trực tiếp phương thức Load của DataService
             return this; // Trả về instance bảng hiện tại
         }

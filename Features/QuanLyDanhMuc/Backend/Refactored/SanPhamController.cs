@@ -1,6 +1,9 @@
+using CuahangNongduoc.BusinessObject;
+using CuahangNongduoc.DataLayer;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Windows.Forms;
-using CuahangNongduoc.DataLayer;
 
 namespace CuahangNongduoc.Controller
 {
@@ -43,6 +46,42 @@ namespace CuahangNongduoc.Controller
             if (numGiaBanLe != null) numGiaBanLe.DataBindings.Add("Value", bs, "GIA_BAN_LE", true);
         }
 
+        public void HienthiAutoComboBox(ComboBox cmb)
+        {
+            DataTable tbl = factory.DanhsachSanPham();
+            cmb.DataSource = tbl;
+            cmb.DisplayMember = "TEN_SAN_PHAM";
+            cmb.ValueMember = "ID";
+            cmb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            cmb.AutoCompleteSource = AutoCompleteSource.ListItems;
+        }
+
+        public void HienthiDataGridViewComboBoxColumn(DataGridViewComboBoxColumn cmb)
+        {
+            cmb.DataSource = factory.DanhsachSanPham();
+            cmb.DisplayMember = "TEN_SAN_PHAM";
+            cmb.ValueMember = "ID";
+            cmb.AutoComplete = true;
+        }
+
+        public void CapNhatGiaNhap(String id, long gia_moi, long so_luong)
+        {
+            DataTable tbl = factory.LaySanPham(id);
+            if (tbl.Rows.Count > 0)
+            {
+                long tong_so = Convert.ToInt32(tbl.Rows[0]["SO_LUONG"]);
+                long tong_gia = Convert.ToInt64(tbl.Rows[0]["DON_GIA_NHAP"]);
+                if (tong_gia != gia_moi)
+                {
+                    long thanh_tien = gia_moi * so_luong + tong_gia * tong_so;
+                    tong_so += so_luong;
+                    tbl.Rows[0]["DON_GIA_NHAP"] = thanh_tien / tong_so;
+                    tbl.Rows[0]["SO_LUONG"] = tong_so;
+                }
+                factory.Save();
+            }
+        }
+
         public void TimMaSanPham(string ma)
         {
             factory.TimMaSanPham(ma);
@@ -56,6 +95,49 @@ namespace CuahangNongduoc.Controller
         public override DataRow NewRow()
         {
             return factory.NewRow();
+        }
+
+        public static IList<SoLuongTon> LaySoLuongTon()
+        {
+            SanPhamFactory f = new SanPhamFactory();
+            DataTable tbl = f.LaySoLuongTon();
+
+            IList<SoLuongTon> ds = new List<SoLuongTon>();
+            foreach (DataRow row in tbl.Rows)
+            {
+                SanPham sp = new SanPham();
+                sp.Id = Convert.ToString(row["ID"]);
+                sp.TenSanPham = Convert.ToString(row["TEN_SAN_PHAM"]);
+                sp.IdDonViTinh = Convert.ToString(row["ID_DON_VI_TINH"]);
+                sp.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
+                sp.DonGiaNhap = Convert.ToDecimal(row["DON_GIA_NHAP"]);
+                sp.GiaBanLe = Convert.ToDecimal(row["GIA_BAN_LE"]);
+                sp.GiaBanSi = Convert.ToDecimal(row["GIA_BAN_SI"]);
+
+                SoLuongTon slt = new SoLuongTon();
+                slt.SanPham = sp;
+                slt.SoLuong = Convert.ToInt32(row["SO_LUONG_TON"]);
+                ds.Add(slt);
+            }
+            return ds;
+        }
+
+        public SanPham LaySanPham(string id)
+        {
+            DataTable tbl = factory.LaySanPham(id);
+            if (tbl.Rows.Count == 0)
+                return null;
+
+            DataRow row = tbl.Rows[0];
+            SanPham sp = new SanPham();
+            sp.Id = Convert.ToString(row["ID"]);
+            sp.TenSanPham = Convert.ToString(row["TEN_SAN_PHAM"]);
+            sp.IdDonViTinh = Convert.ToString(row["ID_DON_VI_TINH"]);
+            sp.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
+            sp.DonGiaNhap = Convert.ToDecimal(row["DON_GIA_NHAP"]);
+            sp.GiaBanLe = Convert.ToDecimal(row["GIA_BAN_LE"]);
+            sp.GiaBanSi = Convert.ToDecimal(row["GIA_BAN_SI"]);
+            return sp;
         }
     }
 }
