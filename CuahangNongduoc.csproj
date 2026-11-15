@@ -131,6 +131,9 @@
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHang.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuThanhToan.cs" />
     <Compile Include="Features\NhapHang\Backend\MaSanPham.cs" />
+    <Compile Include="Features\NhapHang\Backend\LoNhapInput.cs" />
+    <Compile Include="Features\NhapHang\Backend\NhapHangValidator.cs" />
+    <Compile Include="Features\NhapHang\Backend\NhapHangService.cs" />
     <Compile Include="Features\BanHang\Backend\PhieuBan.cs" />
     <Compile Include="Features\NhapHang\Backend\PhieuNhap.cs" />
     <Compile Include="Features\BaoCao\Backend\SoLuongTon.cs" />
