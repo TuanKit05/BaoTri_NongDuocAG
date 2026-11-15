@@ -60,7 +60,7 @@ namespace CuahangNongduoc
             }
             else
             {
-                this.Allow(false);
+                this.ChoPhepChinhSua(false);
             }
 
 
@@ -102,32 +102,55 @@ namespace CuahangNongduoc
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
+            if (!KiemTraChiTietBanSi())
+                return;
 
+            numTongTien.Value += numThanhTien.Value;
+
+            DataRow row = ctrlChiTiet.NewRow();
+            row["ID_MA_SAN_PHAM"] = cmbMaSanPham.SelectedValue;
+            row["ID_PHIEU_BAN"] = txtMaPhieu.Text;
+            row["DON_GIA"] = numDonGia.Value;
+            row["SO_LUONG"] = numSoLuong.Value;
+            row["THANH_TIEN"] = numThanhTien.Value;
+
+            ctrlChiTiet.Add(row);
+        }
+
+        private bool KiemTraChiTietBanSi()
+        {
             if (cmbMaSanPham.SelectedValue == null)
             {
-                MessageBox.Show("Vui lòng chon Mã sản phẩm !", "Phieu Nhap", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (numSoLuong.Value <= 0)
-            {
-                MessageBox.Show("Vui lòng nhập Số lượng !", "Phieu Nhap", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (numDonGia.Value * numSoLuong.Value != numThanhTien.Value)
-            {
-                MessageBox.Show("Thành tiền sai!", "Phieu Nhap", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-                numTongTien.Value += numThanhTien.Value;
-                DataRow row = ctrlChiTiet.NewRow();
-                row["ID_MA_SAN_PHAM"] = cmbMaSanPham.SelectedValue;
-                row["ID_PHIEU_BAN"] = txtMaPhieu.Text;
-                row["DON_GIA"] = numDonGia.Value;
-                row["SO_LUONG"] = numSoLuong.Value;
-                row["THANH_TIEN"] = numThanhTien.Value;
-                ctrlChiTiet.Add(row);
-
+                MessageBox.Show(
+                    "Vui lòng chon Mã sản phẩm !",
+                    "Phieu Nhap",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return false;
             }
 
+            if (numSoLuong.Value <= 0)
+            {
+                MessageBox.Show(
+                    "Vui lòng nhập Số lượng !",
+                    "Phieu Nhap",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return false;
+            }
+
+            if (numDonGia.Value * numSoLuong.Value
+                != numThanhTien.Value)
+            {
+                MessageBox.Show(
+                    "Thành tiền sai!",
+                    "Phieu Nhap",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return false;
+            }
+
+            return true;
         }
 
         private void numDonGia_ValueChanged(object sender, EventArgs e)
@@ -212,34 +235,57 @@ namespace CuahangNongduoc
             txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
             numTongTien.Value = 0;
             ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, txtMaPhieu.Text);
-            this.Allow(true);
+            this.ChoPhepChinhSua(true);
+        }
+
+        private void GhiNhanChiTietBiXoa(DataRowView row)
+        {
+            numTongTien.Value -=
+                Convert.ToInt64(row["THANH_TIEN"]);
+
+            deleted.Add(new MaSanPham(
+                Convert.ToString(row["ID_MA_SAN_PHAM"]),
+                Convert.ToInt32(row["SO_LUONG"])));
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show(
+                "Bạn có chắc chắn xóa không?",
+                "Phieu Ban Le",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                BindingSource bs = ((BindingSource)dgvDanhsachSP.DataSource);
+                BindingSource bs =
+                    (BindingSource)dgvDanhsachSP.DataSource;
+
                 DataRowView row = (DataRowView)bs.Current;
-                numTongTien.Value -= Convert.ToInt64(row["THANH_TIEN"]);
-                deleted.Add(new MaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]), Convert.ToInt32(row["SO_LUONG"])));
+
+                GhiNhanChiTietBiXoa(row);
                 bs.RemoveCurrent();
-                
             }
         }
 
-        private void dgvDanhsachSP_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        private void dgvDanhsachSP_UserDeletingRow(
+            object sender,
+            DataGridViewRowCancelEventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show(
+                "Bạn có chắc chắn xóa không?",
+                "Phieu Ban Le",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) == DialogResult.No)
             {
                 e.Cancel = true;
             }
             else
             {
-                BindingSource bs = ((BindingSource)dgvDanhsachSP.DataSource);
+                BindingSource bs =
+                    (BindingSource)dgvDanhsachSP.DataSource;
+
                 DataRowView row = (DataRowView)bs.Current;
-                numTongTien.Value -= Convert.ToInt64(row["THANH_TIEN"]);
-                deleted.Add(new MaSanPham(Convert.ToString( row["ID_MA_SAN_PHAM"]), Convert.ToInt32(row["SO_LUONG"])) );
+
+                GhiNhanChiTietBiXoa(row);
             }
         }
 
@@ -247,21 +293,26 @@ namespace CuahangNongduoc
         {
             if (status != Controll.Normal)
             {
-                MessageBox.Show("Vui lòng lưu lại Phiếu bán hiện tại!", "Phieu Ban Le", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(
+                    "Vui lòng lưu lại Phiếu bán hiện tại!",
+                    "Phieu Ban Le",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
             }
-            else
-            {
-                String ma_phieu = txtMaPhieu.Text;
 
-                PhieuBanController ctrlPB = new PhieuBanController();
+            String ma_phieu = txtMaPhieu.Text;
 
-                CuahangNongduoc.BusinessObject.PhieuBan ph = ctrlPB.LayPhieuBan(ma_phieu);
+            PhieuBanController ctrlPB =
+                new PhieuBanController();
 
-                frmInPhieuBan InPhieuBan = new frmInPhieuBan(ph);
+            CuahangNongduoc.BusinessObject.PhieuBan ph =
+                ctrlPB.LayPhieuBan(ma_phieu);
 
-                InPhieuBan.Show();
+            frmInPhieuBan InPhieuBan =
+                new frmInPhieuBan(ph);
 
-            }
+            InPhieuBan.Show();
         }
 
         private void dgvDanhsachSP_DataError(object sender, DataGridViewDataErrorEventArgs e)
@@ -272,17 +323,17 @@ namespace CuahangNongduoc
         private void toolChinhSua_Click(object sender, EventArgs e)
         {
             status = Controll.Edit;
-            this.Allow(true);
+            this.ChoPhepChinhSua(true);
         }
 
-        void Allow(bool val)
+        private void ChoPhepChinhSua(bool choPhep)
         {
-            txtMaPhieu.Enabled = val;
-            dtNgayLapPhieu.Enabled = val;
-            numTongTien.Enabled = val;
-            btnAdd.Enabled = val;
-            btnRemove.Enabled = val;
-            dgvDanhsachSP.Enabled = val;
+            txtMaPhieu.Enabled = choPhep;
+            dtNgayLapPhieu.Enabled = choPhep;
+            numTongTien.Enabled = choPhep;
+            btnAdd.Enabled = choPhep;
+            btnRemove.Enabled = choPhep;
+            dgvDanhsachSP.Enabled = choPhep;
         }
 
         private void toolThoat_Click(object sender, EventArgs e)

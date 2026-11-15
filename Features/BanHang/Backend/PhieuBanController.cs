@@ -11,6 +11,8 @@ namespace CuahangNongduoc.Controller
 
     public class PhieuBanController
     {
+        private const int GIOI_HAN_PHIEU_BAN = 50;
+
         PhieuBanFactory factory = new PhieuBanFactory();
 
         BindingSource bs = new BindingSource();
@@ -33,35 +35,53 @@ namespace CuahangNongduoc.Controller
             bs.MoveNext();
             factory.Save();
         }
+
         public void Save()
         {
             int n = PhieuBanFactory.LaySoPhieu();
-            if (n >= 50)
-            {
-                MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được 50 phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+            if (n >= GIOI_HAN_PHIEU_BAN)
+            {
+                MessageBox.Show(
+                    "Đây là bản dùng thử! Chỉ lưu được 50 phiếu bán!",
+                    "Phieu Ban",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             else
             {
-                MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được thêm " + Convert.ToString(50 - n) + " phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(
+                    "Đây là bản dùng thử! Chỉ lưu được thêm "
+                    + Convert.ToString(GIOI_HAN_PHIEU_BAN - n)
+                    + " phiếu bán!",
+                    "Phieu Ban",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 factory.Save();
             }
-
         }
-        public void HienthiPhieuBanLe(BindingNavigator bn, DataGridView dg)
-        {
 
+        private void GanNguonDuLieuPhieuBan(
+            BindingNavigator bn,
+            DataGridView dg)
+        {
+            bn.BindingSource = bs;
+            dg.DataSource = bs;
+        }
+
+        public void HienthiPhieuBanLe(
+            BindingNavigator bn, DataGridView dg)
+        {
             bs.DataSource = factory.DanhsachPhieuBanLe();
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
+            GanNguonDuLieuPhieuBan(bn, dg);
         }
 
-        public void HienthiPhieuBanSi(BindingNavigator bn, DataGridView dg)
+        public void HienthiPhieuBanSi(
+            BindingNavigator bn, DataGridView dg)
         {
-
             bs.DataSource = factory.DanhsachPhieuBanSi();
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
+            GanNguonDuLieuPhieuBan(bn, dg);
         }
 
         public void HienthiPhieuBan(BindingNavigator bn, ComboBox cmb, TextBox txt, DateTimePicker dt, NumericUpDown numTongTien, NumericUpDown numDatra, NumericUpDown numConNo)
@@ -93,22 +113,34 @@ namespace CuahangNongduoc.Controller
         public PhieuBan LayPhieuBan(String id)
         {
             DataTable tbl = factory.LayPhieuBan(id);
-            PhieuBan ph = null;
-            if (tbl.Rows.Count > 0)
-            {
 
-                ph = new PhieuBan();
-                ph.Id = Convert.ToString(tbl.Rows[0]["ID"]);
+            if (tbl.Rows.Count == 0)
+                return null;
 
-                ph.NgayBan = Convert.ToDateTime(tbl.Rows[0]["NGAY_BAN"]);
-                ph.TongTien = Convert.ToInt64(tbl.Rows[0]["TONG_TIEN"]);
-                ph.DaTra = Convert.ToInt64(tbl.Rows[0]["DA_TRA"]);
-                ph.ConNo = Convert.ToInt64(tbl.Rows[0]["CON_NO"]);
-                KhachHangController ctrlKH = new KhachHangController();
-                ph.KhachHang = ctrlKH.LayKhachHang(Convert.ToString(tbl.Rows[0]["ID_KHACH_HANG"]));
-                ChiTietPhieuBanController ctrl = new ChiTietPhieuBanController();
-                ph.ChiTiet = ctrl.ChiTietPhieuBan(ph.Id);
-            }
+            return TaoPhieuBan(tbl.Rows[0]);
+        }
+
+        private PhieuBan TaoPhieuBan(DataRow row)
+        {
+            PhieuBan ph = new PhieuBan();
+
+            ph.Id = Convert.ToString(row["ID"]);
+            ph.NgayBan = Convert.ToDateTime(row["NGAY_BAN"]);
+            ph.TongTien = Convert.ToInt64(row["TONG_TIEN"]);
+            ph.DaTra = Convert.ToInt64(row["DA_TRA"]);
+            ph.ConNo = Convert.ToInt64(row["CON_NO"]);
+
+            KhachHangController ctrlKH =
+                new KhachHangController();
+
+            ph.KhachHang = ctrlKH.LayKhachHang(
+                Convert.ToString(row["ID_KHACH_HANG"]));
+
+            ChiTietPhieuBanController ctrl =
+                new ChiTietPhieuBanController();
+
+            ph.ChiTiet = ctrl.ChiTietPhieuBan(ph.Id);
+
             return ph;
         }
 
