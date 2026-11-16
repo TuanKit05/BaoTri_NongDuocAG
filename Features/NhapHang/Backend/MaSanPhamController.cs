@@ -41,6 +41,7 @@ namespace CuahangNongduoc.Controller
             sp.DonGiaNhap = Convert.ToInt64(row["DON_GIA_NHAP"]);
             sp.GiaBanLe = Convert.ToInt64(row["GIA_BAN_LE"]);
             sp.GiaBanSi = Convert.ToInt64(row["GIA_BAN_SI"]);
+            sp.IdDonViTinh = Convert.ToString(row["ID_DON_VI_TINH"]);
             sp.DonViTinh = new DonViTinhController().LayDVT(Convert.ToInt32(row["ID_DON_VI_TINH"]));
             return sp;
         }

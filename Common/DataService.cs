@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Data.OleDb;
+using System.IO;
 
 namespace CuahangNongduoc
 {
@@ -12,9 +13,16 @@ namespace CuahangNongduoc
 		private static OleDbConnection	m_Connection;
 
         //
-        public static String m_ConnectString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=cuahang.dll;";
-		// The command to execute query or non-query command on a database of this data service.
-		private OleDbCommand		m_Command;
+
+        public static string m_ConnectString =
+            "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" +
+            Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                @"Database\cuahang.dll"
+            ) + ";";
+
+        // The command to execute query or non-query command on a database of this data service.
+        private OleDbCommand		m_Command;
       
 		// The data adapter to execute query on a database of this data service.
 		private OleDbDataAdapter	m_DataAdapter;
