@@ -90,40 +90,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
-<<<<<<< Updated upstream
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\BaseController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\BaseFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\DonViTinh.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\DonViTinhController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\DonViTinhFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\KhachHang.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\KhachHangController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\KhachHangFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\LyDoChi.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\LyDoChiController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\LyDoChiFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\NhaCungCap.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\NhaCungCapController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\NhaCungCapFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\SanPham.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\SanPhamController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\SanPhamFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Frontend\BaseDanhMucForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-=======
     <Compile Include="Features\BaoCao\Backend\BaoCaoTongHopService.cs" />
 >>>>>>> Stashed changes
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
