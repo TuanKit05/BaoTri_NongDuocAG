@@ -36,13 +36,21 @@ namespace CuahangNongduoc
             set { m_Command = value; }
         }
 
-		public void Load(OleDbCommand command)
-		{
-            OpenConnection();
-            m_Command = command;
+
+        public void Load(OleDbCommand command)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             try
             {
-                
+                if (m_Connection == null)
+                    m_Connection = new OleDbConnection(m_ConnectString);
+
+                if (m_Connection.State != ConnectionState.Open)
+                    m_Connection.Open();
+
+                m_Command = command;
                 m_Command.Connection = m_Connection;
 
                 m_DataAdapter = new OleDbDataAdapter();
@@ -50,13 +58,16 @@ namespace CuahangNongduoc
 
                 this.Clear();
                 m_DataAdapter.Fill(this);
-
             }
-            catch (Exception e) 
+            catch (Exception ex)
             {
-                String str = e.Message;
+                throw new InvalidOperationException(
+                    "Không thể tải dữ liệu từ Access.\n" +
+                    "Chuỗi kết nối: " + m_ConnectString +
+                    "\nChi tiết: " + ex.Message, ex);
             }
-		}
+        }
+
 
 
         public static bool OpenConnection()

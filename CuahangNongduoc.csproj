@@ -90,33 +90,33 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\BaseController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\BaseFactory.cs">
+    <Compile Include="Features\QuanLyDanhMuc\Backend\BaseController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\BaseFactory.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\DonViTinh.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\DonViTinhController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\DonViTinhFactory.cs">
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\KhachHang.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\KhachHangController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\KhachHangFactory.cs">
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHang.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\LyDoChi.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\LyDoChiController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\LyDoChiFactory.cs">
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\NhaCungCap.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\NhaCungCapController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\NhaCungCapFactory.cs">
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCap.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\SanPham.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\SanPhamController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\Refactored\SanPhamFactory.cs">
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Frontend\BaseDanhMucForm.cs">
@@ -568,7 +568,7 @@
     <Content Include="Database\cuahang.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Features\QuanLyDanhMuc\Backend\Refactored\README_Refactoring.md" />
+    <Content Include="Features\QuanLyDanhMuc\Backend\README_Refactoring.md" />
     <Content Include="Features\QuanLyDanhMuc\Frontend\README_Frontend_Refactoring.md" />
     <None Include="Resources\LyDoChi.png" />
     <None Include="Resources\DonViTinh.png" />

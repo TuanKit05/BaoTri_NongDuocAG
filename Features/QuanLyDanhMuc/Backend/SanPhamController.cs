@@ -17,11 +17,45 @@ namespace CuahangNongduoc.Controller
             TextBox txtMa, TextBox txtTen, ComboBox cmbDVT,
             NumericUpDown numSL, NumericUpDown numGiaNhap, NumericUpDown numGiaBanSi, NumericUpDown numGiaBanLe)
         {
+
             BindingSource bs = new BindingSource();
-            DataTable tbl = factory.DanhSach();
-            bs.DataSource = tbl;
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
+
+            try
+            {
+                if (dg == null || bn == null)
+                    throw new Exception("DataGridView hoặc BindingNavigator chưa được khởi tạo.");
+
+                DataTable tbl = factory.DanhSach();
+
+                if (tbl == null || tbl.Columns.Count == 0)
+                    throw new Exception(
+                        "Không đọc được cấu trúc bảng SAN_PHAM. " +
+                        "Hãy kiểm tra kết nối Access và DataService.cs.");
+
+                if (!tbl.Columns.Contains("ID") ||
+                    !tbl.Columns.Contains("TEN_SAN_PHAM") ||
+                    !tbl.Columns.Contains("ID_DON_VI_TINH"))
+                    throw new Exception(
+                        "Bảng SAN_PHAM thiếu các cột bắt buộc.");
+
+                bs.DataSource = tbl;
+
+                dg.AutoGenerateColumns = false;
+                dg.DataSource = null;
+                dg.DataSource = bs;
+
+                bn.BindingSource = bs;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi tải danh sách sản phẩm:\n" + ex.ToString(),
+                    "Lỗi dữ liệu",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                throw;
+            }
 
             // Bind dữ liệu chi tiết lên các control nếu có
             if (txtMa != null) txtMa.DataBindings.Clear();
