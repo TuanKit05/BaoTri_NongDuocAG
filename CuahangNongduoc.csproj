@@ -89,7 +89,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Features\BanHang\Backend\BoTinhUuDai.cs" />
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
+    <Compile Include="Features\BanHang\Backend\IChienLuocUuDai.cs" />
+    <Compile Include="Features\BanHang\Backend\KetQuaUuDai.cs" />
+    <Compile Include="Features\BanHang\Backend\KiemThuUuDai.cs" />
+    <Compile Include="Features\BanHang\Backend\TinhTienHoaDon.cs" />
+    <Compile Include="Features\BanHang\Backend\UuDaiCoDinh.cs" />
+    <Compile Include="Features\BanHang\Backend\UuDaiPhanTram.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
     <Compile Include="Features\HeThong\Backend\CuaHang.cs" />
 <Compile Include="Features\HeThong\Backend\Auth\UserAccount.cs" />

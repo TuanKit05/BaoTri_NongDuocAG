@@ -28,9 +28,94 @@ namespace CuahangNongduoc
         public frmBanLe()
         {
             InitializeComponent();
+
+            cmbLoaiChietKhau.SelectedIndex = 0;
+            cmbLoaiGiamGia.SelectedIndex = 0;
+
             status = Controll.AddNew;
             hoaDon.DaThayDoi += new EventHandler(HoaDon_DaThayDoi);
         }
+
+
+        private decimal tienHangGoc = 0m;
+        private decimal tienChietKhau = 0m;
+        private decimal tienGiamGia = 0m;
+
+        private void TinhLaiHoaDon()
+        {
+            if (cmbLoaiChietKhau.SelectedIndex < 0 ||
+                cmbLoaiGiamGia.SelectedIndex < 0)
+                return;
+
+            IChienLuocUuDai chienLuocChietKhau =
+                cmbLoaiChietKhau.SelectedIndex == 0
+                ? (IChienLuocUuDai)new UuDaiPhanTram()
+                : new UuDaiCoDinh();
+
+            IChienLuocUuDai chienLuocGiamGia =
+                cmbLoaiGiamGia.SelectedIndex == 0
+                ? (IChienLuocUuDai)new UuDaiPhanTram()
+                : new UuDaiCoDinh();
+
+            TinhTienHoaDon boTinh = new TinhTienHoaDon();
+
+            tienHangGoc = TinhTienHangTuDanhSach();
+            KetQuaUuDai ketQua = boTinh.Tinh(
+                tienHangGoc,
+                chienLuocChietKhau,
+                numGiaTriChietKhau.Value,
+                chienLuocGiamGia,
+                numGiaTriGiamGia.Value
+            );
+            tienChietKhau = ketQua.TienChietKhau;
+            tienGiamGia = ketQua.TienGiamGia;
+
+
+            lblTienChietKhau.Text =
+                ketQua.TienChietKhau.ToString("#,##0") + " đ";
+
+            lblTienGiamGia.Text =
+                ketQua.TienGiamGia.ToString("#,##0") + " đ";
+
+            if (ketQua.TongThanhToan > numTongTien.Maximum)
+            {
+                MessageBox.Show(
+                    "Tổng thanh toán vượt giới hạn cho phép.");
+                return;
+            }
+
+            numTongTien.Value = ketQua.TongThanhToan;
+            CapNhatCongNo();
+
+        }
+
+
+        private decimal TinhTienHangTuDanhSach()
+        {
+            decimal tong = 0m;
+
+            foreach (DataGridViewRow row in dgvDanhsachSP.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                object giaTri = row.Cells["colThanhTien"].Value;
+
+                if (giaTri != null && giaTri != DBNull.Value)
+                {
+                    tong += Convert.ToDecimal(giaTri);
+                }
+            }
+
+            return tong;
+        }
+
+
+        private void UuDai_ValueChanged(object sender, EventArgs e)
+        {
+            TinhLaiHoaDon();
+        }
+
 
         public frmBanLe(PhieuBanController ctrlPB)
             : this()
@@ -76,28 +161,56 @@ namespace CuahangNongduoc
             }
         }
 
+
+
         void cmbSanPham_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cmbSanPham.SelectedValue != null)
-            {
-                MaSanPhamController ctrlMSP = new MaSanPhamController();
+            if (cmbSanPham.SelectedValue == null ||
+                cmbSanPham.SelectedValue is DataRowView)
+                return;
 
-                cmbMaSanPham.SelectedIndexChanged -= new EventHandler(cmbMaSanPham_SelectedIndexChanged);
-                ctrlMSP.HienThiAutoComboBox(cmbSanPham.SelectedValue.ToString(), cmbMaSanPham);
-                cmbMaSanPham.SelectedIndexChanged += new EventHandler(cmbMaSanPham_SelectedIndexChanged);
+            MaSanPhamController ctrlMSP = new MaSanPhamController();
+
+            cmbMaSanPham.SelectedIndexChanged -=
+                new EventHandler(cmbMaSanPham_SelectedIndexChanged);
+
+            try
+            {
+                ctrlMSP.HienThiAutoComboBox(
+                    cmbSanPham.SelectedValue.ToString(),
+                    cmbMaSanPham);
             }
+            finally
+            {
+                cmbMaSanPham.SelectedIndexChanged +=
+                    new EventHandler(cmbMaSanPham_SelectedIndexChanged);
+            }
+
+            // Cập nhật thông tin nếu danh sách đã chọn được mã hợp lệ.
+            cmbMaSanPham_SelectedIndexChanged(cmbMaSanPham, EventArgs.Empty);
         }
 
         void cmbMaSanPham_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (cmbMaSanPham.SelectedValue == null ||
+                cmbMaSanPham.SelectedValue is DataRowView)
+                return;
+
             MaSanPhamController ctrl = new MaSanPhamController();
-            MaSanPham masp = ctrl.LayMaSanPham(cmbMaSanPham.SelectedValue.ToString());
+
+            MaSanPham masp = ctrl.LayMaSanPham(
+                cmbMaSanPham.SelectedValue.ToString());
+
+            if (masp == null || masp.SanPham == null)
+                return;
+
             numDonGia.Value = masp.SanPham.GiaBanLe;
             txtGiaNhap.Text = masp.GiaNhap.ToString("#,###0");
             txtGiaBanSi.Text = masp.SanPham.GiaBanSi.ToString("#,###0");
             txtGiaBanLe.Text = masp.SanPham.GiaBanLe.ToString("#,###0");
             txtGiaBQGQ.Text = masp.SanPham.DonGiaNhap.ToString("#,###0");
         }
+
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -116,13 +229,15 @@ namespace CuahangNongduoc
             else
             {
                 DataRow row = ctrlChiTiet.NewRow();
+
                 row["ID_MA_SAN_PHAM"] = cmbMaSanPham.SelectedValue;
                 row["ID_PHIEU_BAN"] = txtMaPhieu.Text;
                 row["DON_GIA"] = numDonGia.Value;
                 row["SO_LUONG"] = numSoLuong.Value;
                 row["THANH_TIEN"] = numThanhTien.Value;
+
                 ctrlChiTiet.Add(row);
-                DongBoTienHang();
+                TinhLaiHoaDon();
             }
         }
 
@@ -133,7 +248,17 @@ namespace CuahangNongduoc
 
         private void numTongTien_ValueChanged(object sender, EventArgs e)
         {
-            numConNo.Value = numTongTien.Value - numDaTra.Value;
+            CapNhatCongNo();
+        }
+
+        private void CapNhatCongNo()
+        {
+            decimal conNo = numTongTien.Value - numDaTra.Value;
+
+            if (conNo < 0m)
+                conNo = 0m;
+
+            numConNo.Value = conNo;
         }
 
         // ---------- Phí phát sinh và giảm giá (dùng HoaDonDangLap) ----------
@@ -274,6 +399,8 @@ namespace CuahangNongduoc
             row["TONG_TIEN"] = numTongTien.Value;
             row["DA_TRA"] = numDaTra.Value;
             row["CON_NO"] = numConNo.Value;
+            row["TIEN_CHIET_KHAU"] = tienChietKhau;
+            row["TIEN_GIAM_GIA"] = tienGiamGia;
             ctrlPhieuBan.Add(row);
 
             LapHoaDonMoi lap = new LapHoaDonMoi(ctrlPhieuBan, ctrlChiTiet, hoaDon.ToPhieuBan(txtMaPhieu.Text));
@@ -312,45 +439,79 @@ namespace CuahangNongduoc
             ctrlPhieuBan = new PhieuBanController();
             status = Controll.AddNew;
             txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
+
+            tienHangGoc = 0m;
+
+            numGiaTriChietKhau.Value = 0;
+            numGiaTriGiamGia.Value = 0;
+
+            cmbLoaiChietKhau.SelectedIndex = 0;
+            cmbLoaiGiamGia.SelectedIndex = 0;
+
+            numDaTra.Value = 0;
+            
             ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, txtMaPhieu.Text);
+            TinhLaiHoaDon();
 
-            dangNapPhi = true;
-            numPhiVanChuyen.Value = 0;
-            numPhanTramGiam.Value = 0;
-            dgvDichVu.Rows.Clear();
-            dangNapPhi = false;
-
-            DongBoPhi();
-            DongBoTienHang();
             this.Allow(true);
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                BindingSource bs = ((BindingSource)dgvDanhsachSP.DataSource);
-                DataRowView row = (DataRowView)bs.Current;
-                deleted.Add(new MaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]), Convert.ToInt32(row["SO_LUONG"])));
-                bs.RemoveCurrent();
-                DongBoTienHang();
-            }
+            BindingSource bs = dgvDanhsachSP.DataSource as BindingSource;
+
+            if (bs == null || bs.Current == null)
+                return;
+
+            if (MessageBox.Show(
+                "Bạn có chắc chắn xóa không?",
+                "Phieu Ban Le",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            DataRowView row = bs.Current as DataRowView;
+
+            if (row == null)
+                return;
+
+            deleted.Add(new MaSanPham(
+                Convert.ToString(row["ID_MA_SAN_PHAM"]),
+                Convert.ToInt32(row["SO_LUONG"])
+            ));
+
+            bs.RemoveCurrent();
+
+            TinhLaiHoaDon();
         }
+
 
         private void dgvDanhsachSP_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show(
+                "Bạn có chắc chắn xóa không?",
+                "Phieu Ban Le",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) == DialogResult.No)
             {
                 e.Cancel = true;
+                return;
             }
-            else
+
+            DataRowView row = e.Row.DataBoundItem as DataRowView;
+
+            if (row != null)
             {
-                BindingSource bs = ((BindingSource)dgvDanhsachSP.DataSource);
-                DataRowView row = (DataRowView)bs.Current;
-                deleted.Add(new MaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]), Convert.ToInt32(row["SO_LUONG"])));
-                // Tính lại sau khi dòng bị xóa khỏi lưới
-                this.BeginInvoke(new MethodInvoker(DongBoTienHang));
+                deleted.Add(new MaSanPham(
+                    Convert.ToString(row["ID_MA_SAN_PHAM"]),
+                    Convert.ToInt32(row["SO_LUONG"])
+                ));
             }
+        }
+
+        private void dgvDanhsachSP_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
+        {
+            TinhLaiHoaDon();
         }
 
         private void toolLuuIn_Click(object sender, EventArgs e)
@@ -393,12 +554,11 @@ namespace CuahangNongduoc
             btnAdd.Enabled = val;
             btnRemove.Enabled = val;
             dgvDanhsachSP.Enabled = val;
+            cmbLoaiChietKhau.Enabled = val;
+            numGiaTriChietKhau.Enabled = val;
 
-            // Phí chỉ nhập khi lập phiếu mới; phiếu đã lưu không sửa phí
-            bool choPhi = val && status == Controll.AddNew;
-            numPhiVanChuyen.Enabled = choPhi;
-            numPhanTramGiam.Enabled = choPhi;
-            dgvDichVu.Enabled = choPhi;
+            cmbLoaiGiamGia.Enabled = val;
+            numGiaTriGiamGia.Enabled = val;
         }
 
         private void toolThoat_Click(object sender, EventArgs e)
