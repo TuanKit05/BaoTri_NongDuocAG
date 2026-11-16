@@ -91,7 +91,6 @@
   <ItemGroup>
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
     <Compile Include="Features\BaoCao\Backend\BaoCaoTongHopService.cs" />
->>>>>>> Stashed changes
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
     <Compile Include="Features\HeThong\Backend\CuaHang.cs" />
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHang.cs" />
