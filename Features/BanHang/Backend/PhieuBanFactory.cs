@@ -12,46 +12,61 @@ namespace CuahangNongduoc.DataLayer
 
         public DataTable TimPhieuBan(String idKh, DateTime dt)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM PHIEU_BAN WHERE NGAY_BAN = @ngay AND ID_KHACH_HANG=@kh");
+            OleDbCommand cmd = new OleDbCommand(
+                "SELECT * FROM PHIEU_BAN WHERE NGAY_BAN = @ngay AND ID_KHACH_HANG=@kh");
+
             cmd.Parameters.Add("ngay", OleDbType.Date).Value = dt;
             cmd.Parameters.Add("kh", OleDbType.VarChar).Value = idKh;
 
-            m_Ds.Load(cmd);
+            return TaiDuLieu(cmd);
+        }
 
-            return m_Ds;
+        private DataTable LayDanhSachTheoLoaiKhachHang(bool laBanSi)
+        {
+            string sql = laBanSi
+                ? "SELECT PB.* FROM PHIEU_BAN PB INNER JOIN KHACH_HANG KH ON PB.ID_KHACH_HANG=KH.ID WHERE KH.LOAI_KH=TRUE"
+                : "SELECT PB.* FROM PHIEU_BAN PB INNER JOIN KHACH_HANG KH ON PB.ID_KHACH_HANG=KH.ID WHERE KH.LOAI_KH=FALSE";
+
+            OleDbCommand cmd = new OleDbCommand(sql);
+
+            return TaiDuLieu(cmd);
         }
 
         public DataTable DanhsachPhieuBanLe()
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT PB.* FROM PHIEU_BAN PB INNER JOIN KHACH_HANG KH ON PB.ID_KHACH_HANG=KH.ID WHERE KH.LOAI_KH=FALSE");
-            m_Ds.Load(cmd);
-
-            return m_Ds;
+            return LayDanhSachTheoLoaiKhachHang(false);
         }
+
         public DataTable DanhsachPhieuBanSi()
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT PB.* FROM PHIEU_BAN PB INNER JOIN KHACH_HANG KH ON PB.ID_KHACH_HANG=KH.ID WHERE KH.LOAI_KH=TRUE");
-            m_Ds.Load(cmd);
-
-            return m_Ds;
+            return LayDanhSachTheoLoaiKhachHang(true);
         }
-
 
         public DataTable LayPhieuBan(String id)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM PHIEU_BAN WHERE ID = @id");
+            OleDbCommand cmd = new OleDbCommand(
+                "SELECT * FROM PHIEU_BAN WHERE ID = @id");
+
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = id;
+
+            return TaiDuLieu(cmd);
+        }
+
+        private DataTable TaiDuLieu(OleDbCommand cmd)
+        {
             m_Ds.Load(cmd);
             return m_Ds;
         }
 
-
         public DataTable LayChiTietPhieuBan(String idPhieuBan)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id");
-            cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieuBan;
-            m_Ds.Load(cmd);
-            return m_Ds;
+            OleDbCommand cmd = new OleDbCommand(
+                "SELECT * FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id");
+
+            cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value =
+                idPhieuBan;
+
+            return TaiDuLieu(cmd);
         }
 
         public static long LayConNo(String kh, int thang, int nam)
@@ -65,8 +80,8 @@ namespace CuahangNongduoc.DataLayer
             object obj = ds.ExecuteScalar(cmd);
             if (obj == null)
                 return 0;
-            else
-                return Convert.ToInt64(obj);
+
+            return Convert.ToInt64(obj);
         }
 
         public static int LaySoPhieu()
@@ -77,8 +92,8 @@ namespace CuahangNongduoc.DataLayer
             object obj = ds.ExecuteScalar(cmd);
             if (obj == null)
                 return 0;
-            else
-                return Convert.ToInt32(obj);
+
+            return Convert.ToInt32(obj);
         }
 
         public DataRow NewRow()
