@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using CuahangNongduoc.DataLayer;
@@ -47,7 +47,7 @@ namespace CuahangNongduoc.Controller
                 item.SubItems.Add(ct.MaSanPham.Id);
                 item.SubItems.Add(ct.MaSanPham.GiaNhap.ToString("#,###0"));
                 item.SubItems.Add(ct.MaSanPham.SoLuong.ToString("#,###0"));
-                long thanhtien = (ct.MaSanPham.SoLuong + ct.MaSanPham.GiaNhap);
+                long thanhtien = ct.MaSanPham.SoLuong * ct.MaSanPham.GiaNhap;
                 item.SubItems.Add(thanhtien.ToString("#,###0"));
                 item.SubItems.Add(ct.MaSanPham.NgaySanXuat.ToString("dd/MM/yyyy"));
                 item.SubItems.Add(ct.MaSanPham.NgayHetHan.ToString("dd/MM/yyyy"));

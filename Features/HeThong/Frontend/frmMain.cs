@@ -17,17 +17,24 @@ namespace CuahangNongduoc
         }
         frmDonViTinh DonViTinh = null;
 
+        private void ShowChildForm<T>(ref T form)
+        where T : Form, new()
+            {
+                if (form == null || form.IsDisposed)
+                {
+                    form = new T();
+                    form.MdiParent = this;
+                    form.Show();
+                }
+                else
+                {
+                    form.Activate();
+                }
+            }
+
         private void mnuDonViTinh_Click(object sender, EventArgs e)
         {
-            if (DonViTinh == null || DonViTinh.IsDisposed)
-            {
-                DonViTinh = new frmDonViTinh();
-                DonViTinh.MdiParent = this;
-                DonViTinh.Show();
-
-            }
-            else
-                DonViTinh.Activate();
+            ShowChildForm(ref DonViTinh);
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -65,176 +72,89 @@ namespace CuahangNongduoc
         frmSanPham SanPham = null;
         private void mnuSanPham_Click(object sender, EventArgs e)
         {
-            if (SanPham == null || SanPham.IsDisposed)
-            {
-                SanPham = new frmSanPham();
-                SanPham.MdiParent = this;
-                SanPham.Show();
-            }
-            else
-                SanPham.Activate();
+            ShowChildForm(ref SanPham);
         }
         frmKhachHang KhachHang = null;
         private void mnuKhachHang_Click(object sender, EventArgs e)
         {
-            if (KhachHang == null || KhachHang.IsDisposed)
-            {
-                KhachHang = new frmKhachHang();
-                KhachHang.MdiParent = this;
-                KhachHang.Show();
-            }
-            else
-                KhachHang.Activate();
+            ShowChildForm(ref KhachHang);
         }
         frmDaiLy DaiLy = null;
         private void mnuDaiLy_Click(object sender, EventArgs e)
         {
-            if (DaiLy == null || DaiLy.IsDisposed)
-            {
-                DaiLy = new frmDaiLy();
-                DaiLy.MdiParent = this;
-                DaiLy.Show();
-            }
-            else
-                DaiLy.Activate();
+            ShowChildForm(ref DaiLy);
 
         }
         frmDanhsachPhieuNhap NhapHang = null;
         private void mnuNhapHang_Click(object sender, EventArgs e)
         {
-            if (NhapHang == null || NhapHang.IsDisposed)
-            {
-                NhapHang = new frmDanhsachPhieuNhap();
-                NhapHang.MdiParent = this;
-                NhapHang.Show();
-            }
-            else
-                NhapHang.Activate();
+            ShowChildForm(ref NhapHang);
         }
         frmDanhsachPhieuBanLe BanLe = null;
         private void mnuBanHangKH_Click(object sender, EventArgs e)
         {
-            if (BanLe == null || BanLe.IsDisposed)
-            {
-                BanLe = new frmDanhsachPhieuBanLe();
-                BanLe.MdiParent = this;
-                BanLe.Show();
-            }
-            else
-                BanLe.Activate();
+            ShowChildForm(ref BanLe);
         }
         frmDanhsachPhieuBanSi BanSi = null;
         private void mnuBanHangDL_Click(object sender, EventArgs e)
         {
-            if (BanSi == null || BanSi.IsDisposed)
-            {
-                BanSi = new frmDanhsachPhieuBanSi();
-                BanSi.MdiParent = this;
-                BanSi.Show();
-            }
-            else
-                BanSi.Activate();
+            ShowChildForm(ref BanSi);
+        }
+
+        private void ToggleVisibility(ToolStripMenuItem menuItem, Control target)
+        {
+            menuItem.Checked = !menuItem.Checked;
+            target.Visible = menuItem.Checked;
         }
 
         private void mnuThanhCongCu_Click(object sender, EventArgs e)
         {
-            mnuThanhCongCu.Checked = !mnuThanhCongCu.Checked;
-            toolStrip.Visible = mnuThanhCongCu.Checked;
+            ToggleVisibility(mnuThanhCongCu, toolStrip);
         }
 
         private void mnuThanhChucNang_Click(object sender, EventArgs e)
         {
-            mnuThanhChucNang.Checked = !mnuThanhChucNang.Checked;
-            taskPane.Visible = mnuThanhChucNang.Checked;
+            ToggleVisibility(mnuThanhChucNang, taskPane);
         }
+
         frmThanhToan ThanhToan = null;
         private void mnuThanhtoan_Click(object sender, EventArgs e)
         {
-            if (ThanhToan == null || ThanhToan.IsDisposed)
-            {
-                ThanhToan = new frmThanhToan();
-                ThanhToan.MdiParent = this;
-                ThanhToan.Show();
-            }
-            else
-                ThanhToan.Activate();
+            ShowChildForm(ref ThanhToan);
         }
         frmDunoKhachhang DunoKhachhang = null;
         private void mnuTonghopDuno_Click(object sender, EventArgs e)
         {
-            if (DunoKhachhang == null || DunoKhachhang.IsDisposed)
-            {
-                DunoKhachhang = new frmDunoKhachhang();
-                DunoKhachhang.MdiParent = this;
-                DunoKhachhang.Show();
-            }
-            else
-                DunoKhachhang.Activate();
+            ShowChildForm(ref DunoKhachhang);
         }
         frmDoanhThu DoanhThu = null;
         private void mnuBaocaoDoanhThu_Click(object sender, EventArgs e)
         {
-            if (DoanhThu == null || DoanhThu.IsDisposed)
-            {
-                DoanhThu = new frmDoanhThu();
-                DoanhThu.MdiParent = this;
-                DoanhThu.Show();
-            }
-            else
-                DoanhThu.Activate();
+            ShowChildForm(ref DoanhThu);
 
         }
 
         frmSoLuongTon SoLuongTon = null;
         private void mnuBaocaoSoluongton_Click(object sender, EventArgs e)
         {
-
-            if (SoLuongTon == null || SoLuongTon.IsDisposed)
-            {
-                SoLuongTon = new frmSoLuongTon();
-                SoLuongTon.MdiParent = this;
-                SoLuongTon.Show();
-            }
-            else
-                SoLuongTon.Activate();
+            ShowChildForm(ref SoLuongTon);
 
         }
 
         frmThongKeTonKho ThongKeTonKho = null;
         private void mnuThongKeTonKho_Click(object sender, EventArgs e)
         {
-            if (ThongKeTonKho == null || ThongKeTonKho.IsDisposed)
-            {
-                ThongKeTonKho = new frmThongKeTonKho();
-                ThongKeTonKho.MdiParent = this;
-                ThongKeTonKho.Show();
-            }
-            else
-                ThongKeTonKho.Activate();
+            ShowChildForm(ref ThongKeTonKho);
         }
         frmSoLuongBan SoLuongBan = null;
         private void mnuSoLuongBan_Click(object sender, EventArgs e)
         {
-            if (SoLuongBan == null || SoLuongBan.IsDisposed)
-            {
-                SoLuongBan = new frmSoLuongBan();
-                SoLuongBan.MdiParent = this;
-                SoLuongBan.Show();
-            }
-            else
-                SoLuongBan.Activate();
+            ShowChildForm(ref SoLuongBan);
         }
         frmSanphamHethan SanphamHethan = null;
         private void mnuSanphamHethan_Click(object sender, EventArgs e)
         {
-            if (SanphamHethan == null || SanphamHethan.IsDisposed)
-            {
-                SanphamHethan = new frmSanphamHethan();
-                SanphamHethan.MdiParent = this;
-                SanphamHethan.Show();
-            }
-            else
-                SanphamHethan.Activate();
+            ShowChildForm(ref SanphamHethan);
         }
 
         private void mnuThoat_Click(object sender, EventArgs e)
@@ -244,65 +164,29 @@ namespace CuahangNongduoc
         frmThongtinCuahang ThongtinCuahang = null;
         private void mnuTuychinhThongtin_Click(object sender, EventArgs e)
         {
-
-            if (ThongtinCuahang == null || ThongtinCuahang.IsDisposed)
-            {
-                ThongtinCuahang = new frmThongtinCuahang();
-                ThongtinCuahang.MdiParent = this;
-                ThongtinCuahang.Show();
-            }
-            else
-                ThongtinCuahang.Activate();
+            ShowChildForm(ref ThongtinCuahang);
         }
         frmThongtinLienhe ThongtinLienhe = null;
         private void mnuTrogiupLienhe_Click(object sender, EventArgs e)
         {
-            if (ThongtinLienhe == null || ThongtinLienhe.IsDisposed)
-            {
-                ThongtinLienhe = new frmThongtinLienhe();
-                ThongtinLienhe.MdiParent = this;
-                ThongtinLienhe.Show();
-            }
-            else
-                ThongtinLienhe.Activate();
+            ShowChildForm(ref ThongtinLienhe);
         }
 
         frmNhaCungCap NhaCungCap = null;
         private void mnuNhaCungCap_Click(object sender, EventArgs e)
         {
-            if (NhaCungCap == null || NhaCungCap.IsDisposed)
-            {
-                NhaCungCap = new frmNhaCungCap();
-                NhaCungCap.MdiParent = this;
-                NhaCungCap.Show();
-            }
-            else
-                NhaCungCap.Activate();
+            ShowChildForm(ref NhaCungCap);
         }
         frmLyDoChi LyDoChi = null;
         private void mnuLyDoChi_Click(object sender, EventArgs e)
         {
-            if (LyDoChi == null || LyDoChi.IsDisposed)
-            {
-                LyDoChi = new frmLyDoChi();
-                LyDoChi.MdiParent = this;
-                LyDoChi.Show();
-            }
-            else
-                LyDoChi.Activate();
+            ShowChildForm(ref LyDoChi);
         }
 
         frmPhieuChi PhieuChi = null;
         private void mnuPhieuChi_Click(object sender, EventArgs e)
         {
-            if (PhieuChi == null || PhieuChi.IsDisposed)
-            {
-                PhieuChi = new frmPhieuChi();
-                PhieuChi.MdiParent = this;
-                PhieuChi.Show();
-            }
-            else
-                PhieuChi.Activate();
+            ShowChildForm(ref PhieuChi);
         }
 
         private void mnuTrogiupHuongdan_Click(object sender, EventArgs e)

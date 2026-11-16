@@ -38,7 +38,7 @@ namespace CuahangNongduoc
             // 
             // PhieuThanhToanBindingSource
             // 
-            this.PhieuThanhToanBindingSource.DataSource = typeof(CuahangNongduoc.BusinessObject.PhieuThanhToan);
+            //this.PhieuThanhToanBindingSource.DataSource = typeof(CuahangNongduoc.BusinessObject.PhieuThanhToan);
             // 
             // reportViewer
             // 

@@ -90,32 +90,30 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
+    <Compile Include="Features\BaoCao\Backend\BaoCaoTongHopService.cs" />
+>>>>>>> Stashed changes
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCap.cs" />
     <Compile Include="Features\HeThong\Backend\CuaHang.cs" />
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHang.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuThanhToan.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHang.cs" />
     <Compile Include="Features\NhapHang\Backend\MaSanPham.cs" />
+    <Compile Include="Features\NhapHang\Backend\LoNhapInput.cs" />
+    <Compile Include="Features\NhapHang\Backend\NhapHangValidator.cs" />
+    <Compile Include="Features\NhapHang\Backend\NhapHangService.cs" />
     <Compile Include="Features\BanHang\Backend\PhieuBan.cs" />
     <Compile Include="Features\NhapHang\Backend\PhieuNhap.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
     <Compile Include="Features\BaoCao\Backend\SoLuongTon.cs" />
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBanController.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChiController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapController.cs" />
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHangController.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuThanhToanController.cs" />
     <Compile Include="Features\NhapHang\Backend\PhieuNhapController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangController.cs" />
     <Compile Include="Features\NhapHang\Backend\MaSanPhamController.cs" />
     <Compile Include="Features\BanHang\Backend\PhieuBanController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChiFactory.cs" />
+    <Compile Include="Features\ThuChi\Backend\PhieuThuChiCoBan.cs" />
+    <Compile Include="Features\ThuChi\Backend\ThuChiBinding.cs" />
+    <Compile Include="Features\ThuChi\Backend\ThuChiScarlaQuery.cs" />
     <Compile Include="Features\ThuChi\Frontend\frmInPhieuChi.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -128,14 +126,12 @@
     <Compile Include="Features\ThuChi\Frontend\frmPhieuChi.Designer.cs">
       <DependentUpon>frmPhieuChi.cs</DependentUpon>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Frontend\frmLyDoChi.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Frontend\frmLyDoChi.Designer.cs">
       <DependentUpon>frmLyDoChi.cs</DependentUpon>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs" />
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHangFactory.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuThanhToanFactory.cs" />
     <Compile Include="Features\BanHang\Frontend\frmBanSi.cs">
@@ -173,9 +169,6 @@
     <Compile Include="Features\QuanLyDanhMuc\Frontend\frmDaiLy.Designer.cs">
       <DependentUpon>frmDaiLy.cs</DependentUpon>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs" />
     <Compile Include="Common\DataService.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -325,6 +318,7 @@
     </Compile>
     <Compile Include="Common\Num2Str.cs" />
     <Compile Include="Common\Program.cs" />
+    <Compile Include="Features\ThuChi\Frontend\ThuChiReportParamaters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Features\ThuChi\Frontend\frmInPhieuChi.resx">
       <SubType>Designer</SubType>
@@ -471,6 +465,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="Features\ThuChi\README.Designer.md" />
+    <None Include="Features\ThuChi\README.md">
+      <SubType>Component</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -536,6 +534,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CuahangNongduoc.ico" />
+    <Content Include="Database\cuahang.dll" />
+    <Content Include="Features\QuanLyDanhMuc\Backend\Refactored\README_Refactoring.md" />
+    <Content Include="Features\QuanLyDanhMuc\Frontend\README_Frontend_Refactoring.md" />
     <None Include="Resources\LyDoChi.png" />
     <None Include="Resources\DonViTinh.png" />
     <None Include="Resources\PhieuChi.png" />
@@ -576,6 +577,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Data;
 using System.Windows.Forms;
 using CuahangNongduoc.BusinessObject;
@@ -10,60 +9,93 @@ namespace CuahangNongduoc.Controller
 {
     public class DuNoKhachHangController
     {
-        DuNoKhachHangFactory factory = new DuNoKhachHangFactory();
+        private readonly DuNoKhachHangFactory factory = new DuNoKhachHangFactory();
 
-        public void Tonghop(int thang, int nam,
-            ToolStripProgressBar bar, DataGridView dg, BindingNavigator bn)
+        // Build a draft in memory; Save commits all new/changed rows together.
+        // Unlike Clear(), merely clicking TongHop no longer erases previously saved balances.
+        public void TongHop(int thang, int nam, ToolStripProgressBar bar,
+            DataGridView dg, BindingNavigator bn)
         {
+            if (thang < 1 || thang > 12 || nam < 2000 || nam > 9999)
+                throw new ArgumentOutOfRangeException("thang", "Kỳ tổng hợp không hợp lệ.");
 
-            int ThangTruoc = 0, NamTruoc = 0;
-            ThamSo.PreMonth(ref ThangTruoc, ref NamTruoc, thang, nam);
-            factory.Clear(thang, nam);
+            if (factory.HasPendingChanges())
+                throw new InvalidOperationException(
+                    "Kết quả tổng hợp trước chưa được lưu. Hãy lưu trước khi tổng hợp lại.");
 
+            int thangTruoc = 0;
+            int namTruoc = 0;
+            ThamSo.PreMonth(ref thangTruoc, ref namTruoc, thang, nam);
 
-            BindingSource bs = new BindingSource();
-            bs.DataSource = factory.LayDuNoKhachHang("-1", 0, 0);
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-            KhachHangFactory factoryKH = new KhachHangFactory();
-            DataTable tbl = factoryKH.DanhsachKhachHang();
-            long dauky = 0, phatsinh = 0, datra = 0, cuoiky = 0;
-
-            bar.Minimum = 0;
-            bar.Value = 0;
-            bar.Maximum = tbl.Rows.Count;
-
-            foreach (DataRow row in tbl.Rows)
+            DataTable duNoKyNay = factory.DanhsachDuNo(thang, nam);
+            Dictionary<String, DataRow> theoKhachHang = new Dictionary<String, DataRow>(
+                StringComparer.OrdinalIgnoreCase);
+            foreach (DataRow row in duNoKyNay.Rows)
             {
-                DataRow r = factory.NewRow();
-                String kh = Convert.ToString(row["ID"]);
+                String id = Convert.ToString(row["ID_KHACH_HANG"]);
+                if (id.Length > 0 && !theoKhachHang.ContainsKey(id))
+                    theoKhachHang.Add(id, row);
+            }
 
+            KhachHangFactory khachHang = new KhachHangFactory();
+            DataTable danhSach = khachHang.DanhsachKhachHang();
+            bar.Minimum = 0;
+            bar.Maximum = danhSach.Rows.Count;
+            bar.Value = 0;
+            foreach (DataRow khRow in danhSach.Rows)
+            {
+                String maKhachHang = Convert.ToString(khRow["ID"]);
+                DuNoKhachHang congNo = TinhCongNo(maKhachHang,
+                    thangTruoc, namTruoc, thang, nam);
 
-                dauky = DuNoKhachHangFactory.LayDuNo(kh, ThangTruoc, NamTruoc);
-                phatsinh = PhieuBanFactory.LayConNo(kh, thang, nam);
-                datra = PhieuThanhToanFactory.LayTongTien(kh, thang, nam);
-                cuoiky = (dauky + phatsinh - datra);
-
-                r["ID_KHACH_HANG"] = kh;
-                r["THANG"] = thang;
-                r["NAM"] = nam;
-                r["DAU_KY"] = dauky;
-                r["PHAT_SINH"] = phatsinh;
-                r["DA_TRA"] = datra;
-                r["CUOI_KY"] = cuoiky;
-
-
-                factory.Add(r);
-
+                DataRow row;
+                if (!theoKhachHang.TryGetValue(maKhachHang, out row))
+                {
+                    row = factory.NewRow();
+                    factory.Add(row);
+                    theoKhachHang.Add(maKhachHang, row);
+                }
+                GhiDuNo(row, maKhachHang, thang, nam, congNo);
                 bar.Value++;
             }
 
+            BindingSource source = new BindingSource();
+            source.DataSource = duNoKyNay;
+            bn.BindingSource = source;
+            dg.DataSource = source;
+        }
 
-        }
-        public bool Save()
+        // Separate Query from Modifier: computing debt never edits the DataTable.
+        private static DuNoKhachHang TinhCongNo(String maKhachHang,
+            int thangTruoc, int namTruoc, int thang, int nam)
         {
-            return factory.Save();
+            DuNoKhachHang result = new DuNoKhachHang();
+            result.DauKy = DuNoKhachHangFactory.LayDuNo(maKhachHang, thangTruoc, namTruoc);
+            result.PhatSinh = PhieuBanFactory.LayConNo(maKhachHang, thang, nam);
+            result.DaTra = PhieuThanhToanFactory.LayTongTien(maKhachHang, thang, nam);
+            result.CuoiKy = result.TinhCuoiKy();
+            return result;
         }
+
+        private static void GhiDuNo(DataRow row, String maKhachHang,
+            int thang, int nam, DuNoKhachHang congNo)
+        {
+            row["ID_KHACH_HANG"] = maKhachHang;
+            row["THANG"] = thang;
+            row["NAM"] = nam;
+            row["DAU_KY"] = congNo.DauKy;
+            row["PHAT_SINH"] = congNo.PhatSinh;
+            row["DA_TRA"] = congNo.DaTra;
+            row["CUOI_KY"] = congNo.CuoiKy;
+        }
+
+        [Obsolete("Sử dụng TongHop thay cho Tonghop.")]
+        public void Tonghop(int thang, int nam, ToolStripProgressBar bar,
+            DataGridView dg, BindingNavigator bn)
+        {
+            TongHop(thang, nam, bar, dg, bn);
+        }
+
+        public bool Save() { return factory.Save(); }
     }
 }

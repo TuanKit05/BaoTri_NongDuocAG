@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using CuahangNongduoc.Controller;
+using CuahangNongduoc.DataLayer;
 
 namespace CuahangNongduoc
 {
@@ -49,24 +50,56 @@ namespace CuahangNongduoc
 
         private void toolIn_Click(object sender, EventArgs e)
         {
-            DataRowView row = (DataRowView)bindingNavigator.BindingSource.Current;
-            if (row != null)
+            DataRowView row = bindingNavigator.BindingSource == null
+                ? null : bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null)
             {
-                PhieuNhapController ctrlPN = new PhieuNhapController();
-                String ma_phieu = row["ID"].ToString();
-                CuahangNongduoc.BusinessObject.PhieuNhap ph =  ctrlPN.LayPhieuNhap(ma_phieu);
-                frmInPhieuNhap PhieuNhap = new frmInPhieuNhap(ph);
-                PhieuNhap.Show();
+                MessageBox.Show("Vui lòng chọn phiếu nhập cần in.", "Phiếu nhập",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
+
+            PhieuNhapController ctrlPN = new PhieuNhapController();
+            string maPhieu = Convert.ToString(row["ID"]);
+            CuahangNongduoc.BusinessObject.PhieuNhap ph = ctrlPN.LayPhieuNhap(maPhieu);
+            if (ph == null)
+            {
+                MessageBox.Show("Không tìm thấy phiếu nhập.", "Phiếu nhập",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            frmInPhieuNhap formIn = new frmInPhieuNhap(ph);
+            formIn.Show();
         }
 
         private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Nhap", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            DataRowView row = bindingNavigator.BindingSource == null
+                ? null : bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null)
             {
-                bindingNavigator.BindingSource.RemoveCurrent();
-                ctrl.Save();
+                MessageBox.Show("Vui lòng chọn phiếu nhập cần xóa.", "Phiếu nhập",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
+
+            string maPhieu = Convert.ToString(row["ID"]);
+            if (MessageBox.Show(
+                "Chỉ xóa được phiếu chưa thanh toán và chưa có lô nào phát sinh bán hàng. Bạn có chắc muốn xóa?",
+                "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+
+            string thongBao;
+            NhapHangService dichVu = new NhapHangService();
+            if (!dichVu.XoaPhieuNhap(maPhieu, out thongBao))
+            {
+                MessageBox.Show(thongBao, "Không thể xóa", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ctrl.TaiNapDanhSach();
+            MessageBox.Show(thongBao, "Phiếu nhập", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void toolTimKiem_Click(object sender, EventArgs e)
