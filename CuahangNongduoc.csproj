@@ -89,7 +89,29 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Features\BanHang\Backend\BoTinhUuDai.cs" />
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
+    <Compile Include="Features\BanHang\Backend\IChienLuocUuDai.cs" />
+    <Compile Include="Features\BanHang\Backend\KetQuaUuDai.cs" />
+    <Compile Include="Features\BanHang\Backend\KiemThuUuDai.cs" />
+    <Compile Include="Features\BanHang\Backend\TinhTienHoaDon.cs" />
+    <Compile Include="Features\BanHang\Backend\UuDaiCoDinh.cs" />
+    <Compile Include="Features\BanHang\Backend\UuDaiPhanTram.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHang.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCap.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\BaseController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\BaseFactory.cs">
       <SubType>Component</SubType>
@@ -125,6 +147,12 @@
     <Compile Include="Features\BaoCao\Backend\BaoCaoTongHopService.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
     <Compile Include="Features\HeThong\Backend\CuaHang.cs" />
+    <Compile Include="Features\HeThong\Backend\Auth\UserAccount.cs" />
+    <Compile Include="Features\HeThong\Backend\Auth\PasswordHasher.cs" />
+    <Compile Include="Features\HeThong\Backend\Auth\AccountRepository.cs" />
+    <Compile Include="Features\HeThong\Backend\Auth\AuthenticationHandlers.cs" />
+    <Compile Include="Features\HeThong\Backend\Auth\AuthService.cs" />
+    <Compile Include="Features\HeThong\Backend\Auth\Authorization.cs" />
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHang.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuThanhToan.cs" />
     <Compile Include="Features\NhapHang\Backend\MaSanPham.cs" />
@@ -250,6 +278,30 @@
     </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Frontend\frmKhachHang.Designer.cs">
       <DependentUpon>frmKhachHang.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmDangNhap.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmDangNhap.Designer.cs">
+      <DependentUpon>frmDangNhap.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmTaoTaiKhoanAdmin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmTaoTaiKhoanAdmin.Designer.cs">
+      <DependentUpon>frmTaoTaiKhoanAdmin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmDoiMatKhau.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmDoiMatKhau.Designer.cs">
+      <DependentUpon>frmDoiMatKhau.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmQuanLyTaiKhoan.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\HeThong\Frontend\frmQuanLyTaiKhoan.Designer.cs">
+      <DependentUpon>frmQuanLyTaiKhoan.cs</DependentUpon>
     </Compile>
     <Compile Include="Features\HeThong\Frontend\frmMain.cs">
       <SubType>Form</SubType>
@@ -419,6 +471,10 @@
       <SubType>Designer</SubType>
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Features\HeThong\Frontend\frmQuanLyTaiKhoan.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmQuanLyTaiKhoan.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Features\QuanLyDanhMuc\Frontend\frmNhaCungCap.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmNhaCungCap.cs</DependentUpon>
@@ -565,10 +621,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CuahangNongduoc.ico" />
-    <Content Include="Database\cuahang.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Features\QuanLyDanhMuc\Backend\README_Refactoring.md" />
+    <Content Include="Database\cuahang.dll" />
+    <Content Include="Features\QuanLyDanhMuc\Backend\Refactored\README_Refactoring.md" />
     <Content Include="Features\QuanLyDanhMuc\Frontend\README_Frontend_Refactoring.md" />
     <None Include="Resources\LyDoChi.png" />
     <None Include="Resources\DonViTinh.png" />

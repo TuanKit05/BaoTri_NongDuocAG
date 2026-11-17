@@ -1,56 +1,218 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using CuahangNongduoc.DataLayer;
 using CuahangNongduoc.BusinessObject;
 using System.Windows.Forms;
 using System.Data;
+using System.IO;
+using System.Xml;
 
 namespace CuahangNongduoc.Controller
 {
-
     public class PhieuBanController
     {
+        // Giới hạn của bản dùng thử
+        public const int SoPhieuDungThu = 50;
+
         PhieuBanFactory factory = new PhieuBanFactory();
 
         BindingSource bs = new BindingSource();
-
 
         public PhieuBanController()
         {
             bs.DataSource = factory.LayPhieuBan("-1");
         }
+
         public DataRow NewRow()
         {
             return factory.NewRow();
         }
+
         public void Add(DataRow row)
         {
             factory.Add(row);
         }
+
         public void Update()
         {
             bs.MoveNext();
             factory.Save();
         }
-        public void Save()
+
+        /// <summary>
+        /// Lưu phiếu bán và chi tiết (kèm trừ tồn) trong CÙNG một transaction.
+        /// Được gọi bởi các thao tác trong khung ThaoTacPhieuBan.
+        /// </summary>
+        public void LuuPhieuVaChiTiet(ChiTietPhieuBanController ctrlChiTiet)
         {
-            int n = PhieuBanFactory.LaySoPhieu();
-            if (n >= 50)
+            using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
             {
-                MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được 50 phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
+                conn.Open();
+                using (System.Data.OleDb.OleDbTransaction tr = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        factory.SaveTrongGiaoDich(conn, tr);
+                        ctrlChiTiet.SaveTrongGiaoDich(conn, tr);
+                        tr.Commit();
+                    }
+                    catch
+                    {
+                        tr.Rollback();
+                        throw;
+                    }
+                }
             }
-            else
-            {
-                MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được thêm " + Convert.ToString(50 - n) + " phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                factory.Save();
-            }
-
+            factory.ChapNhanThayDoi();
+            ctrlChiTiet.ChapNhanThayDoi();
         }
+
+        /// <summary>
+        /// Xóa phiếu bán: hoàn tồn, xóa chi tiết và xóa phiếu trong CÙNG một transaction.
+        /// Không áp giới hạn bản dùng thử. Sau khi commit thì xóa mục phí trong phihoadon.xml.
+        /// </summary>
+        public void XoaPhieuBan(String id)
+        {
+            ChiTietPhieuBanController ctrlChiTiet = new ChiTietPhieuBanController();
+            using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
+            {
+                conn.Open();
+                using (System.Data.OleDb.OleDbTransaction tr = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        ctrlChiTiet.XoaTheoPhieuTrongGiaoDich(conn, tr, id);
+                        factory.XoaPhieuTrongGiaoDich(conn, tr, id);
+                        tr.Commit();
+                    }
+                    catch
+                    {
+                        tr.Rollback();
+                        throw;
+                    }
+                }
+            }
+            XoaPhi(id);
+        }
+
+        // ---------- Lưu trữ phí và giảm giá trong phihoadon.xml (không đổi CSDL) ----------
+
+        static XmlNode TimNodePhieu(XmlNode goc, String id)
+        {
+            foreach (XmlNode n in goc.ChildNodes)
+            {
+                if (n.Name == "Phieu" && n.Attributes["Id"] != null && n.Attributes["Id"].Value == id)
+                    return n;
+            }
+            return null;
+        }
+
+        static void LuuAnToan(XmlDocument doc, String path)
+        {
+            // Ghi file tạm rồi thay thế để không bị ghi dở khi lỗi giữa chừng
+            String tam = path + ".tmp";
+            doc.Save(tam);
+            if (File.Exists(path))
+                File.Replace(tam, path, null);
+            else
+                File.Move(tam, path);
+        }
+
+        static void ThemThuocTinh(XmlDocument doc, XmlElement cha, String ten, String giaTri)
+        {
+            XmlElement con = doc.CreateElement(ten);
+            con.InnerText = giaTri;
+            cha.AppendChild(con);
+        }
+
+        public static void GhiPhi(PhieuBan phi)
+        {
+            String path = ThamSo.LayDuongDanPhiHoaDon();
+            XmlDocument doc = new XmlDocument();
+            if (File.Exists(path))
+                doc.Load(path);
+            else
+                doc.LoadXml("<PhiHoaDon />");
+
+            XmlElement goc = doc.DocumentElement;
+            XmlNode cu = TimNodePhieu(goc, phi.Id);
+            if (cu != null)
+                goc.RemoveChild(cu);
+
+            XmlElement el = doc.CreateElement("Phieu");
+            el.SetAttribute("Id", phi.Id);
+            ThemThuocTinh(doc, el, "PhiVanChuyen", phi.PhiVanChuyen.ToString());
+            ThemThuocTinh(doc, el, "PhanTramGiam", phi.PhanTramGiam.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            ThemThuocTinh(doc, el, "TienGiam", phi.TienGiam.ToString());
+            foreach (DichVuPhieuBan dv in phi.DichVu)
+            {
+                XmlElement d = doc.CreateElement("DichVu");
+                d.SetAttribute("Ten", dv.Ten);
+                d.SetAttribute("TienDV", dv.TienDV.ToString());
+                el.AppendChild(d);
+            }
+            goc.AppendChild(el);
+            LuuAnToan(doc, path);
+        }
+
+        public static PhieuBan DocPhi(String id)
+        {
+            PhieuBan ph = new PhieuBan();
+            ph.Id = id;
+            String path = ThamSo.LayDuongDanPhiHoaDon();
+            if (!File.Exists(path))
+                return ph;
+
+            XmlDocument doc = new XmlDocument();
+            doc.Load(path);
+            XmlNode node = TimNodePhieu(doc.DocumentElement, id);
+            if (node == null)
+                return ph;
+
+            foreach (XmlNode con in node.ChildNodes)
+            {
+                long so;
+                if (con.Name == "PhiVanChuyen")
+                {
+                    ph.PhiVanChuyen = long.TryParse(con.InnerText, out so) ? so : 0;
+                }
+                else if (con.Name == "PhanTramGiam")
+                {
+                    double pct;
+                    ph.PhanTramGiam = double.TryParse(con.InnerText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pct) ? pct : 0;
+                }
+                else if (con.Name == "TienGiam")
+                {
+                    ph.TienGiam = long.TryParse(con.InnerText, out so) ? so : 0;
+                }
+                else if (con.Name == "DichVu")
+                {
+                    DichVuPhieuBan dv = new DichVuPhieuBan();
+                    dv.Ten = con.Attributes["Ten"] != null ? con.Attributes["Ten"].Value : "";
+                    dv.TienDV = (con.Attributes["TienDV"] != null && long.TryParse(con.Attributes["TienDV"].Value, out so)) ? so : 0;
+                    ph.DichVu.Add(dv);
+                }
+            }
+            return ph;
+        }
+
+        public static void XoaPhi(String id)
+        {
+            String path = ThamSo.LayDuongDanPhiHoaDon();
+            if (!File.Exists(path))
+                return;
+            XmlDocument doc = new XmlDocument();
+            doc.Load(path);
+            XmlNode cu = TimNodePhieu(doc.DocumentElement, id);
+            if (cu == null)
+                return;
+            doc.DocumentElement.RemoveChild(cu);
+            LuuAnToan(doc, path);
+        }
+
         public void HienthiPhieuBanLe(BindingNavigator bn, DataGridView dg)
         {
-
             bs.DataSource = factory.DanhsachPhieuBanLe();
             bn.BindingSource = bs;
             dg.DataSource = bs;
@@ -58,7 +220,6 @@ namespace CuahangNongduoc.Controller
 
         public void HienthiPhieuBanSi(BindingNavigator bn, DataGridView dg)
         {
-
             bs.DataSource = factory.DanhsachPhieuBanSi();
             bn.BindingSource = bs;
             dg.DataSource = bs;
@@ -66,7 +227,6 @@ namespace CuahangNongduoc.Controller
 
         public void HienthiPhieuBan(BindingNavigator bn, ComboBox cmb, TextBox txt, DateTimePicker dt, NumericUpDown numTongTien, NumericUpDown numDatra, NumericUpDown numConNo)
         {
-
             bn.BindingSource = bs;
 
             txt.DataBindings.Clear();
@@ -86,8 +246,6 @@ namespace CuahangNongduoc.Controller
 
             numConNo.DataBindings.Clear();
             numConNo.DataBindings.Add("Value", bs, "CON_NO");
-
-
         }
 
         public PhieuBan LayPhieuBan(String id)
@@ -96,7 +254,6 @@ namespace CuahangNongduoc.Controller
             PhieuBan ph = null;
             if (tbl.Rows.Count > 0)
             {
-
                 ph = new PhieuBan();
                 ph.Id = Convert.ToString(tbl.Rows[0]["ID"]);
 
@@ -115,8 +272,111 @@ namespace CuahangNongduoc.Controller
         public void TimPhieuBan(String maKH, DateTime dt)
         {
             factory.TimPhieuBan(maKH, dt);
+        }
+    }
 
+    // =====================================================================
+    // TEMPLATE METHOD (refactoring.guru): khung chung cho mọi thao tác trên
+    // phiếu bán: KiemTra -> LuuDuLieu -> HauXuLy. Khung ThucHien() cố định,
+    // lớp con chỉ viết các bước của mình.
+    // =====================================================================
+    public abstract class ThaoTacPhieuBan
+    {
+        protected readonly PhieuBanController ctrl;
+
+        protected ThaoTacPhieuBan(PhieuBanController ctrl)
+        {
+            this.ctrl = ctrl;
         }
 
+        // Khung cố định: không cho lớp con ghi đè
+        public bool ThucHien()
+        {
+            if (!KiemTra())
+                return false;
+            LuuDuLieu();
+            HauXuLy();
+            return true;
+        }
+
+        // Trả về false nếu không được phép thực hiện (đã thông báo lý do)
+        protected abstract bool KiemTra();
+
+        // Ném exception nếu lỗi; giao dịch đã được rollback ở tầng dưới
+        protected abstract void LuuDuLieu();
+
+        protected virtual void HauXuLy()
+        {
+        }
+    }
+
+    // Lập hóa đơn mới: kiểm tra giới hạn bản dùng thử và trùng mã, ghi phí XML,
+    // lưu phiếu + chi tiết + trừ tồn trong một transaction.
+    public class LapHoaDonMoi : ThaoTacPhieuBan
+    {
+        private readonly ChiTietPhieuBanController ctrlChiTiet;
+        private readonly PhieuBan phi;
+        private int soConLai;
+
+        public LapHoaDonMoi(PhieuBanController ctrl, ChiTietPhieuBanController ctrlChiTiet, PhieuBan phi)
+            : base(ctrl)
+        {
+            this.ctrlChiTiet = ctrlChiTiet;
+            this.phi = phi;
+        }
+
+        protected override bool KiemTra()
+        {
+            int n = PhieuBanFactory.LaySoPhieu();
+            if (n >= PhieuBanController.SoPhieuDungThu)
+            {
+                MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được 50 phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return false;
+            }
+
+            // Dùng controller MỚI để kiểm tra: tránh ghi đè bảng đang chứa dòng phiếu vừa thêm
+            if (new PhieuBanController().LayPhieuBan(phi.Id) != null)
+            {
+                MessageBox.Show("Mã Phiếu bán này đã tồn tại !", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            soConLai = PhieuBanController.SoPhieuDungThu - n - 1;
+            return true;
+        }
+
+        protected override void LuuDuLieu()
+        {
+            // Ghi phí trước; nếu CSDL lỗi thì mục XML sẽ được ghi đè ở lần lưu sau
+            PhieuBanController.GhiPhi(phi);
+            ctrl.LuuPhieuVaChiTiet(ctrlChiTiet);
+        }
+
+        protected override void HauXuLy()
+        {
+            MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được thêm " + Convert.ToString(soConLai) + " phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+    }
+
+    // Xóa hóa đơn: không áp giới hạn bản dùng thử. Hoàn tồn, xóa chi tiết, xóa phiếu và mục phí.
+    public class XoaHoaDon : ThaoTacPhieuBan
+    {
+        private readonly String maPhieu;
+
+        public XoaHoaDon(PhieuBanController ctrl, String maPhieu)
+            : base(ctrl)
+        {
+            this.maPhieu = maPhieu;
+        }
+
+        protected override bool KiemTra()
+        {
+            return !String.IsNullOrEmpty(maPhieu);
+        }
+
+        protected override void LuuDuLieu()
+        {
+            ctrl.XoaPhieuBan(maPhieu);
+        }
     }
 }

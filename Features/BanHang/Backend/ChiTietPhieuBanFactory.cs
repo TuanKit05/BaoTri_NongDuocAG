@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
@@ -49,16 +49,120 @@ namespace CuahangNongduoc.DataLayer
         {
             m_Ds.Rows.Add(row);
         }
-        public bool Save()
+
+        public bool CoDongMoi()
         {
             foreach (DataRow row in m_Ds.Rows)
             {
                 if (row.RowState == DataRowState.Added)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Ghi chi tiết và trừ tồn trong transaction riêng của hàm này.
+        /// Nếu lỗi thì rollback và ném lại exception (không nuốt).
+        /// </summary>
+        public bool Save()
+        {
+            if (!CoDongMoi())
+                return true;
+
+            using (OleDbConnection conn = new OleDbConnection(DataService.m_ConnectString))
+            {
+                conn.Open();
+                using (OleDbTransaction tr = conn.BeginTransaction())
                 {
-                    CuahangNongduoc.DataLayer.MaSanPhanFactory.CapNhatSoLuong(Convert.ToString(row["ID_MA_SAN_PHAM"]), -Convert.ToInt32(row["SO_LUONG"]));
+                    try
+                    {
+                        bool ok = SaveTrongGiaoDich(conn, tr);
+                        tr.Commit();
+                        ChapNhanThayDoi();
+                        return ok;
+                    }
+                    catch
+                    {
+                        tr.Rollback();
+                        throw;
+                    }
                 }
             }
-            return m_Ds.ExecuteNoneQuery() > 0;
+        }
+
+        /// <summary>
+        /// Ghi chi tiết và trừ tồn trong transaction do người gọi quản lý.
+        /// Dùng khi phiếu bán và chi tiết phải lưu cùng một transaction.
+        /// Gọi ChapNhanThayDoi() sau khi người gọi commit thành công.
+        /// </summary>
+        public bool SaveTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr)
+        {
+            if (!CoDongMoi())
+                return true;
+
+            // 1. Trừ tồn cho từng dòng mới
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState != DataRowState.Added)
+                    continue;
+
+                OleDbCommand cmdTon = new OleDbCommand("UPDATE MA_SAN_PHAM SET SO_LUONG = SO_LUONG + @so WHERE ID = @id", conn, tr);
+                cmdTon.Parameters.Add("so", OleDbType.Integer).Value = -Convert.ToInt32(row["SO_LUONG"]);
+                cmdTon.Parameters.Add("id", OleDbType.VarChar, 50).Value = Convert.ToString(row["ID_MA_SAN_PHAM"]);
+                cmdTon.ExecuteNonQuery();
+            }
+
+            // 2. Ghi các dòng chi tiết mới
+            OleDbCommand cmdSelect = m_Ds.Command;
+            cmdSelect.Connection = conn;
+            cmdSelect.Transaction = tr;
+
+            OleDbDataAdapter adapter = new OleDbDataAdapter();
+            adapter.SelectCommand = cmdSelect;
+            OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter);
+            adapter.RowUpdating += delegate (object sender, OleDbRowUpdatingEventArgs e)
+            {
+                e.Command.Connection = conn;
+                e.Command.Transaction = tr;
+            };
+
+            int soDong = adapter.Update(m_Ds);
+            return soDong > 0;
+        }
+
+        /// <summary>
+        /// Hoàn tồn cho từng dòng chi tiết của phiếu rồi xóa các dòng đó.
+        /// Chạy trong transaction do người gọi quản lý (cùng transaction với việc xóa phiếu).
+        /// </summary>
+        public void XoaTheoPhieuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieuBan)
+        {
+            // Đọc trước, đóng reader, rồi mới chạy lệnh khác trên cùng connection
+            List<KeyValuePair<String, int>> dong = new List<KeyValuePair<String, int>>();
+            OleDbCommand cmdChon = new OleDbCommand("SELECT ID_MA_SAN_PHAM, SO_LUONG FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id", conn, tr);
+            cmdChon.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieuBan;
+            using (OleDbDataReader rd = cmdChon.ExecuteReader())
+            {
+                while (rd.Read())
+                    dong.Add(new KeyValuePair<String, int>(Convert.ToString(rd[0]), Convert.ToInt32(rd[1])));
+            }
+
+            // Hoàn tồn: ngược với lúc bán (bán thì trừ)
+            foreach (KeyValuePair<String, int> ct in dong)
+            {
+                OleDbCommand cmdTon = new OleDbCommand("UPDATE MA_SAN_PHAM SET SO_LUONG = SO_LUONG + @so WHERE ID = @id", conn, tr);
+                cmdTon.Parameters.Add("so", OleDbType.Integer).Value = ct.Value;
+                cmdTon.Parameters.Add("id", OleDbType.VarChar, 50).Value = ct.Key;
+                cmdTon.ExecuteNonQuery();
+            }
+
+            OleDbCommand cmdXoa = new OleDbCommand("DELETE FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id", conn, tr);
+            cmdXoa.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieuBan;
+            cmdXoa.ExecuteNonQuery();
+        }
+
+        public void ChapNhanThayDoi()
+        {
+            m_Ds.AcceptChanges();
         }
     }
 }

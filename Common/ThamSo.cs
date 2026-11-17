@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.OleDb;
+using System.IO;
 
 namespace CuahangNongduoc
 {
@@ -20,7 +21,7 @@ namespace CuahangNongduoc
             if (thangtruoc == 0)
             {
                 thangtruoc = 12;
-                namtruoc= nam - 1;
+                namtruoc = nam - 1;
             }
         }
 
@@ -37,6 +38,18 @@ namespace CuahangNongduoc
             }
         }
 
+        // Đường dẫn phihoadon.xml: nằm cùng thư mục với file CSDL trong Data Source
+        public static string LayDuongDanPhiHoaDon()
+        {
+            string nguon = DataService.m_ConnectString;
+            int vitri = nguon.IndexOf("Data Source=", StringComparison.OrdinalIgnoreCase);
+            if (vitri < 0)
+                throw new InvalidOperationException("Không đọc được Data Source trong chuỗi kết nối.");
+            string duongDanCSDL = nguon.Substring(vitri + "Data Source=".Length).Split(';')[0].Trim();
+            string thuMuc = Path.GetDirectoryName(Path.GetFullPath(duongDanCSDL));
+            return Path.Combine(thuMuc, "phihoadon.xml");
+        }
+
         public static long LayMaPhieuNhap()
         {
             DataService ds = new DataService();
@@ -47,7 +60,7 @@ namespace CuahangNongduoc
         {
             DataService ds = new DataService();
             ds.ExecuteNoneQuery(new OleDbCommand("UPDATE THAM_SO SET PHIEU_NHAP = " + id));
-            
+
         }
 
         public static long LayMaPhieuBan()
@@ -80,20 +93,20 @@ namespace CuahangNongduoc
 
         public static long SanPham
         {
-            get 
+            get
             {
                 DataService ds = new DataService();
                 object obj = ds.ExecuteScalar(new OleDbCommand("SELECT SAN_PHAM FROM THAM_SO"));
                 return Convert.ToInt64(obj);
             }
-            set 
+            set
             {
                 DataService ds = new DataService();
                 ds.ExecuteNoneQuery(new OleDbCommand("UPDATE THAM_SO SET SAN_PHAM = " + value));
             }
         }
-	
-        
+
+
         public static CuahangNongduoc.BusinessObject.CuaHang LayCuaHang()
         {
             CuahangNongduoc.BusinessObject.CuaHang ch = new CuahangNongduoc.BusinessObject.CuaHang();
@@ -107,7 +120,7 @@ namespace CuahangNongduoc
             }
             return ch;
         }
-        public static void GanCuaHang(String ten_cua_hang, String dia_chi , String dien_thoai)
+        public static void GanCuaHang(String ten_cua_hang, String dia_chi, String dien_thoai)
         {
             DataService ds = new DataService();
             OleDbCommand cmd = new OleDbCommand("UPDATE THAM_SO SET TEN_CUA_HANG = @ten_cua_hang, DIA_CHI = @dia_chi, DIEN_THOAI = @dien_thoai ");
@@ -118,7 +131,7 @@ namespace CuahangNongduoc
             ds.ExecuteNoneQuery(cmd);
         }
 
-        
+
 
         public static long NhaCungCap
         {
@@ -165,6 +178,6 @@ namespace CuahangNongduoc
             }
         }
 
-       
+
     }
 }

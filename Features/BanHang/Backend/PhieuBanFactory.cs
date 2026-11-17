@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
@@ -93,6 +93,44 @@ namespace CuahangNongduoc.DataLayer
         {
 
             return m_Ds.ExecuteNoneQuery() > 0;
+        }
+
+        /// <summary>
+        /// Ghi phiếu bán trong transaction do người gọi quản lý.
+        /// Gọi ChapNhanThayDoi() sau khi người gọi commit thành công.
+        /// </summary>
+        public bool SaveTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr)
+        {
+            OleDbCommand cmdSelect = m_Ds.Command;
+            cmdSelect.Connection = conn;
+            cmdSelect.Transaction = tr;
+
+            OleDbDataAdapter adapter = new OleDbDataAdapter();
+            adapter.SelectCommand = cmdSelect;
+            OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter);
+            adapter.RowUpdating += delegate (object sender, OleDbRowUpdatingEventArgs e)
+            {
+                e.Command.Connection = conn;
+                e.Command.Transaction = tr;
+            };
+
+            return adapter.Update(m_Ds) > 0;
+        }
+
+        /// <summary>
+        /// Xóa phiếu trong transaction do người gọi quản lý. Ném lỗi nếu không xóa đúng một dòng.
+        /// </summary>
+        public void XoaPhieuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieu)
+        {
+            OleDbCommand cmd = new OleDbCommand("DELETE FROM PHIEU_BAN WHERE ID = @id", conn, tr);
+            cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieu;
+            if (cmd.ExecuteNonQuery() != 1)
+                throw new InvalidOperationException("Không xóa được phiếu bán " + idPhieu);
+        }
+
+        public void ChapNhanThayDoi()
+        {
+            m_Ds.AcceptChanges();
         }
     }
 }

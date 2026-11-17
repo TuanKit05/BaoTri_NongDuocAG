@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -19,12 +19,15 @@ namespace CuahangNongduoc
 
         PhieuBanController ctrl = new PhieuBanController();
         KhachHangController ctrlKH = new KhachHangController();
+
         private void frmDanhsachPhieuNhap_Load(object sender, EventArgs e)
         {
             ctrlKH.HienthiDaiLyDataGridviewComboBox(colKhachhang);
             ctrl.HienthiPhieuBanSi(bindingNavigator, dataGridView);
         }
+
         frmBanSi BanLe = null;
+
         private void dataGridView_DoubleClick(object sender, EventArgs e)
         {
             if (BanLe == null || BanLe.IsDisposed)
@@ -47,42 +50,53 @@ namespace CuahangNongduoc
                 BanLe.Activate();
         }
 
+        // TEMPLATE METHOD: xóa qua XoaHoaDon rồi tải lại danh sách
         private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Si", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
             {
                 e.Cancel = true;
+                return;
             }
-            else
+
+            DataRowView view = e.Row.DataBoundItem as DataRowView;
+            if (view == null)
             {
-                DataRowView view = (DataRowView)bindingNavigator.BindingSource.Current;
-                ChiTietPhieuBanController ctrl = new ChiTietPhieuBanController();
-                IList<ChiTietPhieuBan> ds = ctrl.ChiTietPhieuBan(view["ID"].ToString());
-                foreach (ChiTietPhieuBan ct in ds)
-                {
-                    CuahangNongduoc.DataLayer.MaSanPhanFactory.CapNhatSoLuong(ct.MaSanPham.Id, ct.SoLuong);
-                }
-                ctrl.Save();
+                e.Cancel = true;
+                return;
             }
+
+            // Tự xử lý việc xóa; không để lưới xóa dòng trực tiếp
+            String maPhieu = view["ID"].ToString();
+            e.Cancel = true;
+            this.BeginInvoke(new MethodInvoker(delegate { XoaVaTaiLai(maPhieu); }));
         }
 
         private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
         {
-             DataRowView view =  (DataRowView)bindingNavigator.BindingSource.Current;
-             if (view != null)
-             {
-                 if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                 {
-                     ChiTietPhieuBanController ctrl = new ChiTietPhieuBanController();
-                     IList<ChiTietPhieuBan> ds = ctrl.ChiTietPhieuBan(view["ID"].ToString());
-                     foreach (ChiTietPhieuBan ct in ds)
-                     {
-                         CuahangNongduoc.DataLayer.MaSanPhanFactory.CapNhatSoLuong(ct.MaSanPham.Id, ct.SoLuong);
-                     }
-                     bindingNavigator.BindingSource.RemoveCurrent();
-                     ctrl.Save();
-                 }
-             }
+            DataRowView view = (DataRowView)bindingNavigator.BindingSource.Current;
+            if (view == null)
+                return;
+
+            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Si", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                XoaVaTaiLai(view["ID"].ToString());
+            }
+        }
+
+        // Xóa hóa đơn (hoàn tồn, xóa chi tiết, phiếu và phí) rồi tải lại danh sách
+        void XoaVaTaiLai(String maPhieu)
+        {
+            try
+            {
+                ThaoTacPhieuBan xoa = new XoaHoaDon(ctrl, maPhieu);
+                xoa.ThucHien();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Xóa phiếu bán thất bại. Chi tiết: " + ex.Message, "Phieu Ban Si", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            ctrl.HienthiPhieuBanSi(bindingNavigator, dataGridView);
         }
 
         private void toolIn_Click(object sender, EventArgs e)
@@ -106,10 +120,15 @@ namespace CuahangNongduoc
             p.Y += toolTimKiem.Height;
             Tim.Location = p;
             Tim.ShowDialog();
-            if (Tim.DialogResult == DialogResult.OK)
+            // Chưa chọn khách hàng thì không tìm
+            if (Tim.DialogResult == DialogResult.OK && Tim.cmbNCC.SelectedValue != null)
             {
                 ctrl.TimPhieuBan(Tim.cmbNCC.SelectedValue.ToString(), Tim.dtNgayNhap.Value.Date);
             }
+        }
+
+        private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
         }
     }
 }
