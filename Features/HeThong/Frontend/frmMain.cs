@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -27,13 +27,21 @@ namespace CuahangNongduoc
             if (!KiemTraQuyen("DonViTinh")) return;
             if (DonViTinh == null || DonViTinh.IsDisposed)
             {
-                DonViTinh = new frmDonViTinh();
-                DonViTinh.MdiParent = this;
-                DonViTinh.Show();
-
+                if (form == null || form.IsDisposed)
+                {
+                    form = new T();
+                    form.MdiParent = this;
+                    form.Show();
+                }
+                else
+                {
+                    form.Activate();
+                }
             }
-            else
-                DonViTinh.Activate();
+
+        private void mnuDonViTinh_Click(object sender, EventArgs e)
+        {
+            ShowChildForm(ref DonViTinh);
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -153,15 +161,14 @@ namespace CuahangNongduoc
 
         private void mnuThanhCongCu_Click(object sender, EventArgs e)
         {
-            mnuThanhCongCu.Checked = !mnuThanhCongCu.Checked;
-            toolStrip.Visible = mnuThanhCongCu.Checked;
+            ToggleVisibility(mnuThanhCongCu, toolStrip);
         }
 
         private void mnuThanhChucNang_Click(object sender, EventArgs e)
         {
-            mnuThanhChucNang.Checked = !mnuThanhChucNang.Checked;
-            taskPane.Visible = mnuThanhChucNang.Checked;
+            ToggleVisibility(mnuThanhChucNang, taskPane);
         }
+
         frmThanhToan ThanhToan = null;
         private void mnuThanhtoan_Click(object sender, EventArgs e)
         {
@@ -280,14 +287,7 @@ namespace CuahangNongduoc
         frmThongtinLienhe ThongtinLienhe = null;
         private void mnuTrogiupLienhe_Click(object sender, EventArgs e)
         {
-            if (ThongtinLienhe == null || ThongtinLienhe.IsDisposed)
-            {
-                ThongtinLienhe = new frmThongtinLienhe();
-                ThongtinLienhe.MdiParent = this;
-                ThongtinLienhe.Show();
-            }
-            else
-                ThongtinLienhe.Activate();
+            ShowChildForm(ref ThongtinLienhe);
         }
 
         frmNhaCungCap NhaCungCap = null;

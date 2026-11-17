@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.Windows.Forms;
@@ -10,6 +11,9 @@ namespace CuahangNongduoc
     public partial class frmThongKeTonKho : Form
     {
         private DataTable m_Data;
+        private IList<KetQuaChiTieu> m_ChiTieu;
+        private DateTime m_TuNgayIn;
+        private DateTime m_DenNgayIn;
         private int m_PrintRowIndex = 0;
         private int m_TotalSoLuong = 0;
         private long m_TotalThanhTien = 0;
@@ -121,40 +125,77 @@ namespace CuahangNongduoc
             });
         }
 
+
         private void btnXem_Click(object sender, EventArgs e)
         {
-            if (dtTuNgay.Value.Date > dtDenNgay.Value.Date)
+            DateTime tuNgay = dtTuNgay.Value.Date;
+            DateTime denNgay = dtDenNgay.Value.Date;
+
+            if (tuNgay > denNgay)
             {
-                MessageBox.Show("Từ ngày không được lớn hơn đến ngày.", "Thông báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    "Từ ngày không được lớn hơn đến ngày.",
+                    "Thông báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-                m_Data = MaSanPhamController.LayTonKhoTheoKhoangNgay(dtTuNgay.Value.Date, dtDenNgay.Value.Date);
-                dgvTonKho.DataSource = m_Data;
-
-                m_TotalSoLuong = 0;
-                m_TotalThanhTien = 0;
-                if (m_Data != null)
-                {
-                    foreach (DataRow row in m_Data.Rows)
-                    {
-                        m_TotalSoLuong += Convert.ToInt32(row["SO_LUONG"]);
-                        m_TotalThanhTien += Convert.ToInt64(row["THANH_TIEN"]);
-                    }
-                }
-
-                lblTongSo.Text = string.Format("Tổng số dòng: {0}  |  Tổng SL tồn: {1:N0}  |  Tổng giá trị: {2:N0} đ",
-                    m_Data != null ? m_Data.Rows.Count : 0, m_TotalSoLuong, m_TotalThanhTien);
+                TaiDuLieuTonKho(tuNgay, denNgay);
+                TinhTongTonKho();
+                HienThiTongTonKho();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi tải dữ liệu: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Lỗi tải dữ liệu: " + ex.Message,
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
+
+        private void TaiDuLieuTonKho(
+            DateTime tuNgay, DateTime denNgay)
+        {
+            m_Data = MaSanPhamController
+                .LayTonKhoTheoKhoangNgay(tuNgay, denNgay);
+
+            dgvTonKho.DataSource = m_Data;
+        }
+
+        private void TinhTongTonKho()
+        {
+            m_TotalSoLuong = 0;
+            m_TotalThanhTien = 0;
+
+            if (m_Data == null)
+                return;
+
+            foreach (DataRow row in m_Data.Rows)
+            {
+                m_TotalSoLuong +=
+                    Convert.ToInt32(row["SO_LUONG"]);
+
+                m_TotalThanhTien +=
+                    Convert.ToInt64(row["THANH_TIEN"]);
+            }
+        }
+
+        private void HienThiTongTonKho()
+        {
+            int soDong = m_Data == null
+                ? 0 : m_Data.Rows.Count;
+
+            lblTongSo.Text = string.Format(
+                "Tổng số dòng: {0} | Tổng SL tồn: {1:N0} | Tổng giá trị: {2:N0} đ",
+                soDong,
+                m_TotalSoLuong,
+                m_TotalThanhTien);
+        }
+
 
         private void btnIn_Click(object sender, EventArgs e)
         {
@@ -266,9 +307,34 @@ namespace CuahangNongduoc
             e.HasMorePages = false;
         }
 
+        private string TaoChuoiChiTieu()
+        {
+            if (m_ChiTieu == null)
+                return "";
+
+            System.Text.StringBuilder result =
+                new System.Text.StringBuilder();
+
+            foreach (KetQuaChiTieu item in m_ChiTieu)
+            {
+                result.Append(" | ");
+                result.Append(item.Ten);
+                result.Append(": ");
+
+                if (item.SoTien.HasValue)
+                    result.Append(item.SoTien.Value.ToString("N0") + " đ");
+                else
+                    result.Append("Chưa có dữ liệu");
+            }
+
+            return result.ToString();
+        }
+
         private void btnThoat_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+
+
     }
 }

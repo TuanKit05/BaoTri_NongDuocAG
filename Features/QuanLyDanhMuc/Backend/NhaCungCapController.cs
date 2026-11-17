@@ -1,56 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data;
-using CuahangNongduoc.BusinessObject;
+﻿using CuahangNongduoc.BusinessObject;
 using CuahangNongduoc.DataLayer;
-
+using System;
+using System.Data;
+using System.Windows.Forms;
 
 namespace CuahangNongduoc.Controller
 {
-    public class NhaCungCapController
+    public class NhaCungCapController : BaseController
     {
-        NhaCungCapFactory factory = new NhaCungCapFactory();
+        private readonly NhaCungCapFactory factory = new NhaCungCapFactory();
 
-        public void HienthiAutoComboBox(System.Windows.Forms.ComboBox cmb)
+        protected override BaseFactory Factory => factory;
+
+        public void TimHoTen(string ten)
         {
-            cmb.DataSource = factory.DanhsachNCC();
-            cmb.DisplayMember = "HO_TEN";
-            cmb.ValueMember = "ID";
-
-        }
-        public void HienthiAllComboBox(System.Windows.Forms.ComboBox cmb)
-        {
-            IList<NhaCungCap> ds = this.LayDanhSachNCC();
-            ds.Add(new NhaCungCap("ALL", "Tất cả"));
-            cmb.DataSource = ds;
-            cmb.DisplayMember = "HoTen";
-            cmb.ValueMember = "Id";
-
+            factory.TimHoTen(ten);
         }
 
-        public void HienthiDataGridview(System.Windows.Forms.DataGridView dg, System.Windows.Forms.BindingNavigator bn)
+        public void TimDiaChi(string diachi)
         {
-            System.Windows.Forms.BindingSource bs = new System.Windows.Forms.BindingSource();
-            DataTable tbl = factory.DanhsachNCC();
-            bs.DataSource = tbl;
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
+            factory.TimDiaChi(diachi);
         }
 
-        public void HienthiDataGridviewComboBox(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
+        public override DataRow NewRow()
         {
-
-            cmb.DataSource = factory.DanhsachNCC();
-            cmb.DisplayMember = "HO_TEN";
-            cmb.ValueMember = "ID";
-            cmb.DataPropertyName = "ID_NHA_CUNG_CAP";
-            cmb.HeaderText = "Nhà cung cấp";
-
+            return factory.NewRow();
         }
 
-        public NhaCungCap LayNCC(String id)
+        public NhaCungCap LayNCC(string id)
         {
             DataTable tbl = factory.LayNCC(id);
             NhaCungCap ncc = new NhaCungCap();
@@ -64,43 +41,23 @@ namespace CuahangNongduoc.Controller
             return ncc;
         }
 
-        public IList<NhaCungCap> LayDanhSachNCC()
+        public void HienthiAutoComboBox(ComboBox cmb)
         {
             DataTable tbl = factory.DanhsachNCC();
-            IList<NhaCungCap> ds = new List<NhaCungCap>();
-
-            foreach (DataRow row in tbl.Rows)
-            {
-                NhaCungCap kh = new NhaCungCap();
-                kh.Id = Convert.ToString(row["ID"]);
-                kh.HoTen = Convert.ToString(row["HO_TEN"]);
-                kh.DienThoai = Convert.ToString(row["DIEN_THOAI"]);
-                kh.DiaChi = Convert.ToString(row["DIA_CHI"]);
-                ds.Add(kh);
-            }
-            return ds;
+            cmb.DataSource = tbl;
+            cmb.DisplayMember = "HO_TEN";
+            cmb.ValueMember = "ID";
+            cmb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            cmb.AutoCompleteSource = AutoCompleteSource.ListItems;
         }
 
-        public void TimDiaChi(String diachi)
+        public void HienthiDataGridviewComboBox(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
         {
-            factory.TimDiaChi(diachi);
-        }
-        public void TimHoTen(String hoten)
-        {
-            factory.TimHoTen(hoten);
-        }
-
-        public DataRow NewRow()
-        {
-            return factory.NewRow();
-        }
-        public void Add(DataRow row)
-        {
-            factory.Add(row);
-        }
-        public bool Save()
-        {
-            return factory.Save();
+            cmb.DataSource = factory.DanhsachNCC();
+            cmb.DisplayMember = "HO_TEN";
+            cmb.ValueMember = "ID";
+            cmb.DataPropertyName = "ID_NHA_CUNG_CAP";
+            cmb.HeaderText = "Nhà cung cấp";
         }
     }
 }

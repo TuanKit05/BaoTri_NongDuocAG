@@ -1,31 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using CuahangNongduoc.Controller;
+using System;
 using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
 {
-    public partial class frmDaiLy : Form
+    public partial class frmDaiLy : BaseDanhMucForm
     {
-        CuahangNongduoc.Controller.KhachHangController ctrl = new CuahangNongduoc.Controller.KhachHangController();
+        private readonly KhachHangController _ctrl = new KhachHangController();
+
+        protected override BaseController Controller => _ctrl;
+        protected override string TenDanhMuc => "Đại lý";
+
         public frmDaiLy()
         {
             InitializeComponent();
+            this.dataGridView = dataGridView;
+            this.bindingNavigator = bindingNavigator;
+            this.bindingNavigatorPositionItem = bindingNavigatorPositionItem;
         }
 
-        private void frmKhachHang_Load(object sender, EventArgs e)
+        protected override void LoadData()
         {
+            _ctrl.HienthiDaiLyDataGridview(dataGridView, bindingNavigator);
+        }
 
-            ctrl.HienthiDaiLyDataGridview(dataGridView, bindingNavigator);
+        private void frmDaiLy_Load(object sender, EventArgs e)
+        {
+            Base_Load(sender, e);
         }
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
-            bindingNavigatorPositionItem.Focus();
-            ctrl.Save();
+            Luu();
+        }
+
+        private void toolThoat_Click(object sender, EventArgs e)
+        {
+            Thoat();
+        }
+
+        private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
+        {
+            XoaDongHienTai();
+        }
+
+        private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            HuyXoaDong(e);
         }
 
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
@@ -35,27 +58,6 @@ namespace CuahangNongduoc
 
             DataRowView row = (DataRowView)bindingNavigator.BindingSource.AddNew();
             row["ID"] = maso;
-        }
-
-        private void toolThoat_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void bindingNavigatorDeleteItem_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Dai Ly", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                bindingNavigator.BindingSource.RemoveCurrent();
-            }
-        }
-
-        private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
-        {
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Dai Ly", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-            {
-                e.Cancel = true;
-            }
         }
 
         private void toolTimHoTen_Click(object sender, EventArgs e)
@@ -74,20 +76,15 @@ namespace CuahangNongduoc
             bindingNavigator.Focus();
         }
 
-        private void toolTimKhachHang_KeyPress(object sender, KeyPressEventArgs e)
+        private void toolTimKhachHang_Enter(object sender, EventArgs e)
         {
-            if (e.KeyChar == 13)
-            {
-                if (toolTimHoTen.Checked)
-                    ctrl.TimHoTen(toolTimKhachHang.Text, true);
-                else
-                    ctrl.TimDiaChi(toolTimKhachHang.Text, true);
-            }
+            toolTimKhachHang.Text = "";
+            toolTimKhachHang.ForeColor = Color.Black;
         }
 
         private void toolTimKhachHang_Leave(object sender, EventArgs e)
         {
-            if (toolTimHoTen.Checked == true)
+            if (toolTimHoTen.Checked)
                 toolTimKhachHang.Text = "Tìm theo Họ tên";
             else
                 toolTimKhachHang.Text = "Tìm theo Địa chỉ";
@@ -95,10 +92,15 @@ namespace CuahangNongduoc
             toolTimKhachHang.ForeColor = Color.FromArgb(224, 224, 224);
         }
 
-        private void toolTimKhachHang_Enter(object sender, EventArgs e)
+        private void toolTimKhachHang_KeyPress(object sender, KeyPressEventArgs e)
         {
-            toolTimKhachHang.Text = "";
-            toolTimKhachHang.ForeColor = Color.Black;
+            if (e.KeyChar == 13)
+            {
+                if (toolTimHoTen.Checked)
+                    _ctrl.TimHoTen(toolTimKhachHang.Text, true);
+                else
+                    _ctrl.TimDiaChi(toolTimKhachHang.Text, true);
+            }
         }
     }
 }

@@ -1,60 +1,55 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 using System.Data;
 using CuahangNongduoc.BusinessObject;
+using System.Windows.Forms;
 using CuahangNongduoc.DataLayer;
-
 
 namespace CuahangNongduoc.Controller
 {
-    public class LyDoChiController
+    public class LyDoChiController : BaseController
     {
-        LyDoChiFactory factory = new LyDoChiFactory();
+        private readonly LyDoChiFactory factory = new LyDoChiFactory();
 
-        public void HienthiAutoComboBox(System.Windows.Forms.ComboBox cmb)
+        protected override BaseFactory Factory => factory;
+
+        // Trả về đối tượng nghiệp vụ để PhieuChiController hiển thị và in phiếu chi.
+        public LyDoChi LayLyDoChi(long id)
+        {
+            DataTable bang = factory.LayLyDoChi(id);
+            if (bang.Rows.Count == 0)
+                return null;
+
+            DataRow row = bang.Rows[0];
+            return new LyDoChi
+            {
+                Id = Convert.ToString(row["ID"]),
+                TenLyDo = Convert.ToString(row["LY_DO"])
+            };
+        }
+
+        // Nạp danh sách lý do chi vào ComboBox của các form phiếu chi/tìm kiếm.
+        public void HienthiAutoComboBox(ComboBox cmb)
         {
             cmb.DataSource = factory.DanhsachLyDo();
             cmb.DisplayMember = "LY_DO";
             cmb.ValueMember = "ID";
+            cmb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            cmb.AutoCompleteSource = AutoCompleteSource.ListItems;
         }
 
-        public void HienthiDataGridview(System.Windows.Forms.DataGridView dg, System.Windows.Forms.BindingNavigator bn)
+        // Hiển thị lý do chi dưới dạng cột danh sách trong bảng phiếu chi.
+        public void HienthiDataGridviewComboBox(DataGridViewComboBoxColumn cmb)
         {
-            System.Windows.Forms.BindingSource bs = new System.Windows.Forms.BindingSource();
-            DataTable tbl = factory.DanhsachLyDo();
-            bs.DataSource = tbl;
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-        }
-
-        public void HienthiDataGridviewComboBox(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
-        {
-
             cmb.DataSource = factory.DanhsachLyDo();
             cmb.DisplayMember = "LY_DO";
             cmb.ValueMember = "ID";
             cmb.DataPropertyName = "ID_LY_DO_CHI";
             cmb.HeaderText = "Lý do chi";
-
         }
 
-        public LyDoChi LayLyDoChi(long id)
+        public override DataRow NewRow()
         {
-            DataTable tbl = factory.LayLyDoChi(id);
-            LyDoChi lydo = new LyDoChi();
-            if (tbl.Rows.Count > 0)
-            {
-                lydo.Id = Convert.ToInt64(tbl.Rows[0]["ID"]);
-                lydo.LyDo = Convert.ToString(tbl.Rows[0]["LY_DO"]);
-            }
-            return lydo;
-        }
-
-        public bool Save()
-        {
-            return factory.Save();
+            return factory.NewRow();
         }
     }
 }

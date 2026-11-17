@@ -49,7 +49,7 @@ namespace CuahangNongduoc
             // 
             // PhieuChiBindingSource
             // 
-            this.PhieuChiBindingSource.DataSource = typeof(CuahangNongduoc.BusinessObject.PhieuChi);
+            //this.PhieuChiBindingSource.DataSource = typeof(CuahangNongduoc.BusinessObject.PhieuChi);
             // 
             // frmInPhieuChi
             // 

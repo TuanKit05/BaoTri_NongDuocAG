@@ -1,35 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Data;
 using System.Data.OleDb;
 
-
 namespace CuahangNongduoc.DataLayer
 {
-    public class LyDoChiFactory
+    /// <summary>
+    /// Factory cho Lý do chi.
+    /// Kế thừa BaseFactory → loại bỏ code trùng lặp.
+    /// </summary>
+    public class LyDoChiFactory : BaseFactory
     {
-        DataService m_Ds = new DataService();
+        protected override string TableName => "LY_DO_CHI";
 
-        public DataTable DanhsachLyDo()
-        {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM LY_DO_CHI");
-            m_Ds.Load(cmd);
+        public DataTable DanhsachLyDo() => DanhSach();
 
-            return m_Ds;
-        }
-
-        public DataTable LayLyDoChi(long id)
-        {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM LY_DO_CHI WHERE ID = " + id);
-            m_Ds.Load(cmd);
-
-            return m_Ds;
-        }
-
-        public bool Save()
-        {
-            return m_Ds.ExecuteNoneQuery() > 0;
-        }
+        public DataTable LayLyDoChi(long id) => LayTheoId(id);
     }
 }

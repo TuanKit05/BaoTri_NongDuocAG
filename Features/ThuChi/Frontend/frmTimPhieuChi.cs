@@ -10,7 +10,7 @@ namespace CuahangNongduoc
 {
     public partial class frmTimPhieuChi : Form
     {
-        
+
         public frmTimPhieuChi()
         {
             InitializeComponent();

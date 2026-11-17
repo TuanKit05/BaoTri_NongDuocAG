@@ -1,75 +1,104 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data;
-using System.Windows.Forms;
 using CuahangNongduoc.BusinessObject;
 using CuahangNongduoc.DataLayer;
-
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Windows.Forms;
 
 namespace CuahangNongduoc.Controller
 {
-    public class SanPhamController
+    public class SanPhamController : BaseController
     {
-        SanPhamFactory factory = new SanPhamFactory();
+        private readonly SanPhamFactory factory = new SanPhamFactory();
 
-        public void HienthiAutoComboBox(System.Windows.Forms.ComboBox cmb)
+        protected override BaseFactory Factory => factory;
+
+        public void HienthiDataGridview(DataGridView dg, BindingNavigator bn,
+            TextBox txtMa, TextBox txtTen, ComboBox cmbDVT,
+            NumericUpDown numSL, NumericUpDown numGiaNhap, NumericUpDown numGiaBanSi, NumericUpDown numGiaBanLe)
         {
-            DataTable tbl = factory.DanhsachSanPham(); 
+
+            BindingSource bs = new BindingSource();
+
+            try
+            {
+                if (dg == null || bn == null)
+                    throw new Exception("DataGridView hoặc BindingNavigator chưa được khởi tạo.");
+
+                DataTable tbl = factory.DanhSach();
+
+                if (tbl == null || tbl.Columns.Count == 0)
+                    throw new Exception(
+                        "Không đọc được cấu trúc bảng SAN_PHAM. " +
+                        "Hãy kiểm tra kết nối Access và DataService.cs.");
+
+                if (!tbl.Columns.Contains("ID") ||
+                    !tbl.Columns.Contains("TEN_SAN_PHAM") ||
+                    !tbl.Columns.Contains("ID_DON_VI_TINH"))
+                    throw new Exception(
+                        "Bảng SAN_PHAM thiếu các cột bắt buộc.");
+
+                bs.DataSource = tbl;
+
+                dg.AutoGenerateColumns = false;
+                dg.DataSource = null;
+                dg.DataSource = bs;
+
+                bn.BindingSource = bs;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi tải danh sách sản phẩm:\n" + ex.ToString(),
+                    "Lỗi dữ liệu",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                throw;
+            }
+
+            // Bind dữ liệu chi tiết lên các control nếu có
+            if (txtMa != null) txtMa.DataBindings.Clear();
+            if (txtMa != null) txtMa.DataBindings.Add("Text", bs, "ID", true);
+
+            if (txtTen != null) txtTen.DataBindings.Clear();
+            if (txtTen != null) txtTen.DataBindings.Add("Text", bs, "TEN_SAN_PHAM", true);
+
+            if (cmbDVT != null) cmbDVT.DataBindings.Clear();
+            if (cmbDVT != null) cmbDVT.DataBindings.Add("SelectedValue", bs, "ID_DON_VI_TINH", true);
+
+            if (numSL != null) numSL.DataBindings.Clear();
+            if (numSL != null) numSL.DataBindings.Add("Value", bs, "SO_LUONG", true);
+
+            if (numGiaNhap != null) numGiaNhap.DataBindings.Clear();
+            if (numGiaNhap != null) numGiaNhap.DataBindings.Add("Value", bs, "DON_GIA_NHAP", true);
+
+            if (numGiaBanSi != null) numGiaBanSi.DataBindings.Clear();
+            if (numGiaBanSi != null) numGiaBanSi.DataBindings.Add("Value", bs, "GIA_BAN_SI", true);
+
+            if (numGiaBanLe != null) numGiaBanLe.DataBindings.Clear();
+            if (numGiaBanLe != null) numGiaBanLe.DataBindings.Add("Value", bs, "GIA_BAN_LE", true);
+        }
+
+        public void HienthiAutoComboBox(ComboBox cmb)
+        {
+            DataTable tbl = factory.DanhsachSanPham();
             cmb.DataSource = tbl;
             cmb.DisplayMember = "TEN_SAN_PHAM";
             cmb.ValueMember = "ID";
-            cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            cmb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            cmb.AutoCompleteSource = AutoCompleteSource.ListItems;
         }
-        public void HienthiDataGridViewComboBoxColumn(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
+
+        public void HienthiDataGridViewComboBoxColumn(DataGridViewComboBoxColumn cmb)
         {
             cmb.DataSource = factory.DanhsachSanPham();
             cmb.DisplayMember = "TEN_SAN_PHAM";
             cmb.ValueMember = "ID";
             cmb.AutoComplete = true;
         }
-        public void TimMaSanPham(String ma)
-        {
-            factory.TimMaSanPham(ma);
-        }
-        public void TimTenSanPham(String ten)
-        {
-            factory.TimTenSanPham(ten);
-        }
 
-        public void HienthiDataGridview(System.Windows.Forms.DataGridView dg, System.Windows.Forms.BindingNavigator bn,
-            TextBox txtMaSp, TextBox txtTenSp, ComboBox cmbDVT, NumericUpDown numSL, NumericUpDown numDonGiaNhap, NumericUpDown numGiaBanSi, NumericUpDown numGiaBanLe)
-        {
-            System.Windows.Forms.BindingSource bs = new System.Windows.Forms.BindingSource();
-            bs.DataSource = factory.DanhsachSanPham();
-            
-            txtMaSp.DataBindings.Clear();
-            txtMaSp.DataBindings.Add("Text", bs, "ID");
-
-            txtTenSp.DataBindings.Clear();
-            txtTenSp.DataBindings.Add("Text", bs, "TEN_SAN_PHAM");
-
-            cmbDVT.DataBindings.Clear();
-            cmbDVT.DataBindings.Add("SelectedValue", bs, "ID_DON_VI_TINH");
-
-            numSL.DataBindings.Clear();
-            numSL.DataBindings.Add("Value", bs, "SO_LUONG");
-
-            numDonGiaNhap.DataBindings.Clear();
-            numDonGiaNhap.DataBindings.Add("Value", bs, "DON_GIA_NHAP");
-
-            numGiaBanSi.DataBindings.Clear();
-            numGiaBanSi.DataBindings.Add("Value", bs, "GIA_BAN_SI");
-
-            numGiaBanLe.DataBindings.Clear();
-            numGiaBanLe.DataBindings.Add("Value", bs, "GIA_BAN_LE");
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-            
-        }
-        public void CapNhatGiaNhap(String id, long gia_moi ,long so_luong)
+        public void CapNhatGiaNhap(String id, long gia_moi, long so_luong)
         {
             DataTable tbl = factory.LaySanPham(id);
             if (tbl.Rows.Count > 0)
@@ -85,26 +114,21 @@ namespace CuahangNongduoc.Controller
                 }
                 factory.Save();
             }
-
         }
-    
-        public SanPham LaySanPham(String id)
-        {
-            DataTable tbl = factory.LaySanPham(id);
-            SanPham sp = new SanPham();
-            DonViTinhController ctrlDVT = new DonViTinhController();
-            if (tbl.Rows.Count > 0)
-            {
-                sp.Id = Convert.ToString(tbl.Rows[0]["ID"]);
-                sp.TenSanPham =  Convert.ToString(tbl.Rows[0]["TEN_SAN_PHAM"]);
-                sp.SoLuong = Convert.ToInt32(tbl.Rows[0]["SO_LUONG"]);
-                sp.DonGiaNhap = Convert.ToInt64(tbl.Rows[0]["DON_GIA_NHAP"]);
-                sp.GiaBanLe = Convert.ToInt64(tbl.Rows[0]["GIA_BAN_LE"]);
-                sp.GiaBanSi = Convert.ToInt64(tbl.Rows[0]["GIA_BAN_SI"]);
-                sp.DonViTinh = ctrlDVT.LayDVT(Convert.ToInt32(tbl.Rows[0]["ID_DON_VI_TINH"]));
-            }
-            return sp;
 
+        public void TimMaSanPham(string ma)
+        {
+            factory.TimMaSanPham(ma);
+        }
+
+        public void TimTenSanPham(string ten)
+        {
+            factory.TimTenSanPham(ten);
+        }
+
+        public override DataRow NewRow()
+        {
+            return factory.NewRow();
         }
 
         public static IList<SoLuongTon> LaySoLuongTon()
@@ -113,39 +137,41 @@ namespace CuahangNongduoc.Controller
             DataTable tbl = f.LaySoLuongTon();
 
             IList<SoLuongTon> ds = new List<SoLuongTon>();
-            
-
-            DonViTinhController ctrlDVT = new DonViTinhController();
-            foreach(DataRow row in tbl.Rows)
+            foreach (DataRow row in tbl.Rows)
             {
-                SoLuongTon slt = new SoLuongTon();
                 SanPham sp = new SanPham();
                 sp.Id = Convert.ToString(row["ID"]);
                 sp.TenSanPham = Convert.ToString(row["TEN_SAN_PHAM"]);
+                sp.IdDonViTinh = Convert.ToString(row["ID_DON_VI_TINH"]);
                 sp.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
-                sp.DonGiaNhap = Convert.ToInt64(row["DON_GIA_NHAP"]);
-                sp.GiaBanLe = Convert.ToInt64(row["GIA_BAN_LE"]);
-                sp.GiaBanSi = Convert.ToInt64(row["GIA_BAN_SI"]);
-                sp.DonViTinh = ctrlDVT.LayDVT(Convert.ToInt32(row["ID_DON_VI_TINH"]));
+                sp.DonGiaNhap = Convert.ToDecimal(row["DON_GIA_NHAP"]);
+                sp.GiaBanLe = Convert.ToDecimal(row["GIA_BAN_LE"]);
+                sp.GiaBanSi = Convert.ToDecimal(row["GIA_BAN_SI"]);
+
+                SoLuongTon slt = new SoLuongTon();
                 slt.SanPham = sp;
                 slt.SoLuong = Convert.ToInt32(row["SO_LUONG_TON"]);
                 ds.Add(slt);
             }
             return ds;
-
         }
 
-        public DataRow NewRow()
+        public SanPham LaySanPham(string id)
         {
-            return factory.NewRow();
-        }
-        public void Add(DataRow row)
-        {
-            factory.Add(row);
-        }
-        public bool Save()
-        {
-            return factory.Save();
+            DataTable tbl = factory.LaySanPham(id);
+            if (tbl.Rows.Count == 0)
+                return null;
+
+            DataRow row = tbl.Rows[0];
+            SanPham sp = new SanPham();
+            sp.Id = Convert.ToString(row["ID"]);
+            sp.TenSanPham = Convert.ToString(row["TEN_SAN_PHAM"]);
+            sp.IdDonViTinh = Convert.ToString(row["ID_DON_VI_TINH"]);
+            sp.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
+            sp.DonGiaNhap = Convert.ToDecimal(row["DON_GIA_NHAP"]);
+            sp.GiaBanLe = Convert.ToDecimal(row["GIA_BAN_LE"]);
+            sp.GiaBanSi = Convert.ToDecimal(row["GIA_BAN_SI"]);
+            return sp;
         }
     }
 }

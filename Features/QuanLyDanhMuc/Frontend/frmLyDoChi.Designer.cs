@@ -234,7 +234,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "frmLyDoChi";
             this.Text = "Ly Do Chi";
-            this.Load += new System.EventHandler(this.frmNhaCungCap_Load);
+            this.Load += new System.EventHandler(this.frmLyDoChi_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator)).EndInit();
             this.bindingNavigator.ResumeLayout(false);

@@ -1,95 +1,89 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Data;
+using System.Windows.Forms;
 using CuahangNongduoc.BusinessObject;
 using CuahangNongduoc.DataLayer;
 
-
 namespace CuahangNongduoc.Controller
 {
-    public class KhachHangController
+    /// <summary>
+    /// Controller Khách hàng / Đại lý – kế thừa BaseController.
+    /// Có nhiều logic đặc thù (phân biệt LoaiKH) nên giữ lại các method riêng.
+    /// </summary>
+    public class KhachHangController : BaseController
     {
-        KhachHangFactory factory = new KhachHangFactory();
+        private readonly KhachHangFactory _factory = new KhachHangFactory();
 
-        public void HienthiAutoComboBox(System.Windows.Forms.ComboBox cmb, bool loai)
+        protected override BaseFactory Factory => _factory;
+
+        public void HienthiAutoComboBox(ComboBox cmb, bool loai)
         {
-            cmb.DataSource = factory.DanhsachKhachHang(loai);
-            cmb.DisplayMember = "HO_TEN";
-            cmb.ValueMember = "ID";
-        }
-        public void HienthiChungAutoComboBox(System.Windows.Forms.ComboBox cmb)
-        {
-            cmb.DataSource = factory.DanhsachKhachHang();
+            cmb.DataSource = _factory.DanhsachKhachHang(loai);
             cmb.DisplayMember = "HO_TEN";
             cmb.ValueMember = "ID";
         }
 
-        public void HienthiKhachHangDataGridview(System.Windows.Forms.DataGridView dg, System.Windows.Forms.BindingNavigator bn)
+        public void HienthiChungAutoComboBox(ComboBox cmb)
         {
-            System.Windows.Forms.BindingSource bs = new System.Windows.Forms.BindingSource();
-            DataTable tbl = factory.DanhsachKhachHang(false);
+            cmb.DataSource = _factory.DanhsachKhachHang();
+            cmb.DisplayMember = "HO_TEN";
+            cmb.ValueMember = "ID";
+        }
+
+        public void HienthiKhachHangDataGridview(DataGridView dg, BindingNavigator bn)
+        {
+            BindingSource bs = new BindingSource();
+            DataTable tbl = _factory.DanhsachKhachHang(false);
             tbl.Columns[4].DefaultValue = false;
             bs.DataSource = tbl;
             bn.BindingSource = bs;
             dg.DataSource = bs;
-
         }
 
-        public void HienthiKhachHangChungDataGridviewComboBox(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
+        public void HienthiDaiLyDataGridview(DataGridView dg, BindingNavigator bn)
         {
-
-            cmb.DataSource = factory.DanhsachKhachHang();
-            cmb.DisplayMember = "HO_TEN";
-            cmb.ValueMember = "ID";
-            cmb.DataPropertyName = "ID_KHACH_HANG";
-            cmb.HeaderText = "Khách hàng";
-
-        }
-
-        public void HienthiKhachHangDataGridviewComboBox(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
-        {
-
-            cmb.DataSource = factory.DanhsachKhachHang(false);
-            cmb.DisplayMember = "HO_TEN";
-            cmb.ValueMember = "ID";
-            cmb.DataPropertyName = "ID_KHACH_HANG";
-            cmb.HeaderText = "Khách hàng";
-
-        }
-        public void HienthiDaiLyDataGridviewComboBox(System.Windows.Forms.DataGridViewComboBoxColumn cmb)
-        {
-
-            cmb.DataSource = factory.DanhsachKhachHang(true);
-            cmb.DisplayMember = "HO_TEN";
-            cmb.ValueMember = "ID";
-            cmb.DataPropertyName = "ID_KHACH_HANG";
-            cmb.HeaderText = "Đại lý";
-
-        }
-        public void HienthiDaiLyDataGridview(System.Windows.Forms.DataGridView dg, System.Windows.Forms.BindingNavigator bn)
-        {
-            System.Windows.Forms.BindingSource bs = new System.Windows.Forms.BindingSource();
-            DataTable tbl = factory.DanhsachKhachHang(true);
+            BindingSource bs = new BindingSource();
+            DataTable tbl = _factory.DanhsachKhachHang(true);
             tbl.Columns[4].DefaultValue = true;
             bs.DataSource = tbl;
             bn.BindingSource = bs;
             dg.DataSource = bs;
-
         }
 
-        public void TimHoTen(String hoten, bool loai)
+        public void HienthiKhachHangChungDataGridviewComboBox(DataGridViewComboBoxColumn cmb)
         {
-            factory.TimHoTen(hoten, loai);
-        }
-        public void TimDiaChi(String diachi, bool loai)
-        {
-            factory.TimDiaChi(diachi, loai);
+            cmb.DataSource = _factory.DanhsachKhachHang();
+            cmb.DisplayMember = "HO_TEN";
+            cmb.ValueMember = "ID";
+            cmb.DataPropertyName = "ID_KHACH_HANG";
+            cmb.HeaderText = "Khách hàng";
         }
 
-        public KhachHang LayKhachHang(String id)
+        public void HienthiKhachHangDataGridviewComboBox(DataGridViewComboBoxColumn cmb)
         {
-            DataTable tbl = factory.LayKhachHang(id);
+            cmb.DataSource = _factory.DanhsachKhachHang(false);
+            cmb.DisplayMember = "HO_TEN";
+            cmb.ValueMember = "ID";
+            cmb.DataPropertyName = "ID_KHACH_HANG";
+            cmb.HeaderText = "Khách hàng";
+        }
+
+        public void HienthiDaiLyDataGridviewComboBox(DataGridViewComboBoxColumn cmb)
+        {
+            cmb.DataSource = _factory.DanhsachKhachHang(true);
+            cmb.DisplayMember = "HO_TEN";
+            cmb.ValueMember = "ID";
+            cmb.DataPropertyName = "ID_KHACH_HANG";
+            cmb.HeaderText = "Đại lý";
+        }
+
+        public void TimHoTen(string hoten, bool loai) => _factory.TimHoTen(hoten, loai);
+        public void TimDiaChi(string diachi, bool loai) => _factory.TimDiaChi(diachi, loai);
+
+        public KhachHang LayKhachHang(string id)
+        {
+            DataTable tbl = _factory.LayKhachHang(id);
             KhachHang kh = new KhachHang();
             if (tbl.Rows.Count > 0)
             {
@@ -104,7 +98,7 @@ namespace CuahangNongduoc.Controller
 
         public IList<KhachHang> LayDanhSachKhachHang()
         {
-            DataTable tbl = factory.DanhsachKhachHang();
+            DataTable tbl = _factory.DanhsachKhachHang();
             IList<KhachHang> ds = new List<KhachHang>();
 
             foreach (DataRow row in tbl.Rows)
@@ -118,18 +112,6 @@ namespace CuahangNongduoc.Controller
                 ds.Add(kh);
             }
             return ds;
-        }
-        public DataRow NewRow()
-        {
-            return factory.NewRow();
-        }
-        public void Add(DataRow row)
-        {
-            factory.Add(row);
-        }
-        public bool Save()
-        {
-            return factory.Save();
         }
     }
 }

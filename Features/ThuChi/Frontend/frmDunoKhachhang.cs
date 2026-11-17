@@ -13,6 +13,9 @@ namespace CuahangNongduoc
 {
     public partial class frmDunoKhachhang : Form
     {
+        private const int NamNhoNhat = 2000;
+        private const int NamLonNhat = 9999;
+
         public frmDunoKhachhang()
         {
             InitializeComponent();
@@ -30,43 +33,71 @@ namespace CuahangNongduoc
 
         private void btnTongHop_Click(object sender, EventArgs e)
         {
-            
-            
+
+
+        }
+
+        // Decompose Conditional: dieu kien hop le duoc dat ten theo nghiep vu.
+        private static bool NamHopLe(String giaTriNam)
+        {
+            int nam;
+            return Int32.TryParse(giaTriNam, out nam) &&
+                nam >= NamNhoNhat && nam <= NamLonNhat;
         }
 
         private void toolNam_Validating(object sender, CancelEventArgs e)
         {
-            bool ok = true;
-            try
-            {
-                long nam = Convert.ToInt32(toolNam.Text);
-                if (nam < 2000 || nam > 9999)
-                {
-                    ok = false;
-                }
-            }
-            catch
-            {
-                ok = false;
-            }
-            if (!ok)
-            {
-                MessageBox.Show("Thông tin năm không hợp lệ!", "Tong Hop Du No", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                e.Cancel = true;
-            }
+            if (NamHopLe(toolNam.Text))
+                return;
+
+            MessageBox.Show("Thông tin năm không hợp lệ!", "Tong Hop Du No",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            e.Cancel = true;
         }
 
         private void toolTongHop_Click(object sender, EventArgs e)
         {
+            if (!NamHopLe(toolNam.Text) || toolThang.SelectedIndex < 0)
+            {
+                MessageBox.Show("Tháng hoặc năm tổng hợp không hợp lệ.");
+                return;
+            }
             toolProgress.Visible = true;
-            ctrl.Tonghop(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text), toolProgress, dataGridView, bindingNavigator);
-            toolProgress.Visible = false;
+            try
+            {
+                ctrl.TongHop(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text),
+                    toolProgress, dataGridView, bindingNavigator);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể tổng hợp dư nợ: " + ex.Message,
+                    "Lỗi tổng hợp", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                toolProgress.Visible = false;
+            }
         }
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
-            toolThang.Focus();
-            ctrl.Save();
+            if (bindingNavigator.BindingSource == null)
+            {
+                MessageBox.Show("Chưa có kết quả tổng hợp dư nợ để lưu.");
+                return;
+            }
+            try
+            {
+                dataGridView.EndEdit();
+                if (bindingNavigator.BindingSource != null)
+                    bindingNavigator.BindingSource.EndEdit();
+                ctrl.Save();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể lưu dư nợ: " + ex.Message,
+                    "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void toolThoat_Click(object sender, EventArgs e)
@@ -76,7 +107,14 @@ namespace CuahangNongduoc
 
         private void toolIn_Click(object sender, EventArgs e)
         {
-            DataRowView row = (DataRowView)bindingNavigator.BindingSource.Current;
+            DataRowView row = bindingNavigator.BindingSource == null ? null :
+                bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null) return;
+            if (row.Row.RowState != DataRowState.Unchanged)
+            {
+                MessageBox.Show("Vui lòng lưu kết quả dư nợ trước khi in.");
+                return;
+            }
             KhachHangController ctrlKH = new KhachHangController();
             DuNoKhachHang dn = new DuNoKhachHang();
 

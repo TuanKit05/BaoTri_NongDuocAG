@@ -49,6 +49,12 @@ namespace CuahangNongduoc.BusinessObject
             get { return m_DaTra; }
             set { m_DaTra = value; }
         }
+        // Replace Temp with Query: gom cong thuc tinh cuoi ky vao nghiep vu.
+        public long TinhCuoiKy()
+        {
+            return DauKy + PhatSinh - DaTra;
+        }
+
         private long m_CuoiKy;
 
         public long CuoiKy

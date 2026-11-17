@@ -1,58 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+
+using System;
 using System.Data;
+using System.Windows.Forms;
 using CuahangNongduoc.BusinessObject;
 using CuahangNongduoc.DataLayer;
 
-
 namespace CuahangNongduoc.Controller
 {
-    public class DonViTinhController
+    public class DonViTinhController : BaseController
     {
-        DonViTinhFactory factory = new DonViTinhFactory();
+        private readonly DonViTinhFactory factory =
+            new DonViTinhFactory();
 
-        public void HienthiAutoComboBox(System.Windows.Forms.ComboBox cmb)
+        protected override BaseFactory Factory => factory;
+
+        public DonViTinh LayDVT(int id)
         {
-            DataTable tbl = factory.DanhsachDVT();
-            cmb.DataSource = tbl;
+            DataTable bang = factory.LayDVT(id);
+
+            if (bang.Rows.Count == 0)
+                return null;
+
+            DataRow row = bang.Rows[0];
+
+            return new DonViTinh
+            {
+                Id = Convert.ToString(row["ID"]),
+                TenDonViTinh =
+                    Convert.ToString(row["TEN_DON_VI"])
+            };
+        }
+
+        public void HienthiAutoComboBox(ComboBox cmb)
+        {
+            cmb.DataSource = factory.DanhSach();
             cmb.DisplayMember = "TEN_DON_VI";
             cmb.ValueMember = "ID";
         }
-        public System.Windows.Forms.DataGridViewComboBoxColumn HienthiDataGridViewComboBoxColumn()
+
+        public DataGridViewComboBoxColumn
+            HienthiDataGridViewComboBoxColumn()
         {
-            System.Windows.Forms.DataGridViewComboBoxColumn cmb = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            DataTable tbl = factory.DanhsachDVT();
-            cmb.DataSource = tbl;
+            DataGridViewComboBoxColumn cmb =
+                new DataGridViewComboBoxColumn();
+
+            cmb.DataSource = factory.DanhSach();
             cmb.DisplayMember = "TEN_DON_VI";
             cmb.ValueMember = "ID";
             cmb.DataPropertyName = "ID_DON_VI_TINH";
             cmb.HeaderText = "Đơn vị tính";
+
             return cmb;
-        }
-        public void HienthiDataGridview(System.Windows.Forms.DataGridView dg, System.Windows.Forms.BindingNavigator bn)
-        {
-            System.Windows.Forms.BindingSource bs = new System.Windows.Forms.BindingSource();
-            bs.DataSource = factory.DanhsachDVT();
-            bn.BindingSource = bs;
-            dg.DataSource = bs;
-
-        }
-
-        public DonViTinh LayDVT(int id)
-        {
-            DataTable tbl = factory.LayDVT(id);
-            DonViTinh dvt = null;
-            if (tbl.Rows.Count > 0)
-            {
-                dvt = new DonViTinh(Convert.ToInt32(tbl.Rows[0]["ID"]), Convert.ToString(tbl.Rows[0]["TEN_DON_VI"]));
-            }
-            return dvt;
-        }
-
-        public bool Save()
-        {
-            return factory.Save();
         }
     }
 }

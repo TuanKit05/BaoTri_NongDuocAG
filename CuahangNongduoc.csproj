@@ -112,6 +112,39 @@
     <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\BaseController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\BaseFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHang.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCap.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Frontend\BaseDanhMucForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\BaoCao\Backend\BaoCaoTongHopService.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuChi.cs" />
     <Compile Include="Features\HeThong\Backend\CuaHang.cs" />
     <Compile Include="Features\HeThong\Backend\Auth\UserAccount.cs" />
@@ -123,6 +156,9 @@
     <Compile Include="Features\ThuChi\Backend\DuNoKhachHang.cs" />
     <Compile Include="Features\ThuChi\Backend\PhieuThanhToan.cs" />
     <Compile Include="Features\NhapHang\Backend\MaSanPham.cs" />
+    <Compile Include="Features\NhapHang\Backend\LoNhapInput.cs" />
+    <Compile Include="Features\NhapHang\Backend\NhapHangValidator.cs" />
+    <Compile Include="Features\NhapHang\Backend\NhapHangService.cs" />
     <Compile Include="Features\BanHang\Backend\PhieuBan.cs" />
     <Compile Include="Features\NhapHang\Backend\PhieuNhap.cs" />
     <Compile Include="Features\BaoCao\Backend\SoLuongTon.cs" />

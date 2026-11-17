@@ -1,34 +1,20 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Data;
 using System.Data.OleDb;
 
 namespace CuahangNongduoc.DataLayer
 {
-    public class DonViTinhFactory
+    /// <summary>
+    /// Factory cho Đơn vị tính.
+    /// Kế thừa BaseFactory → loại bỏ code trùng lặp (Extract Superclass).
+    /// </summary>
+    public class DonViTinhFactory : BaseFactory
     {
-        DataService m_Ds = new DataService();
+        protected override string TableName => "DON_VI_TINH";
 
-        public DataTable DanhsachDVT()
-        {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM DON_VI_TINH");
-            m_Ds.Load(cmd);
+        // Giữ tên method cũ để tương thích với code Frontend hiện tại
+        public DataTable DanhsachDVT() => DanhSach();
 
-            return m_Ds;
-        }
-
-
-        public DataTable LayDVT(int id)
-        {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM DON_VI_TINH WHERE ID = @id");
-            cmd.Parameters.Add("id", OleDbType.Integer).Value = id;
-            m_Ds.Load(cmd);
-            return m_Ds;
-        }
-        public bool Save()
-        {
-            return m_Ds.ExecuteNoneQuery() > 0;
-        }
+        public DataTable LayDVT(int id) => LayTheoId(id);
     }
 }

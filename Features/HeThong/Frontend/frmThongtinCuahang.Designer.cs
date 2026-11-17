@@ -128,6 +128,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmThongtinCuahang";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "THONG TIN CUA HANG";
             this.Load += new System.EventHandler(this.frmThongtinCuahang_Load);
             this.ResumeLayout(false);
