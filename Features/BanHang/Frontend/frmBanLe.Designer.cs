@@ -107,6 +107,17 @@
             this.label18 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
+            this.grpPhi = new System.Windows.Forms.GroupBox();
+            this.lblPhiVanChuyen = new System.Windows.Forms.Label();
+            this.numPhiVanChuyen = new System.Windows.Forms.NumericUpDown();
+            this.lblPhanTramGiam = new System.Windows.Forms.Label();
+            this.numPhanTramGiam = new System.Windows.Forms.NumericUpDown();
+            this.lblTienGiamTitle = new System.Windows.Forms.Label();
+            this.lblTienGiam = new System.Windows.Forms.Label();
+            this.lblDichVuTitle = new System.Windows.Forms.Label();
+            this.dgvDichVu = new System.Windows.Forms.DataGridView();
+            this.colDichVuTen = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDichVuTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator)).BeginInit();
             this.bindingNavigator.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -125,6 +136,10 @@
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numGiaTriGiamGia)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numGiaTriChietKhau)).BeginInit();
+            this.grpPhi.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).BeginInit();
             this.SuspendLayout();
             // 
             // bindingNavigator
@@ -157,7 +172,7 @@
             this.bindingNavigator.MovePreviousItem = this.bindingNavigatorMovePreviousItem;
             this.bindingNavigator.Name = "bindingNavigator";
             this.bindingNavigator.PositionItem = this.bindingNavigatorPositionItem;
-            this.bindingNavigator.Size = new System.Drawing.Size(706, 46);
+            this.bindingNavigator.Size = new System.Drawing.Size(690, 46);
             this.bindingNavigator.TabIndex = 0;
             this.bindingNavigator.Text = "bindingNavigator1";
             // 
@@ -317,7 +332,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 234);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(706, 251);
+            this.groupBox1.Size = new System.Drawing.Size(690, 162);
             this.groupBox1.TabIndex = 60;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Danh sách Sản phẩm";
@@ -328,7 +343,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(3, 16);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(700, 232);
+            this.panel2.Size = new System.Drawing.Size(684, 143);
             this.panel2.TabIndex = 1;
             // 
             // dgvDanhsachSP
@@ -346,7 +361,7 @@
             this.dgvDanhsachSP.Location = new System.Drawing.Point(0, 0);
             this.dgvDanhsachSP.Name = "dgvDanhsachSP";
             this.dgvDanhsachSP.ReadOnly = true;
-            this.dgvDanhsachSP.Size = new System.Drawing.Size(700, 232);
+            this.dgvDanhsachSP.Size = new System.Drawing.Size(684, 143);
             this.dgvDanhsachSP.TabIndex = 6;
             this.dgvDanhsachSP.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dgvDanhsachSP_DataError);
             this.dgvDanhsachSP.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.dgvDanhsachSP_UserDeletedRow);
@@ -396,7 +411,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 46);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(706, 188);
+            this.panel1.Size = new System.Drawing.Size(690, 188);
             this.panel1.TabIndex = 61;
             // 
             // groupBox2
@@ -418,7 +433,7 @@
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Location = new System.Drawing.Point(258, 0);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(448, 188);
+            this.groupBox2.Size = new System.Drawing.Size(432, 188);
             this.groupBox2.TabIndex = 61;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Chọn sản phẩm";
@@ -755,6 +770,7 @@
             0,
             -2147483648});
             this.numConNo.Name = "numConNo";
+            this.numConNo.ReadOnly = true;
             this.numConNo.Size = new System.Drawing.Size(152, 20);
             this.numConNo.TabIndex = 52;
             this.numConNo.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -788,11 +804,11 @@
             0,
             0});
             this.numTongTien.Name = "numTongTien";
+            this.numTongTien.ReadOnly = true;
             this.numTongTien.Size = new System.Drawing.Size(152, 20);
             this.numTongTien.TabIndex = 45;
             this.numTongTien.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numTongTien.ThousandsSeparator = true;
-            this.numTongTien.ReadOnly = true;
             this.numTongTien.ValueChanged += new System.EventHandler(this.numTongTien_ValueChanged);
             // 
             // numDaTra
@@ -848,9 +864,9 @@
             this.groupBox4.Controls.Add(this.label17);
             this.groupBox4.Controls.Add(this.label16);
             this.groupBox4.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBox4.Location = new System.Drawing.Point(0, 485);
+            this.groupBox4.Location = new System.Drawing.Point(0, 396);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(706, 139);
+            this.groupBox4.Size = new System.Drawing.Size(690, 139);
             this.groupBox4.TabIndex = 62;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Chiết khấu và giảm giá";
@@ -981,29 +997,8 @@
             this.label16.TabIndex = 46;
             this.label16.Text = "Loại chiết khấu: ";
             // 
-            // frmBanLe
-            // 
-            //
-            // grpPhi (phí phát sinh & giảm giá)
-            //
-            this.grpPhi = new System.Windows.Forms.GroupBox();
-            this.lblPhiVanChuyen = new System.Windows.Forms.Label();
-            this.numPhiVanChuyen = new System.Windows.Forms.NumericUpDown();
-            this.lblPhanTramGiam = new System.Windows.Forms.Label();
-            this.numPhanTramGiam = new System.Windows.Forms.NumericUpDown();
-            this.lblTienGiamTitle = new System.Windows.Forms.Label();
-            this.lblTienGiam = new System.Windows.Forms.Label();
-            this.lblDichVuTitle = new System.Windows.Forms.Label();
-            this.dgvDichVu = new System.Windows.Forms.DataGridView();
-            this.colDichVuTen = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDichVuTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.grpPhi.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).BeginInit();
-            //
             // grpPhi
-            //
+            // 
             this.grpPhi.Controls.Add(this.lblPhiVanChuyen);
             this.grpPhi.Controls.Add(this.numPhiVanChuyen);
             this.grpPhi.Controls.Add(this.lblPhanTramGiam);
@@ -1018,16 +1013,18 @@
             this.grpPhi.TabIndex = 90;
             this.grpPhi.TabStop = false;
             this.grpPhi.Text = "Phí phát sinh và giảm giá";
-            //
+            // 
             // lblPhiVanChuyen
-            //
+            // 
             this.lblPhiVanChuyen.AutoSize = true;
             this.lblPhiVanChuyen.Location = new System.Drawing.Point(12, 25);
             this.lblPhiVanChuyen.Name = "lblPhiVanChuyen";
+            this.lblPhiVanChuyen.Size = new System.Drawing.Size(83, 13);
+            this.lblPhiVanChuyen.TabIndex = 0;
             this.lblPhiVanChuyen.Text = "Phí vận chuyển";
-            //
+            // 
             // numPhiVanChuyen
-            //
+            // 
             this.numPhiVanChuyen.Location = new System.Drawing.Point(120, 22);
             this.numPhiVanChuyen.Maximum = new decimal(new int[] {
             -727379968,
@@ -1039,51 +1036,53 @@
             this.numPhiVanChuyen.TabIndex = 91;
             this.numPhiVanChuyen.ThousandsSeparator = true;
             this.numPhiVanChuyen.ValueChanged += new System.EventHandler(this.numPhiVanChuyen_ValueChanged);
-            //
+            // 
             // lblPhanTramGiam
-            //
+            // 
             this.lblPhanTramGiam.AutoSize = true;
             this.lblPhanTramGiam.Location = new System.Drawing.Point(12, 55);
             this.lblPhanTramGiam.Name = "lblPhanTramGiam";
+            this.lblPhanTramGiam.Size = new System.Drawing.Size(65, 13);
+            this.lblPhanTramGiam.TabIndex = 92;
             this.lblPhanTramGiam.Text = "Giảm giá (%)";
-            //
+            // 
             // numPhanTramGiam
-            //
+            // 
             this.numPhanTramGiam.Location = new System.Drawing.Point(120, 52);
-            this.numPhanTramGiam.Maximum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
             this.numPhanTramGiam.Name = "numPhanTramGiam";
             this.numPhanTramGiam.Size = new System.Drawing.Size(70, 20);
             this.numPhanTramGiam.TabIndex = 92;
             this.numPhanTramGiam.ValueChanged += new System.EventHandler(this.numPhanTramGiam_ValueChanged);
-            //
+            // 
             // lblTienGiamTitle
-            //
+            // 
             this.lblTienGiamTitle.AutoSize = true;
             this.lblTienGiamTitle.Location = new System.Drawing.Point(12, 85);
             this.lblTienGiamTitle.Name = "lblTienGiamTitle";
+            this.lblTienGiamTitle.Size = new System.Drawing.Size(53, 13);
+            this.lblTienGiamTitle.TabIndex = 93;
             this.lblTienGiamTitle.Text = "Tiền giảm";
-            //
+            // 
             // lblTienGiam
-            //
+            // 
             this.lblTienGiam.Location = new System.Drawing.Point(120, 85);
             this.lblTienGiam.Name = "lblTienGiam";
             this.lblTienGiam.Size = new System.Drawing.Size(150, 20);
+            this.lblTienGiam.TabIndex = 94;
             this.lblTienGiam.Text = "0";
             this.lblTienGiam.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // lblDichVuTitle
-            //
+            // 
             this.lblDichVuTitle.AutoSize = true;
             this.lblDichVuTitle.Location = new System.Drawing.Point(300, 22);
             this.lblDichVuTitle.Name = "lblDichVuTitle";
+            this.lblDichVuTitle.Size = new System.Drawing.Size(195, 13);
+            this.lblDichVuTitle.TabIndex = 95;
             this.lblDichVuTitle.Text = "Dịch vụ phát sinh (mỗi dòng một khoản)";
-            //
+            // 
             // dgvDichVu
-            //
+            // 
             this.dgvDichVu.AllowUserToResizeRows = false;
             this.dgvDichVu.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dgvDichVu.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -1097,26 +1096,26 @@
             this.dgvDichVu.TabIndex = 93;
             this.dgvDichVu.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDichVu_CellValueChanged);
             this.dgvDichVu.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.dgvDichVu_UserDeletedRow);
-            //
+            // 
             // colDichVuTen
-            //
+            // 
             this.colDichVuTen.HeaderText = "Tên dịch vụ";
             this.colDichVuTen.Name = "colDichVuTen";
             this.colDichVuTen.Width = 220;
-            //
+            // 
             // colDichVuTien
-            //
+            // 
             this.colDichVuTien.HeaderText = "Số tiền";
             this.colDichVuTien.Name = "colDichVuTien";
             this.colDichVuTien.Width = 130;
-            this.grpPhi.ResumeLayout(false);
-            this.grpPhi.PerformLayout();
+            // 
+            // frmBanLe
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(706, 624);
+            this.ClientSize = new System.Drawing.Size(690, 535);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupBox4);
-            this.ClientSize = new System.Drawing.Size(690, 535);
             this.Controls.Add(this.grpPhi);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.bindingNavigator);
@@ -1147,6 +1146,8 @@
             this.groupBox4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numGiaTriGiamGia)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numGiaTriChietKhau)).EndInit();
+            this.grpPhi.ResumeLayout(false);
+            this.grpPhi.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).EndInit();
