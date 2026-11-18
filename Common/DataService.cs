@@ -18,7 +18,7 @@ namespace CuahangNongduoc
             "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" +
             Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                @"Database\cuahang.dll"
+                @"cuahang.dll"
             ) + ";";
 
         // The command to execute query or non-query command on a database of this data service.
