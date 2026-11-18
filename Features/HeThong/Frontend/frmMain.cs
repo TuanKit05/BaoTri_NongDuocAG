@@ -22,22 +22,22 @@ namespace CuahangNongduoc
         }
         frmDonViTinh DonViTinh = null;
 
-        private void mnuDonViTinh_Click(object sender, EventArgs e)
+
+
+        private void ShowChildForm<T>(ref T form) where T : Form, new()
         {
-            if (!KiemTraQuyen("DonViTinh")) return;
-            if (DonViTinh == null || DonViTinh.IsDisposed)
+            if (form == null || form.IsDisposed)
             {
-                if (form == null || form.IsDisposed)
-                {
-                    form = new T();
-                    form.MdiParent = this;
-                    form.Show();
-                }
-                else
-                {
-                    form.Activate();
-                }
+                form = new T();
+                form.MdiParent = this;
+                form.Show();
             }
+            else
+            {
+                form.Activate();
+            }
+        }
+
 
         private void mnuDonViTinh_Click(object sender, EventArgs e)
         {
@@ -157,6 +157,12 @@ namespace CuahangNongduoc
             }
             else
                 BanSi.Activate();
+        }
+
+        private void ToggleVisibility(ToolStripMenuItem menuItem, Control control)
+        {
+            control.Visible = !control.Visible;
+            menuItem.Checked = control.Visible;
         }
 
         private void mnuThanhCongCu_Click(object sender, EventArgs e)
@@ -425,8 +431,7 @@ namespace CuahangNongduoc
             itemTonKho.Visible = CoQuyen("BaoCaoTonKho");
 
             expando1.Visible = itemDaiLy.Visible || itemKhachHang.Visible || itemSanPham.Visible || itemNhaCungCap.Visible;
-            expando2.Visible = itemNhapHang.Visible || itemBanSi.Visible || itemBanLe.Visible ||
-                itemThanhToan.Visible || itemPhieuChi.Visible;
+            expando2.Visible = itemNhapHang.Visible || itemBanSi.Visible || itemBanLe.Visible || itemThanhToan.Visible || itemPhieuChi.Visible;
             expando3.Visible = itemTonghopDoanhthu.Visible || itemTonKho.Visible;
             taskPane.Visible = expando1.Visible || expando2.Visible || expando3.Visible;
         }

@@ -99,19 +99,29 @@
     <Compile Include="Features\BanHang\Backend\UuDaiPhanTram.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHang.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCap.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\BaseController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\BaseFactory.cs">
       <SubType>Component</SubType>
