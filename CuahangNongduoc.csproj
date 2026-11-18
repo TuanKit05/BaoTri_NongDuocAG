@@ -630,12 +630,13 @@
     <None Include="Resources\Thoat.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Debug\cuahang.dll" />
     <Content Include="bin\Debug\CuahangNongduoc.exe" />
     <Content Include="bin\Debug\CuahangNongduoc.pdb" />
     <Content Include="cuahang.dll" />
     <Content Include="CuahangNongduoc.ico" />
-    <Content Include="Database\cuahang.dll" />
+    <Content Include="Database\cuahang.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Features\QuanLyDanhMuc\Backend\Refactored\README_Refactoring.md" />
     <Content Include="Features\QuanLyDanhMuc\Frontend\README_Frontend_Refactoring.md" />
     <Content Include="Lib\Microsoft.ReportViewer.Common.dll" />
