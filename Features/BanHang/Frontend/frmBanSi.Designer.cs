@@ -59,6 +59,7 @@
             this.colThanhTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btnThemSanPham = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.txtGiaBQGQ = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
@@ -81,6 +82,7 @@
             this.cmbSanPham = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.grpPhieuBanLe = new System.Windows.Forms.GroupBox();
+            this.btnThemDaiLy = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.txtMaPhieu = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -93,8 +95,17 @@
             this.numDaTra = new System.Windows.Forms.NumericUpDown();
             this.label6 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
-            this.btnThemDaiLy = new System.Windows.Forms.Button();
-            this.btnThemSanPham = new System.Windows.Forms.Button();
+            this.grpPhi = new System.Windows.Forms.GroupBox();
+            this.lblPhiVanChuyen = new System.Windows.Forms.Label();
+            this.numPhiVanChuyen = new System.Windows.Forms.NumericUpDown();
+            this.lblPhanTramGiam = new System.Windows.Forms.Label();
+            this.numPhanTramGiam = new System.Windows.Forms.NumericUpDown();
+            this.lblTienGiamTitle = new System.Windows.Forms.Label();
+            this.lblTienGiam = new System.Windows.Forms.Label();
+            this.lblDichVuTitle = new System.Windows.Forms.Label();
+            this.dgvDichVu = new System.Windows.Forms.DataGridView();
+            this.colDichVuTen = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDichVuTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator)).BeginInit();
             this.bindingNavigator.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -110,6 +121,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.numConNo)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTongTien)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDaTra)).BeginInit();
+            this.grpPhi.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).BeginInit();
             this.SuspendLayout();
             // 
             // bindingNavigator
@@ -181,6 +196,7 @@
             // 
             this.bindingNavigatorPositionItem.AccessibleName = "Position";
             this.bindingNavigatorPositionItem.AutoSize = false;
+            this.bindingNavigatorPositionItem.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.bindingNavigatorPositionItem.Name = "bindingNavigatorPositionItem";
             this.bindingNavigatorPositionItem.Size = new System.Drawing.Size(50, 23);
             this.bindingNavigatorPositionItem.Text = "0";
@@ -269,7 +285,7 @@
             this.toolIn.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.toolIn.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolIn.Name = "toolIn";
-            this.toolIn.Size = new System.Drawing.Size(55, 43);
+            this.toolIn.Size = new System.Drawing.Size(54, 43);
             this.toolIn.Text = "Trang in";
             this.toolIn.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.toolIn.Click += new System.EventHandler(this.toolLuuIn_Click);
@@ -304,7 +320,6 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.panel2);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.None;
             this.groupBox1.Location = new System.Drawing.Point(0, 240);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(750, 145);
@@ -338,8 +353,8 @@
             this.dgvDanhsachSP.ReadOnly = true;
             this.dgvDanhsachSP.Size = new System.Drawing.Size(744, 126);
             this.dgvDanhsachSP.TabIndex = 6;
-            this.dgvDanhsachSP.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.dgvDanhsachSP_UserDeletingRow);
             this.dgvDanhsachSP.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dgvDanhsachSP_DataError);
+            this.dgvDanhsachSP.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.dgvDanhsachSP_UserDeletingRow);
             // 
             // colMaPhieuBan
             // 
@@ -412,6 +427,16 @@
             this.groupBox2.TabIndex = 61;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Chọn sản phẩm";
+            // 
+            // btnThemSanPham
+            // 
+            this.btnThemSanPham.Image = global::CuahangNongduoc.Properties.Resources.add_16;
+            this.btnThemSanPham.Location = new System.Drawing.Point(206, 17);
+            this.btnThemSanPham.Name = "btnThemSanPham";
+            this.btnThemSanPham.Size = new System.Drawing.Size(24, 24);
+            this.btnThemSanPham.TabIndex = 63;
+            this.btnThemSanPham.UseVisualStyleBackColor = true;
+            this.btnThemSanPham.Click += new System.EventHandler(this.btnThemSanPham_Click);
             // 
             // groupBox3
             // 
@@ -673,6 +698,16 @@
             this.grpPhieuBanLe.TabStop = false;
             this.grpPhieuBanLe.Text = "Phiếu bán lẽ";
             // 
+            // btnThemDaiLy
+            // 
+            this.btnThemDaiLy.Image = global::CuahangNongduoc.Properties.Resources.add_16;
+            this.btnThemDaiLy.Location = new System.Drawing.Point(212, 66);
+            this.btnThemDaiLy.Name = "btnThemDaiLy";
+            this.btnThemDaiLy.Size = new System.Drawing.Size(24, 24);
+            this.btnThemDaiLy.TabIndex = 58;
+            this.btnThemDaiLy.UseVisualStyleBackColor = true;
+            this.btnThemDaiLy.Click += new System.EventHandler(this.btnThemDaiLy_Click);
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -731,6 +766,7 @@
             0,
             -2147483648});
             this.numConNo.Name = "numConNo";
+            this.numConNo.ReadOnly = true;
             this.numConNo.Size = new System.Drawing.Size(154, 20);
             this.numConNo.TabIndex = 52;
             this.numConNo.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -769,11 +805,11 @@
             0,
             -2147483648});
             this.numTongTien.Name = "numTongTien";
+            this.numTongTien.ReadOnly = true;
             this.numTongTien.Size = new System.Drawing.Size(154, 20);
             this.numTongTien.TabIndex = 45;
             this.numTongTien.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numTongTien.ThousandsSeparator = true;
-            this.numTongTien.ReadOnly = true;
             this.numTongTien.ValueChanged += new System.EventHandler(this.numTongTien_ValueChanged);
             // 
             // numDaTra
@@ -814,49 +850,8 @@
             this.label8.TabIndex = 42;
             this.label8.Text = "Tổng tiền";
             // 
-            // btnThemDaiLy
-            // 
-            this.btnThemDaiLy.Image = global::CuahangNongduoc.Properties.Resources.add_16;
-            this.btnThemDaiLy.Location = new System.Drawing.Point(212, 66);
-            this.btnThemDaiLy.Name = "btnThemDaiLy";
-            this.btnThemDaiLy.Size = new System.Drawing.Size(24, 24);
-            this.btnThemDaiLy.TabIndex = 58;
-            this.btnThemDaiLy.UseVisualStyleBackColor = true;
-            this.btnThemDaiLy.Click += new System.EventHandler(this.btnThemDaiLy_Click);
-            // 
-            // btnThemSanPham
-            // 
-            this.btnThemSanPham.Image = global::CuahangNongduoc.Properties.Resources.add_16;
-            this.btnThemSanPham.Location = new System.Drawing.Point(206, 17);
-            this.btnThemSanPham.Name = "btnThemSanPham";
-            this.btnThemSanPham.Size = new System.Drawing.Size(24, 24);
-            this.btnThemSanPham.TabIndex = 63;
-            this.btnThemSanPham.UseVisualStyleBackColor = true;
-            this.btnThemSanPham.Click += new System.EventHandler(this.btnThemSanPham_Click);
-            // 
-            // frmBanSi
-            // 
-            //
-            // grpPhi (phí phát sinh & giảm giá)
-            //
-            this.grpPhi = new System.Windows.Forms.GroupBox();
-            this.lblPhiVanChuyen = new System.Windows.Forms.Label();
-            this.numPhiVanChuyen = new System.Windows.Forms.NumericUpDown();
-            this.lblPhanTramGiam = new System.Windows.Forms.Label();
-            this.numPhanTramGiam = new System.Windows.Forms.NumericUpDown();
-            this.lblTienGiamTitle = new System.Windows.Forms.Label();
-            this.lblTienGiam = new System.Windows.Forms.Label();
-            this.lblDichVuTitle = new System.Windows.Forms.Label();
-            this.dgvDichVu = new System.Windows.Forms.DataGridView();
-            this.colDichVuTen = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDichVuTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.grpPhi.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).BeginInit();
-            //
             // grpPhi
-            //
+            // 
             this.grpPhi.Controls.Add(this.lblPhiVanChuyen);
             this.grpPhi.Controls.Add(this.numPhiVanChuyen);
             this.grpPhi.Controls.Add(this.lblPhanTramGiam);
@@ -871,16 +866,18 @@
             this.grpPhi.TabIndex = 90;
             this.grpPhi.TabStop = false;
             this.grpPhi.Text = "Phí phát sinh và giảm giá";
-            //
+            // 
             // lblPhiVanChuyen
-            //
+            // 
             this.lblPhiVanChuyen.AutoSize = true;
             this.lblPhiVanChuyen.Location = new System.Drawing.Point(12, 25);
             this.lblPhiVanChuyen.Name = "lblPhiVanChuyen";
+            this.lblPhiVanChuyen.Size = new System.Drawing.Size(83, 13);
+            this.lblPhiVanChuyen.TabIndex = 0;
             this.lblPhiVanChuyen.Text = "Phí vận chuyển";
-            //
+            // 
             // numPhiVanChuyen
-            //
+            // 
             this.numPhiVanChuyen.Location = new System.Drawing.Point(120, 22);
             this.numPhiVanChuyen.Maximum = new decimal(new int[] {
             -727379968,
@@ -892,51 +889,53 @@
             this.numPhiVanChuyen.TabIndex = 91;
             this.numPhiVanChuyen.ThousandsSeparator = true;
             this.numPhiVanChuyen.ValueChanged += new System.EventHandler(this.numPhiVanChuyen_ValueChanged);
-            //
+            // 
             // lblPhanTramGiam
-            //
+            // 
             this.lblPhanTramGiam.AutoSize = true;
             this.lblPhanTramGiam.Location = new System.Drawing.Point(12, 55);
             this.lblPhanTramGiam.Name = "lblPhanTramGiam";
+            this.lblPhanTramGiam.Size = new System.Drawing.Size(65, 13);
+            this.lblPhanTramGiam.TabIndex = 92;
             this.lblPhanTramGiam.Text = "Giảm giá (%)";
-            //
+            // 
             // numPhanTramGiam
-            //
+            // 
             this.numPhanTramGiam.Location = new System.Drawing.Point(120, 52);
-            this.numPhanTramGiam.Maximum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
             this.numPhanTramGiam.Name = "numPhanTramGiam";
             this.numPhanTramGiam.Size = new System.Drawing.Size(70, 20);
             this.numPhanTramGiam.TabIndex = 92;
             this.numPhanTramGiam.ValueChanged += new System.EventHandler(this.numPhanTramGiam_ValueChanged);
-            //
+            // 
             // lblTienGiamTitle
-            //
+            // 
             this.lblTienGiamTitle.AutoSize = true;
             this.lblTienGiamTitle.Location = new System.Drawing.Point(12, 85);
             this.lblTienGiamTitle.Name = "lblTienGiamTitle";
+            this.lblTienGiamTitle.Size = new System.Drawing.Size(53, 13);
+            this.lblTienGiamTitle.TabIndex = 93;
             this.lblTienGiamTitle.Text = "Tiền giảm";
-            //
+            // 
             // lblTienGiam
-            //
+            // 
             this.lblTienGiam.Location = new System.Drawing.Point(120, 85);
             this.lblTienGiam.Name = "lblTienGiam";
             this.lblTienGiam.Size = new System.Drawing.Size(150, 20);
+            this.lblTienGiam.TabIndex = 94;
             this.lblTienGiam.Text = "0";
             this.lblTienGiam.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // lblDichVuTitle
-            //
+            // 
             this.lblDichVuTitle.AutoSize = true;
             this.lblDichVuTitle.Location = new System.Drawing.Point(300, 22);
             this.lblDichVuTitle.Name = "lblDichVuTitle";
+            this.lblDichVuTitle.Size = new System.Drawing.Size(195, 13);
+            this.lblDichVuTitle.TabIndex = 95;
             this.lblDichVuTitle.Text = "Dịch vụ phát sinh (mỗi dòng một khoản)";
-            //
+            // 
             // dgvDichVu
-            //
+            // 
             this.dgvDichVu.AllowUserToResizeRows = false;
             this.dgvDichVu.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dgvDichVu.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -950,20 +949,21 @@
             this.dgvDichVu.TabIndex = 93;
             this.dgvDichVu.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDichVu_CellValueChanged);
             this.dgvDichVu.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.dgvDichVu_UserDeletedRow);
-            //
+            // 
             // colDichVuTen
-            //
+            // 
             this.colDichVuTen.HeaderText = "Tên dịch vụ";
             this.colDichVuTen.Name = "colDichVuTen";
             this.colDichVuTen.Width = 260;
-            //
+            // 
             // colDichVuTien
-            //
+            // 
             this.colDichVuTien.HeaderText = "Số tiền";
             this.colDichVuTien.Name = "colDichVuTien";
             this.colDichVuTien.Width = 150;
-            this.grpPhi.ResumeLayout(false);
-            this.grpPhi.PerformLayout();
+            // 
+            // frmBanSi
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(750, 535);
@@ -994,6 +994,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numConNo)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTongTien)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDaTra)).EndInit();
+            this.grpPhi.ResumeLayout(false);
+            this.grpPhi.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPhiVanChuyen)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPhanTramGiam)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDichVu)).EndInit();
