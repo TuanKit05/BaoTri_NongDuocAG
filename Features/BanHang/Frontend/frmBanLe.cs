@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -28,6 +28,12 @@ namespace CuahangNongduoc
         public frmBanLe()
         {
             InitializeComponent();
+            this.Shown += delegate {
+                if (!AccessControl.Can("ThietLapUuDai"))
+                {
+                    numPhanTramGiam.Enabled = false;
+                }
+            };
 
             cmbLoaiChietKhau.SelectedIndex = 0;
             cmbLoaiGiamGia.SelectedIndex = 0;
@@ -375,6 +381,7 @@ namespace CuahangNongduoc
 
         void CapNhat()
         {
+            AccessControl.DemandCurrent("SuaPhieuBan");
             // Sửa phiếu đã lưu: chỉ hoàn tồn cho dòng bị gỡ khỏi phiếu (không phải xóa cả phiếu)
             foreach (MaSanPham masp in deleted)
             {
@@ -389,6 +396,8 @@ namespace CuahangNongduoc
         // TEMPLATE METHOD: lập hóa đơn mới qua LapHoaDonMoi (kiểm tra -> lưu -> thông báo)
         bool ThemMoi()
         {
+            if (!AccessControl.Can("ThietLapUuDai") && (numGiaTriChietKhau.Value != 0 || numGiaTriGiamGia.Value != 0))
+                throw new UnauthorizedAccessException("Chỉ quản lý được thiết lập mức ưu đãi.");
             DongBoPhi();
             DongBoTienHang();
 
@@ -541,6 +550,8 @@ namespace CuahangNongduoc
 
         private void toolChinhSua_Click(object sender, EventArgs e)
         {
+            if (!AccessControl.Can("SuaPhieuBan"))
+            { MessageBox.Show("Chỉ quản lý được sửa phiếu đã lập.", "Phân quyền"); return; }
             status = Controll.Edit;
             this.Allow(true);
         }
@@ -554,11 +565,11 @@ namespace CuahangNongduoc
             btnAdd.Enabled = val;
             btnRemove.Enabled = val;
             dgvDanhsachSP.Enabled = val;
-            cmbLoaiChietKhau.Enabled = val;
-            numGiaTriChietKhau.Enabled = val;
+            cmbLoaiChietKhau.Enabled = val && AccessControl.Can("ThietLapUuDai");
+            numGiaTriChietKhau.Enabled = val && AccessControl.Can("ThietLapUuDai");
 
-            cmbLoaiGiamGia.Enabled = val;
-            numGiaTriGiamGia.Enabled = val;
+            cmbLoaiGiamGia.Enabled = val && AccessControl.Can("ThietLapUuDai");
+            numGiaTriGiamGia.Enabled = val && AccessControl.Can("ThietLapUuDai");
         }
 
         private void toolThoat_Click(object sender, EventArgs e)

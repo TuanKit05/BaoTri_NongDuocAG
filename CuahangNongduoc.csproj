@@ -126,31 +126,6 @@
     <Compile Include="Features\QuanLyDanhMuc\Backend\BaseFactory.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHang.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\KhachHangFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChi.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\LyDoChiFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCap.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\NhaCungCapFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPham.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamController.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Backend\SanPhamFactory.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Frontend\BaseDanhMucForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -413,6 +388,9 @@
     <Compile Include="Common\Program.cs" />
     <Compile Include="Features\ThuChi\Frontend\ThuChiReportParamaters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Features\HeThong\Frontend\frmDangNhap.resx">
+      <DependentUpon>frmDangNhap.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Features\ThuChi\Frontend\frmInPhieuChi.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmInPhieuChi.cs</DependentUpon>
@@ -683,6 +661,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Compile Include="Features\BaoCao\Backend\ThongKeUuDai.cs" />
+    <Compile Include="Features\BaoCao\Frontend\frmThongKeUuDai.cs"><SubType>Form</SubType></Compile>
+    <Compile Include="Features\BaoCao\Frontend\frmThongKeUuDai.Designer.cs"><DependentUpon>frmThongKeUuDai.cs</DependentUpon></Compile>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

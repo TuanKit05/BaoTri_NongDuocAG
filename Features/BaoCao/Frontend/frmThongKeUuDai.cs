@@ -35,8 +35,8 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             this.dateTimePicker1.Value = ngayKetThucMacDinh;
             CauHinhLuoi();
 
-            bool coQuyen = ThongKeUuDaiSession.CoQuyenXemToanBo;
-            this.cbTenNV.Enabled = coQuyen;
+            bool coQuyen = AccessControl.Can("BaoCaoBanHang");
+            this.cbTenNV.Enabled = AccessControl.Can("XemTatCaPhieuBan");
             this.btnThongKe.Enabled = coQuyen;
             this.btnXuatExcel.Enabled = false;
 
@@ -101,6 +101,12 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             DataTable table = new DataTable();
             table.Columns.Add("ID", typeof(string));
             table.Columns.Add("HO_TEN", typeof(string));
+            if (!AccessControl.Can("XemTatCaPhieuBan"))
+            {
+                table.Rows.Add(AppSession.CurrentUser.Id, AppSession.CurrentUser.FullName);
+                this.cbTenNV.DataSource = table; this.cbTenNV.DisplayMember = "HO_TEN"; this.cbTenNV.ValueMember = "ID";
+                this.cbTenNV.SelectedIndex = 0; return;
+            }
             table.Rows.Add(ALL_EMPLOYEES, "Tất cả nhân viên");
 
             using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
@@ -127,7 +133,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
 
         private void btnThongKe_Click(object sender, EventArgs e)
         {
-            if (!ThongKeUuDaiSession.CoQuyenXemToanBo)
+            if (!AccessControl.Can("BaoCaoBanHang"))
             {
                 MessageBox.Show(this, "Bạn không có quyền xem báo cáo toàn bộ nhân viên.",
                     "Không đủ quyền", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -167,6 +173,8 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
 
         private List<ThongKeUuDai> TruyVanHoaDon(DateTime fromDate, DateTime toDate, string employeeId)
         {
+            AccessControl.DemandCurrent("BaoCaoBanHang");
+            if (!AccessControl.Can("XemTatCaPhieuBan")) employeeId = AppSession.CurrentUser.Id;
             List<ThongKeUuDai> rows = new List<ThongKeUuDai>();
             string employeeCondition = String.IsNullOrEmpty(employeeId) ? String.Empty : " AND PB.ID_NHAN_VIEN = ?";
             string sql = "SELECT PB.ID, PB.NGAY_BAN, PB.ID_NHAN_VIEN, T.HO_TEN, PB.TONG_TIEN, " +

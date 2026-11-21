@@ -41,11 +41,7 @@ namespace CuahangNongduoc
         // Đường dẫn phihoadon.xml: nằm cùng thư mục với file CSDL trong Data Source
         public static string LayDuongDanPhiHoaDon()
         {
-            string nguon = DataService.m_ConnectString;
-            int vitri = nguon.IndexOf("Data Source=", StringComparison.OrdinalIgnoreCase);
-            if (vitri < 0)
-                throw new InvalidOperationException("Không đọc được Data Source trong chuỗi kết nối.");
-            string duongDanCSDL = nguon.Substring(vitri + "Data Source=".Length).Split(';')[0].Trim();
+            string duongDanCSDL = new OleDbConnectionStringBuilder(DataService.m_ConnectString).DataSource;
             string thuMuc = Path.GetDirectoryName(Path.GetFullPath(duongDanCSDL));
             return Path.Combine(thuMuc, "phihoadon.xml");
         }
@@ -122,6 +118,7 @@ namespace CuahangNongduoc
         }
         public static void GanCuaHang(String ten_cua_hang, String dia_chi, String dien_thoai)
         {
+            AccessControl.DemandCurrent("QuanTri");
             DataService ds = new DataService();
             OleDbCommand cmd = new OleDbCommand("UPDATE THAM_SO SET TEN_CUA_HANG = @ten_cua_hang, DIA_CHI = @dia_chi, DIEN_THOAI = @dien_thoai ");
             cmd.Parameters.Add("@ten_cua_hang", OleDbType.VarChar).Value = ten_cua_hang;

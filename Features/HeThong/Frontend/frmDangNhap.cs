@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
@@ -36,6 +36,7 @@ namespace CuahangNongduoc
                     return;
                 }
 
+                result.Account.LegacyPassword = null;
                 result.Account.PasswordHash = null;
                 result.Account.Salt = null;
                 result.Password = null;
