@@ -228,6 +228,38 @@ namespace CuahangNongduoc
                 }
             }
         }
+        public void UpdateAccount(string id, string fullName, string roles)
+        {
+            AccessControl.DemandCurrent("QuanLyTaiKhoan");
+            fullName = fullName == null ? "" : fullName.Trim();
+            if (fullName.Length == 0 || fullName.Length > 100)
+                throw new ArgumentException("Họ tên phải có từ 1 đến 100 ký tự.");
+            UserAccount account = GetById(id);
+            if (account == null || account.IsDeleted)
+                throw new InvalidOperationException("Không tìm thấy tài khoản.");
+            bool roleChanged = !String.Equals(account.Role, roles, StringComparison.OrdinalIgnoreCase);
+            if (id == AppSession.CurrentUser.Id && roleChanged)
+                throw new InvalidOperationException("Không thể tự thay đổi vai trò đang đăng nhập.");
+            using (OleDbConnection c = CreateConnection())
+            {
+                c.Open();
+                using (OleDbTransaction tr = c.BeginTransaction())
+                {
+                    try
+                    {
+                        ValidateRoles(c, tr, roles);
+                        if (AccountRoles.IsAdmin(account.Role) && !AccountRoles.IsAdmin(roles))
+                            ProtectLastAdmin(c, tr, id);
+                        if (Execute(c, tr, "UPDATE TAI_KHOAN SET HO_TEN=?, VAI_TRO=? WHERE ID=?", fullName, roles, id) != 1)
+                            throw new InvalidOperationException("Không tìm thấy tài khoản.");
+                        WriteRoles(c, tr, id, roles);
+                        Audit(c, tr, "SUA_TAI_KHOAN", id, account.Role + " -> " + roles);
+                        tr.Commit();
+                    }
+                    catch { tr.Rollback(); throw; }
+                }
+            }
+        }
         private static void ProtectLastAdmin(OleDbConnection c, OleDbTransaction tr, string id)
         {
             if (Convert.ToInt32(Scalar(c,tr,"SELECT COUNT(*) FROM TAI_KHOAN T INNER JOIN TAI_KHOAN_VAI_TRO V ON T.ID=V.ID_TAI_KHOAN WHERE V.MaVaiTro='ADMIN' AND T.DANG_HOAT_DONG=True AND (T.DaXoa=False OR T.DaXoa IS NULL) AND T.ID<>?",id)) == 0)

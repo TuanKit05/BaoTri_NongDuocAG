@@ -25,6 +25,40 @@ namespace CuahangNongduoc
             base.bindingNavigatorPositionItem = this.bindingNavigatorPositionItem;
         }
 
+        protected override void DemandSavePermission()
+        {
+            if (AccessControl.Can("SuaDanhMuc")) base.DemandSavePermission();
+            else
+            {
+                AccessControl.DemandCurrent("BanHang");
+                AccessControl.DemandCurrent("KhachHang");
+            }
+        }
+
+        internal void ConfigureCustomerCreation()
+        {
+            if (AccessControl.Can("SuaDanhMuc") || !AccessControl.CanAddCustomer()) return;
+            dataGridView.ReadOnly = false;
+            dataGridView.AllowUserToAddRows = false;
+            dataGridView.AllowUserToDeleteRows = false;
+            bindingNavigatorAddNewItem.Enabled = true;
+            toolLuu.Enabled = true;
+            colID.ReadOnly = true;
+            colLoaiKH.ReadOnly = true;
+            dataGridView.DataBindingComplete += delegate { UpdateCustomerRowPermissions(); };
+            UpdateCustomerRowPermissions();
+        }
+
+        private void UpdateCustomerRowPermissions()
+        {
+            if (AccessControl.Can("SuaDanhMuc") || !AccessControl.CanAddCustomer()) return;
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                DataRowView item = row.DataBoundItem as DataRowView;
+                row.ReadOnly = item == null || item.Row.RowState != DataRowState.Added;
+            }
+        }
+
         protected override void LoadData()
         {
             // Logic load dữ liệu khách hàng (LoaiKH = false)
@@ -38,7 +72,9 @@ namespace CuahangNongduoc
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
+            dataGridView.EndEdit();
             Luu();
+            UpdateCustomerRowPermissions();
         }
 
         private void toolThoat_Click(object sender, EventArgs e)
@@ -58,11 +94,18 @@ namespace CuahangNongduoc
 
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
         {
+            if (!AccessControl.Can("SuaDanhMuc"))
+            {
+                AccessControl.DemandCurrent("BanHang");
+                AccessControl.DemandCurrent("KhachHang");
+            }
             long maso = ThamSo.KhachHang;
             ThamSo.KhachHang = maso + 1;
 
             DataRowView row = (DataRowView)bindingNavigator.BindingSource.AddNew();
             row["ID"] = maso;
+            row["LOAI_KH"] = false;
+            UpdateCustomerRowPermissions();
         }
 
         // ========== Tìm kiếm ==========

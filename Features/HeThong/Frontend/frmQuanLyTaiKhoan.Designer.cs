@@ -7,16 +7,10 @@
         private System.Windows.Forms.Label lblUser;
         private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.Label lblRole;
-        private System.Windows.Forms.Label lblPassword;
         private System.Windows.Forms.Label lblNote;
         private System.Windows.Forms.TextBox txtUsername;
         private System.Windows.Forms.TextBox txtFullName;
-        private System.Windows.Forms.TextBox txtPassword;
         private System.Windows.Forms.ComboBox cboRole;
-        private System.Windows.Forms.Button btnCreate;
-        private System.Windows.Forms.Button btnRole;
-        private System.Windows.Forms.Button btnToggle;
-        private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Button btnClose;
 
@@ -32,19 +26,19 @@
             this.lblUser = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
             this.lblRole = new System.Windows.Forms.Label();
-            this.lblPassword = new System.Windows.Forms.Label();
             this.lblNote = new System.Windows.Forms.Label();
             this.txtUsername = new System.Windows.Forms.TextBox();
             this.txtFullName = new System.Windows.Forms.TextBox();
-            this.txtPassword = new System.Windows.Forms.TextBox();
             this.cboRole = new System.Windows.Forms.ComboBox();
-            this.btnCreate = new System.Windows.Forms.Button();
-            this.btnRole = new System.Windows.Forms.Button();
-            this.btnToggle = new System.Windows.Forms.Button();
-            this.btnReset = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
+            this.btnReset = new System.Windows.Forms.Button();
+            this.btnThem = new System.Windows.Forms.Button();
+            this.btnSua = new System.Windows.Forms.Button();
+            this.btnKhoaTaiKhoan = new System.Windows.Forms.Button();
+            this.btnLuu = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.lblPassword = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.grid)).BeginInit();
             this.SuspendLayout();
             // 
@@ -88,14 +82,6 @@
             this.lblRole.TabIndex = 3;
             this.lblRole.Text = "Vai trò:";
             // 
-            // lblPassword
-            // 
-            this.lblPassword.Location = new System.Drawing.Point(395, 327);
-            this.lblPassword.Name = "lblPassword";
-            this.lblPassword.Size = new System.Drawing.Size(90, 25);
-            this.lblPassword.TabIndex = 4;
-            this.lblPassword.Text = "Mật khẩu tạm:";
-            // 
             // lblNote
             // 
             this.lblNote.ForeColor = System.Drawing.Color.DarkSlateGray;
@@ -103,8 +89,7 @@
             this.lblNote.Name = "lblNote";
             this.lblNote.Size = new System.Drawing.Size(540, 28);
             this.lblNote.TabIndex = 5;
-            this.lblNote.Text = "Tài khoản mới và mật khẩu đặt lại sẽ phải đổi mật khẩu khi đăng nhập lần tiếp the" +
-    "o.";
+            this.lblNote.Text = "Mật khẩu sẽ được đặt lại trong lần đăng nhập tiếp theo.";
             // 
             // txtUsername
             // 
@@ -120,14 +105,6 @@
             this.txtFullName.Size = new System.Drawing.Size(220, 22);
             this.txtFullName.TabIndex = 7;
             // 
-            // txtPassword
-            // 
-            this.txtPassword.Location = new System.Drawing.Point(485, 325);
-            this.txtPassword.Name = "txtPassword";
-            this.txtPassword.Size = new System.Drawing.Size(285, 22);
-            this.txtPassword.TabIndex = 8;
-            this.txtPassword.UseSystemPasswordChar = true;
-            // 
             // cboRole
             // 
             this.cboRole.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -136,49 +113,9 @@
             this.cboRole.Size = new System.Drawing.Size(285, 24);
             this.cboRole.TabIndex = 9;
             // 
-            // btnCreate
-            // 
-            this.btnCreate.Location = new System.Drawing.Point(15, 375);
-            this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(130, 32);
-            this.btnCreate.TabIndex = 10;
-            this.btnCreate.Text = "Tạo tài khoản";
-            this.btnCreate.UseVisualStyleBackColor = true;
-            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
-            // 
-            // btnRole
-            // 
-            this.btnRole.Location = new System.Drawing.Point(155, 375);
-            this.btnRole.Name = "btnRole";
-            this.btnRole.Size = new System.Drawing.Size(115, 32);
-            this.btnRole.TabIndex = 11;
-            this.btnRole.Text = "Lưu vai trò";
-            this.btnRole.UseVisualStyleBackColor = true;
-            this.btnRole.Click += new System.EventHandler(this.btnRole_Click);
-            // 
-            // btnToggle
-            // 
-            this.btnToggle.Location = new System.Drawing.Point(280, 375);
-            this.btnToggle.Name = "btnToggle";
-            this.btnToggle.Size = new System.Drawing.Size(130, 32);
-            this.btnToggle.TabIndex = 12;
-            this.btnToggle.Text = "Khóa / Mở khóa";
-            this.btnToggle.UseVisualStyleBackColor = true;
-            this.btnToggle.Click += new System.EventHandler(this.btnToggle_Click);
-            // 
-            // btnReset
-            // 
-            this.btnReset.Location = new System.Drawing.Point(420, 375);
-            this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(135, 32);
-            this.btnReset.TabIndex = 13;
-            this.btnReset.Text = "Đặt lại mật khẩu";
-            this.btnReset.UseVisualStyleBackColor = true;
-            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
-            // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(565, 375);
+            this.btnRefresh.Location = new System.Drawing.Point(627, 375);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(100, 32);
             this.btnRefresh.TabIndex = 14;
@@ -192,35 +129,89 @@
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(95, 32);
             this.btnClose.TabIndex = 15;
-            this.btnClose.Text = "Đóng";
+            this.btnClose.Text = "Thoát";
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
-            // btnDelete
+            // btnReset
             // 
-            this.btnDelete.Location = new System.Drawing.Point(671, 375);
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(119, 32);
-            this.btnDelete.TabIndex = 16;
-            this.btnDelete.Text = "Xóa tài khoản";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Visible = false;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            this.btnReset.Location = new System.Drawing.Point(480, 375);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(135, 32);
+            this.btnReset.TabIndex = 13;
+            this.btnReset.Text = "Đặt lại mật khẩu";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // btnThem
+            // 
+            this.btnThem.Location = new System.Drawing.Point(72, 375);
+            this.btnThem.Name = "btnThem";
+            this.btnThem.Size = new System.Drawing.Size(75, 32);
+            this.btnThem.TabIndex = 16;
+            this.btnThem.Text = "Thêm";
+            this.btnThem.UseVisualStyleBackColor = true;
+            this.btnThem.Click += new System.EventHandler(this.btnThem_Click);
+            // 
+            // btnSua
+            // 
+            this.btnSua.Location = new System.Drawing.Point(159, 375);
+            this.btnSua.Name = "btnSua";
+            this.btnSua.Size = new System.Drawing.Size(75, 32);
+            this.btnSua.TabIndex = 16;
+            this.btnSua.Text = "Sửa";
+            this.btnSua.UseVisualStyleBackColor = true;
+            this.btnSua.Click += new System.EventHandler(this.btnSua_Click);
+            // 
+            // btnKhoaTaiKhoan
+            // 
+            this.btnKhoaTaiKhoan.Location = new System.Drawing.Point(333, 375);
+            this.btnKhoaTaiKhoan.Name = "btnKhoaTaiKhoan";
+            this.btnKhoaTaiKhoan.Size = new System.Drawing.Size(135, 32);
+            this.btnKhoaTaiKhoan.TabIndex = 13;
+            this.btnKhoaTaiKhoan.Text = "Mở / Khóa tài khoản";
+            this.btnKhoaTaiKhoan.UseVisualStyleBackColor = true;
+            this.btnKhoaTaiKhoan.Click += new System.EventHandler(this.btnKhoaTaiKhoan_Click);
+            // 
+            // btnLuu
+            // 
+            this.btnLuu.Location = new System.Drawing.Point(246, 375);
+            this.btnLuu.Name = "btnLuu";
+            this.btnLuu.Size = new System.Drawing.Size(75, 32);
+            this.btnLuu.TabIndex = 18;
+            this.btnLuu.Text = "Lưu";
+            this.btnLuu.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(482, 327);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(122, 25);
+            this.label1.TabIndex = 17;
+            this.label1.Text = "Mặc định từ 1-8";
+            // 
+            // lblPassword
+            // 
+            this.lblPassword.Location = new System.Drawing.Point(395, 327);
+            this.lblPassword.Name = "lblPassword";
+            this.lblPassword.Size = new System.Drawing.Size(105, 25);
+            this.lblPassword.TabIndex = 4;
+            this.lblPassword.Text = "Mật khẩu:";
             // 
             // frmQuanLyTaiKhoan
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 470);
-            this.Controls.Add(this.btnDelete);
+            this.Controls.Add(this.btnLuu);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.btnSua);
+            this.Controls.Add(this.btnThem);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnRefresh);
+            this.Controls.Add(this.btnKhoaTaiKhoan);
             this.Controls.Add(this.btnReset);
-            this.Controls.Add(this.btnToggle);
-            this.Controls.Add(this.btnRole);
-            this.Controls.Add(this.btnCreate);
             this.Controls.Add(this.lblNote);
-            this.Controls.Add(this.txtPassword);
             this.Controls.Add(this.lblPassword);
             this.Controls.Add(this.cboRole);
             this.Controls.Add(this.lblRole);
@@ -233,13 +224,18 @@
             this.Name = "frmQuanLyTaiKhoan";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "QUẢN LÝ TÀI KHOẢN";
-            this.Load += new System.EventHandler(this.frmQuanLyTaiKhoan_Load);
             ((System.ComponentModel.ISupportInitialize)(this.grid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
-        private System.Windows.Forms.Button btnDelete;
+        private System.Windows.Forms.Button btnReset;
+        private System.Windows.Forms.Button btnThem;
+        private System.Windows.Forms.Button btnSua;
+        private System.Windows.Forms.Button btnKhoaTaiKhoan;
+        private System.Windows.Forms.Button btnLuu;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblPassword;
     }
 }

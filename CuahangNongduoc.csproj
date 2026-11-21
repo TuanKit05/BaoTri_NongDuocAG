@@ -392,6 +392,9 @@
     <EmbeddedResource Include="Features\HeThong\Frontend\frmDangNhap.resx">
       <DependentUpon>frmDangNhap.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Features\HeThong\Frontend\frmDoiMatKhau.resx">
+      <DependentUpon>frmDoiMatKhau.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Features\ThuChi\Frontend\frmInPhieuChi.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmInPhieuChi.cs</DependentUpon>
@@ -664,8 +667,12 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="Features\BaoCao\Backend\ThongKeUuDai.cs" />
-    <Compile Include="Features\BaoCao\Frontend\frmThongKeUuDai.cs"><SubType>Form</SubType></Compile>
-    <Compile Include="Features\BaoCao\Frontend\frmThongKeUuDai.Designer.cs"><DependentUpon>frmThongKeUuDai.cs</DependentUpon></Compile>
+    <Compile Include="Features\BaoCao\Frontend\frmThongKeUuDai.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\BaoCao\Frontend\frmThongKeUuDai.Designer.cs">
+      <DependentUpon>frmThongKeUuDai.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

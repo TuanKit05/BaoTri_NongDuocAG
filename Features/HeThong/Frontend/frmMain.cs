@@ -20,9 +20,36 @@ namespace CuahangNongduoc
         public frmMain()
         {
             InitializeComponent();
+            ConfigureToolbarImages();
             this.MdiChildActivate += new EventHandler(frmMain_MdiChildActivate);
             KhoiTaoMenuTaiKhoan();
         }
+        // MDI inserts a system icon whenever the active child changes.
+        // Scale that image too, even when Windows supplies a large source icon.
+        private void ConfigureToolbarImages()
+        {
+            menuStrip.ImageScalingSize = new Size(16, 16);
+            menuStrip.ItemAdded += delegate(object sender, ToolStripItemEventArgs e) {
+                e.Item.ImageScaling = ToolStripItemImageScaling.SizeToFit;
+            };
+            foreach (ToolStripItem item in menuStrip.Items)
+                item.ImageScaling = ToolStripItemImageScaling.SizeToFit;
+
+            toolStrip.SuspendLayout();
+            toolStrip.ImageScalingSize = new Size(24, 24);
+            foreach (ToolStripItem item in toolStrip.Items)
+            {
+                item.ImageScaling = ToolStripItemImageScaling.SizeToFit;
+                if (item is ToolStripButton)
+                {
+                    item.ImageAlign = ContentAlignment.MiddleCenter;
+                    item.TextAlign = ContentAlignment.MiddleCenter;
+                    item.TextImageRelation = TextImageRelation.ImageAboveText;
+                }
+            }
+            toolStrip.ResumeLayout(true);
+        }
+
         frmDonViTinh DonViTinh = null;
 
 
@@ -31,6 +58,12 @@ namespace CuahangNongduoc
         private void frmMain_MdiChildActivate(object sender, EventArgs e)
         {
             Form child = this.ActiveMdiChild;
+            frmDoiMatKhau passwordForm = child as frmDoiMatKhau;
+            if (passwordForm != null)
+            {
+                passwordForm.RestoreCompactLayout();
+                return;
+            }
             if (child != null && !child.IsDisposed && child.WindowState != FormWindowState.Maximized)
                 child.WindowState = FormWindowState.Maximized;
         }
@@ -497,9 +530,6 @@ namespace CuahangNongduoc
             if (doiMatKhau == null || doiMatKhau.IsDisposed)
             {
                 doiMatKhau = new frmDoiMatKhau(new AccountRepository(), false);
-                doiMatKhau.FormBorderStyle = FormBorderStyle.Sizable;
-                doiMatKhau.MaximizeBox = true;
-                doiMatKhau.MinimizeBox = true;
                 doiMatKhau.MdiParent = this;
                 doiMatKhau.Show();
             }

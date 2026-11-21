@@ -7,11 +7,19 @@ namespace CuahangNongduoc
     {
         private AccountRepository _repository;
         private bool _firstLogin;
+        private System.Drawing.Size _compactClientSize;
 
         public frmDoiMatKhau()
         {
             InitializeComponent();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
+            _compactClientSize = ClientSize;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            AcceptButton = btnSave;
+            CancelButton = btnCancel;
+            Shown += delegate { RestoreCompactLayout(); };
         }
 
         public frmDoiMatKhau(AccountRepository repository, bool firstLogin) : this()
@@ -19,6 +27,22 @@ namespace CuahangNongduoc
             _repository = repository;
             _firstLogin = firstLogin;
             lblTitle.Text = _firstLogin ? "Đổi mật khẩu lần đăng nhập đầu" : "Đổi mật khẩu tài khoản";
+        }
+
+        internal void RestoreCompactLayout()
+        {
+            if (MdiParent == null || IsDisposed) return;
+            WindowState = FormWindowState.Normal;
+            ClientSize = _compactClientSize;
+            foreach (Control control in MdiParent.Controls)
+            {
+                MdiClient content = control as MdiClient;
+                if (content == null) continue;
+                Location = new System.Drawing.Point(
+                    Math.Max(0, (content.ClientSize.Width - Width) / 2),
+                    Math.Max(0, (content.ClientSize.Height - Height) / 2));
+                break;
+            }
         }
 
         private void btnSave_Click(object sender, EventArgs e)

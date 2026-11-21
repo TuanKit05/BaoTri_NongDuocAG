@@ -28,11 +28,16 @@ namespace CuahangNongduoc
             }
         }
 
+        protected virtual void DemandSavePermission()
+        {
+            AccessControl.DemandCurrent("SuaDanhMuc");
+        }
+
         protected virtual void Luu()
         {
             try
             {
-                AccessControl.DemandCurrent("SuaDanhMuc");
+                DemandSavePermission();
                 if (Controller != null)
                 {
                     if (bindingNavigator != null && bindingNavigator.BindingSource != null)

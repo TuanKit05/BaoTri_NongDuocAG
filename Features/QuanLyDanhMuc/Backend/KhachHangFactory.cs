@@ -18,7 +18,7 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand(
                 $"SELECT * FROM {TableName} WHERE LOAI_KH = @loai");
-            cmd.Parameters.AddWithValue("@loai", loai);
+            cmd.Parameters.Add("@loai", OleDbType.Boolean).Value = loai;
             Load(cmd); // Gọi trực tiếp phương thức của DataService
             return this; // Trả về chính instance dữ liệu bảng
         }
@@ -29,8 +29,8 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand(
                 $"SELECT * FROM {TableName} WHERE HO_TEN LIKE '%' + @hoten + '%' AND LOAI_KH = @loai");
-            cmd.Parameters.AddWithValue("@hoten", hoten);
-            cmd.Parameters.AddWithValue("@loai", loai);
+            cmd.Parameters.Add("@hoten", OleDbType.VarWChar, 255).Value = hoten ?? String.Empty;
+            cmd.Parameters.Add("@loai", OleDbType.Boolean).Value = loai;
             Load(cmd);
             return this;
         }
@@ -39,8 +39,8 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand(
                 $"SELECT * FROM {TableName} WHERE DIA_CHI LIKE '%' + @diachi + '%' AND LOAI_KH = @loai");
-            cmd.Parameters.AddWithValue("@diachi", diachi);
-            cmd.Parameters.AddWithValue("@loai", loai);
+            cmd.Parameters.Add("@diachi", OleDbType.VarWChar, 255).Value = diachi ?? String.Empty;
+            cmd.Parameters.Add("@loai", OleDbType.Boolean).Value = loai;
             Load(cmd);
             return this;
         }

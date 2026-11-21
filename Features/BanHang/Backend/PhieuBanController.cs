@@ -12,9 +12,6 @@ namespace CuahangNongduoc.Controller
 {
     public class PhieuBanController
     {
-        // Giới hạn của bản dùng thử
-        public const int SoPhieuDungThu = 50;
-
         PhieuBanFactory factory = new PhieuBanFactory();
 
         BindingSource bs = new BindingSource();
@@ -324,7 +321,6 @@ namespace CuahangNongduoc.Controller
     {
         private readonly ChiTietPhieuBanController ctrlChiTiet;
         private readonly PhieuBan phi;
-        private int soConLai;
 
         public LapHoaDonMoi(PhieuBanController ctrl, ChiTietPhieuBanController ctrlChiTiet, PhieuBan phi)
             : base(ctrl)
@@ -335,21 +331,18 @@ namespace CuahangNongduoc.Controller
 
         protected override bool KiemTra()
         {
-            int n = PhieuBanFactory.LaySoPhieu();
-            if (n >= PhieuBanController.SoPhieuDungThu)
-            {
-                MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được 50 phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return false;
-            }
-
-            // Dùng controller MỚI để kiểm tra: tránh ghi đè bảng đang chứa dòng phiếu vừa thêm
+            // Giữ kiểm tra trùng mã phiếu.
             if (new PhieuBanController().LayPhieuBan(phi.Id) != null)
             {
-                MessageBox.Show("Mã Phiếu bán này đã tồn tại !", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Mã phiếu bán đã tồn tại. Vui lòng chọn mã khác.",
+                    "Phiếu bán",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
                 return false;
             }
 
-            soConLai = PhieuBanController.SoPhieuDungThu - n - 1;
             return true;
         }
 
@@ -358,11 +351,6 @@ namespace CuahangNongduoc.Controller
             // Ghi phí trước; nếu CSDL lỗi thì mục XML sẽ được ghi đè ở lần lưu sau
             PhieuBanController.GhiPhi(phi);
             ctrl.LuuPhieuVaChiTiet(ctrlChiTiet);
-        }
-
-        protected override void HauXuLy()
-        {
-            MessageBox.Show("Đây là bản dùng thử! Chỉ lưu được thêm " + Convert.ToString(soConLai) + " phiếu bán!", "Phieu Ban", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 

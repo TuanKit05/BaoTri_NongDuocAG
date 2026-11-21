@@ -1,22 +1,60 @@
 ﻿using System;
+using System.Data;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
 {
     public partial class frmQuanLyTaiKhoan : Form
     {
+        private const string DefaultPassword = "12345678";
         private AccountRepository _repository;
-        private System.Data.DataTable _roleTable;
+        private readonly BindingSource _accounts = new BindingSource();
+        private enum EditMode { View, Add, Edit }
+        private EditMode _mode;
+        private string _editingId;
 
         public frmQuanLyTaiKhoan()
         {
             InitializeComponent();
+            btnLuu.Click += btnSave_Click;
+            lblPassword.AutoSize = true;
+            grid.DataSource = _accounts;
+            _accounts.CurrentChanged += grid_SelectionChanged;
+            Disposed += FormDisposed;
+            Load += FormLoaded;
             CuahangNongduoc.ResponsiveLayout.Attach(this);
+            AcceptButton = btnLuu;
+            SetMode(EditMode.View);
         }
 
         public frmQuanLyTaiKhoan(AccountRepository repository) : this()
         {
             _repository = repository;
+            ReloadData();
+        }
+
+        private void FormLoaded(object sender, EventArgs e)
+        {
+            if (_repository != null) return;
+
+            try
+            {
+                _repository = new AccountRepository();
+                ReloadData();
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
+        }
+
+        private void FormDisposed(object sender, EventArgs e)
+        {
+            _accounts.Dispose();
+        }
+
+        private void ReloadData()
+        {
             LoadRoles();
             LoadAccounts();
         }
@@ -30,100 +68,148 @@ namespace CuahangNongduoc
 
         private void LoadRoles()
         {
-            if (_repository == null) return;
             cboRole.DataSource = null;
-            _roleTable = _repository.GetRoles();
-            cboRole.DataSource = _roleTable;
+            DataTable roles = _repository.GetRoles();
             cboRole.DisplayMember = "TenVaiTro";
             cboRole.ValueMember = "MaVaiTro";
+            cboRole.DataSource = roles;
             cboRole.SelectedIndex = -1;
-            btnCreate.Enabled = btnRole.Enabled = _roleTable.Rows.Count > 0;
         }
 
-        private void SelectRole(string role)
-        {
-            cboRole.SelectedIndex = -1;
-            string[] codes = AccountRoles.Split(role);
-            if (codes.Length == 1) cboRole.SelectedValue = codes[0];
-        }
+        private DataRowView CurrentAccount { get { return _accounts.Current as DataRowView; } }
 
         private string SelectedAccountId()
         {
-            if (grid.CurrentRow == null || grid.CurrentRow.Cells["MaTaiKhoan"].Value == null)
-                throw new InvalidOperationException("Vui lòng chọn một tài khoản trong danh sách.");
-            return Convert.ToString(grid.CurrentRow.Cells["MaTaiKhoan"].Value);
+            if (CurrentAccount == null) throw new InvalidOperationException("Vui lòng chọn tài khoản.");
+            return Convert.ToString(CurrentAccount["MaTaiKhoan"]);
         }
 
         private void LoadAccounts()
         {
             if (_repository == null) return;
-            grid.DataSource = _repository.GetAllAccounts();
+            string id = CurrentAccount == null ? null : SelectedAccountId();
+            _accounts.DataSource = _repository.GetAllAccounts();
+            int position = id == null ? -1 : _accounts.Find("MaTaiKhoan", id);
+            if (position >= 0) _accounts.Position = position;
+            ConfigureGridColumns();
+            DisplaySelectedAccount();
+        }
+
+        private void ConfigureGridColumns()
+        {
             if (grid.Columns.Contains("VaiTro")) grid.Columns["VaiTro"].Visible = false;
-            if (grid.Columns.Contains("TenVaiTro")) grid.Columns["TenVaiTro"].HeaderText = "Vai trò";
-            if (grid.Columns.Contains("MaTaiKhoan")) grid.Columns["MaTaiKhoan"].HeaderText = "Mã";
-            if (grid.Columns.Contains("TenDangNhap")) grid.Columns["TenDangNhap"].HeaderText = "Tên đăng nhập";
-            if (grid.Columns.Contains("HoTen")) grid.Columns["HoTen"].HeaderText = "Họ tên";
-            if (grid.Columns.Contains("VaiTro")) grid.Columns["VaiTro"].HeaderText = "Vai trò";
-            if (grid.Columns.Contains("TrangThai")) grid.Columns["TrangThai"].HeaderText = "Đang hoạt động";
-            if (grid.Columns.Contains("DoiMatKhau")) grid.Columns["DoiMatKhau"].HeaderText = "Buộc đổi mật khẩu";
+            if (grid.Columns.Contains("DoiMatKhau")) grid.Columns["DoiMatKhau"].Visible = false;
+            string[] fields = { "MaTaiKhoan", "TenDangNhap", "HoTen", "TrangThai", "TenVaiTro" };
+            string[] titles = { "Mã", "Tên đăng nhập", "Họ tên", "Đang hoạt động", "Vai trò" };
+            for (int i = 0; i < fields.Length; i++)
+                if (grid.Columns.Contains(fields[i])) grid.Columns[fields[i]].HeaderText = titles[i];
+        }
+
+        private void SetMode(EditMode mode)
+        {
+            _mode = mode;
+            bool viewing = mode == EditMode.View;
+            bool hasAccount = CurrentAccount != null;
+            grid.Enabled = viewing;
+            grid.ReadOnly = true;
+            txtUsername.Enabled = mode == EditMode.Add;
+            txtFullName.Enabled = !viewing;
+            txtUsername.ReadOnly = mode != EditMode.Add;
+            txtFullName.ReadOnly = viewing;
+            cboRole.Enabled = !viewing;
+            btnLuu.Enabled = !viewing;
+            btnThem.Enabled = viewing;
+            btnSua.Enabled = viewing && hasAccount;
+            btnKhoaTaiKhoan.Enabled = viewing && hasAccount;
+            bool active = CurrentAccount != null && Convert.ToBoolean(CurrentAccount["TrangThai"]);
+            btnKhoaTaiKhoan.Text = active ? "Kh\u00f3a t\u00e0i kho\u1ea3n" : "M\u1edf t\u00e0i kho\u1ea3n";
+            btnReset.Enabled = viewing && hasAccount;
+            btnRefresh.Text = viewing ? "Làm mới" : "Hủy";
         }
 
         private void grid_SelectionChanged(object sender, EventArgs e)
         {
-            if (grid.CurrentRow == null || !grid.Columns.Contains("VaiTro")) return;
-            if (grid.CurrentRow.Cells["VaiTro"].Value == null) return;
-            string role = Convert.ToString(grid.CurrentRow.Cells["VaiTro"].Value);
-            SelectRole(role);
+            DisplaySelectedAccount();
         }
 
-        private void btnCreate_Click(object sender, EventArgs e)
+        private void DisplaySelectedAccount()
+        {
+            if (_mode != EditMode.View) return;
+            DataRowView current = CurrentAccount;
+            txtUsername.Text = current == null ? "" : Convert.ToString(current["TenDangNhap"]);
+            txtFullName.Text = current == null ? "" : Convert.ToString(current["HoTen"]);
+            cboRole.SelectedIndex = -1;
+            if (current != null)
+            {
+                string[] codes = AccountRoles.Split(Convert.ToString(current["VaiTro"]));
+                if (codes.Length == 1) cboRole.SelectedValue = codes[0];
+            }
+            SetMode(EditMode.View);
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            SetMode(EditMode.Add);
+            _editingId = null;
+            grid.ClearSelection();
+            txtUsername.Clear();
+            txtFullName.Clear();
+            cboRole.SelectedIndex = -1;
+            txtUsername.Focus();
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (CurrentAccount == null) return;
+            _editingId = SelectedAccountId();
+            SetMode(EditMode.Edit);
+            txtFullName.Focus();
+        }
+
+        private void SaveAccount()
+        {
+            if (_mode == EditMode.View) return;
+            string username = txtUsername.Text.Trim();
+            if (_mode == EditMode.Add)
+            {
+                _repository.CreateAccount(username, txtFullName.Text, DefaultPassword, SelectedRole());
+            }
+            else
+            {
+                _repository.UpdateAccount(_editingId, txtFullName.Text, SelectedRole());
+            }
+            SetMode(EditMode.View);
+            LoadAccounts();
+            int position = _accounts.Find("TenDangNhap", username);
+            if (position >= 0) _accounts.Position = position;
+            DisplaySelectedAccount();
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
         {
             try
             {
-                _repository.CreateAccount(txtUsername.Text, txtFullName.Text, txtPassword.Text, SelectedRole());
-                MessageBox.Show("Tạo tài khoản thành công. Người dùng phải đổi mật khẩu khi đăng nhập.",
-                    "Quản lý tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtUsername.Clear(); txtFullName.Clear(); txtPassword.Clear(); LoadAccounts();
+                SaveAccount();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Không thể tạo tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowError(ex);
             }
         }
 
-        private void btnRole_Click(object sender, EventArgs e)
+        private void btnKhoaTaiKhoan_Click(object sender, EventArgs e)
         {
             try
             {
                 string id = SelectedAccountId();
                 UserAccount selected = _repository.GetById(id);
                 if (selected == null) throw new InvalidOperationException("Không tìm thấy tài khoản.");
-                if (AppSession.CurrentUser != null && selected.Id == AppSession.CurrentUser.Id)
-                    throw new InvalidOperationException("Không thể tự thay đổi vai trò của tài khoản đang đăng nhập.");
-                _repository.UpdateRole(id, SelectedRole());
-                LoadAccounts();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Không thể cập nhật vai trò", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        private void btnToggle_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                string id = SelectedAccountId();
-                UserAccount selected = _repository.GetById(id);
-                if (selected == null) throw new InvalidOperationException("Không tìm thấy tài khoản.");
-                if (AppSession.CurrentUser != null && selected.Id == AppSession.CurrentUser.Id)
-                    throw new InvalidOperationException("Không thể tự khóa tài khoản đang đăng nhập.");
                 _repository.SetActive(id, !selected.IsActive);
                 LoadAccounts();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Không thể đổi trạng thái", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowError(ex);
             }
         }
 
@@ -131,36 +217,40 @@ namespace CuahangNongduoc
         {
             try
             {
-                _repository.ResetPassword(SelectedAccountId(), txtPassword.Text);
-                MessageBox.Show("Đặt lại mật khẩu thành công. Người dùng sẽ phải đổi mật khẩu mới khi đăng nhập.",
-                    "Quản lý tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtPassword.Clear(); LoadAccounts();
+                ResetSelectedPassword();
+                MessageBox.Show("Đã đặt lại mật khẩu. Người dùng phải đổi mật khẩu khi đăng nhập.", "Quản lý tài khoản");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Không thể đặt lại mật khẩu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowError(ex);
             }
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            try { LoadRoles(); LoadAccounts(); }
+            try
+            {
+                SetMode(EditMode.View);
+                ReloadData();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Không thể tải danh sách tài khoản và vai trò",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowError(ex);
             }
         }
-        private void btnClose_Click(object sender, EventArgs e) { this.Close(); }
-
-        private void btnDelete_Click(object sender, EventArgs e)
+        private void ResetSelectedPassword()
         {
-            MessageBox.Show("Nhân viên nghỉ việc được khóa tài khoản để giữ lịch sử. Dùng nút Khóa / Mở khóa.", "Quản lý tài khoản");
+            _repository.ResetPassword(SelectedAccountId(), DefaultPassword);
         }
 
-        private void frmQuanLyTaiKhoan_Load(object sender, EventArgs e)
+        private void ShowError(Exception ex)
         {
-
+            MessageBox.Show(ex.Message, "Không thể lưu thay đổi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }

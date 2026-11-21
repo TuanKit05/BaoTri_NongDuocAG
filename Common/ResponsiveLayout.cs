@@ -159,7 +159,7 @@ namespace CuahangNongduoc
                 {
                     int width = strip.GripStyle == ToolStripGripStyle.Visible ? strip.GripRectangle.Width : 0;
                     foreach (ToolStripItem item in strip.Items)
-                        if (item.Available) width += item.Width + item.Margin.Horizontal;
+                        if (item.Available) width += item.GetPreferredSize(Size.Empty).Width + item.Margin.Horizontal;
                     Padding padding = new Padding(Math.Max(original.Left, (strip.ClientSize.Width - width) / 2), original.Top, original.Right, original.Bottom);
                     if (strip.Padding != padding) strip.Padding = padding;
                 }

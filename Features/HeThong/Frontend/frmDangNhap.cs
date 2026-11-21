@@ -13,6 +13,7 @@ namespace CuahangNongduoc
         {
             InitializeComponent();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
+            AcceptButton = btnLogin;
         }
 
         public frmDangNhap(AuthService authService, AccountRepository repository) : this()

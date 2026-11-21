@@ -120,6 +120,11 @@ namespace CuahangNongduoc
             }
             table.AcceptChanges();
         }
+        public static bool CanAddCustomer()
+        {
+            return Can("BanHang") && Can("KhachHang");
+        }
+
         public static void DemandWrite(string sql)
         {
             Match counter=Regex.Match(sql,@"^\s*UPDATE\s+THAM_SO\s+SET\s+(PHIEU_BAN|PHIEU_NHAP|PHIEU_THANH_TOAN|PHIEU_CHI)\s*=\s*\d+\s*$",RegexOptions.IgnoreCase);
@@ -127,6 +132,13 @@ namespace CuahangNongduoc
             {
                 string field=counter.Groups[1].Value.ToUpperInvariant();
                 DemandCurrent(field=="PHIEU_BAN" ? "BanHang" : field=="PHIEU_NHAP" ? "NhapHang" : "ThuChi"); return;
+            }
+            if (Regex.IsMatch(sql, @"^\s*UPDATE\s+THAM_SO\s+SET\s+KHACH_HANG\s*=\s*\d+\s*$", RegexOptions.IgnoreCase)
+                && !Can("SuaDanhMuc"))
+            {
+                DemandCurrent("BanHang");
+                DemandCurrent("KhachHang");
+                return;
             }
             bool delete=Regex.IsMatch(sql,@"^\s*DELETE\b",RegexOptions.IgnoreCase);
             if(delete && (Uses(sql,"PHIEU_BAN") || Uses(sql,"PHIEU_NHAP") || Uses(sql,"PHIEU_CHI") || Uses(sql,"PHIEU_THANH_TOAN"))) DemandCurrent("XoaPhieu");
@@ -153,6 +165,13 @@ namespace CuahangNongduoc
                                 throw new UnauthorizedAccessException("Nhân viên không được tự thay đổi mức ưu đãi.");
                     }
                     else DemandCurrent("SuaPhieuBan");
+                }
+                else if (Uses(sql, "KHACH_HANG") && row.RowState == DataRowState.Added && !Can("SuaDanhMuc"))
+                {
+                    DemandCurrent("BanHang");
+                    DemandCurrent("KhachHang");
+                    if (!table.Columns.Contains("LOAI_KH") || row["LOAI_KH"] == DBNull.Value || Convert.ToBoolean(row["LOAI_KH"]))
+                        throw new UnauthorizedAccessException("Chi duoc them khach hang, khong duoc them dai ly.");
                 }
                 else DemandWrite(sql);
             }
@@ -221,6 +240,8 @@ namespace CuahangNongduoc
             }
             bool catalog=name=="frmSanPham" || name=="frmNhaCungCap" || name=="frmDonViTinh" || name=="frmKhachHang" || name=="frmDaiLy" || name=="frmLyDoChi";
             ConfigureControls(form,catalog && !AccessControl.Can("SuaDanhMuc"),name=="frmBanLe" || name=="frmBanSi");
+            frmKhachHang customers = form as frmKhachHang;
+            if (customers != null) customers.ConfigureCustomerCreation();
         }
         private static void ConfigureCostColumn(System.Windows.Forms.DataGridViewColumn column)
         {
