@@ -52,8 +52,6 @@ namespace CuahangNongduoc
 
         frmDonViTinh DonViTinh = null;
 
-
-
         // Apply to every MDI child, including forms opened from menus and toolbars.
         private void frmMain_MdiChildActivate(object sender, EventArgs e)
         {
@@ -81,7 +79,6 @@ namespace CuahangNongduoc
                 form.Activate();
             }
         }
-
 
         private void mnuDonViTinh_Click(object sender, EventArgs e)
         {
@@ -128,80 +125,38 @@ namespace CuahangNongduoc
         private void mnuSanPham_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("SanPham")) return;
-            if (SanPham == null || SanPham.IsDisposed)
-            {
-                SanPham = new frmSanPham();
-                SanPham.MdiParent = this;
-                SanPham.Show();
-            }
-            else
-                SanPham.Activate();
+            ShowChildForm(ref SanPham);
         }
         frmKhachHang KhachHang = null;
         private void mnuKhachHang_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("KhachHang")) return;
-            if (KhachHang == null || KhachHang.IsDisposed)
-            {
-                KhachHang = new frmKhachHang();
-                KhachHang.MdiParent = this;
-                KhachHang.Show();
-            }
-            else
-                KhachHang.Activate();
+            ShowChildForm(ref KhachHang);
         }
         frmDaiLy DaiLy = null;
         private void mnuDaiLy_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("DaiLy")) return;
-            if (DaiLy == null || DaiLy.IsDisposed)
-            {
-                DaiLy = new frmDaiLy();
-                DaiLy.MdiParent = this;
-                DaiLy.Show();
-            }
-            else
-                DaiLy.Activate();
+            ShowChildForm(ref DaiLy);
 
         }
         frmDanhsachPhieuNhap NhapHang = null;
         private void mnuNhapHang_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("NhapHang")) return;
-            if (NhapHang == null || NhapHang.IsDisposed)
-            {
-                NhapHang = new frmDanhsachPhieuNhap();
-                NhapHang.MdiParent = this;
-                NhapHang.Show();
-            }
-            else
-                NhapHang.Activate();
+            ShowChildForm(ref NhapHang);
         }
         frmDanhsachPhieuBanLe BanLe = null;
         private void mnuBanHangKH_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BanHang")) return;
-            if (BanLe == null || BanLe.IsDisposed)
-            {
-                BanLe = new frmDanhsachPhieuBanLe();
-                BanLe.MdiParent = this;
-                BanLe.Show();
-            }
-            else
-                BanLe.Activate();
+            ShowChildForm(ref BanLe);
         }
         frmDanhsachPhieuBanSi BanSi = null;
         private void mnuBanHangDL_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BanHang")) return;
-            if (BanSi == null || BanSi.IsDisposed)
-            {
-                BanSi = new frmDanhsachPhieuBanSi();
-                BanSi.MdiParent = this;
-                BanSi.Show();
-            }
-            else
-                BanSi.Activate();
+            ShowChildForm(ref BanSi);
         }
 
         private void ToggleVisibility(ToolStripMenuItem menuItem, Control control)
@@ -224,40 +179,19 @@ namespace CuahangNongduoc
         private void mnuThanhtoan_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("ThuChi")) return;
-            if (ThanhToan == null || ThanhToan.IsDisposed)
-            {
-                ThanhToan = new frmThanhToan();
-                ThanhToan.MdiParent = this;
-                ThanhToan.Show();
-            }
-            else
-                ThanhToan.Activate();
+            ShowChildForm(ref ThanhToan);
         }
         frmDunoKhachhang DunoKhachhang = null;
         private void mnuTonghopDuno_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("ThuChi")) return;
-            if (DunoKhachhang == null || DunoKhachhang.IsDisposed)
-            {
-                DunoKhachhang = new frmDunoKhachhang();
-                DunoKhachhang.MdiParent = this;
-                DunoKhachhang.Show();
-            }
-            else
-                DunoKhachhang.Activate();
+            ShowChildForm(ref DunoKhachhang);
         }
         frmDoanhThu DoanhThu = null;
         private void mnuBaocaoDoanhThu_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BaoCaoBanHang")) return;
-            if (DoanhThu == null || DoanhThu.IsDisposed)
-            {
-                DoanhThu = new frmDoanhThu();
-                DoanhThu.MdiParent = this;
-                DoanhThu.Show();
-            }
-            else
-                DoanhThu.Activate();
+            ShowChildForm(ref DoanhThu);
 
         }
 
@@ -265,56 +199,26 @@ namespace CuahangNongduoc
         private void mnuBaocaoSoluongton_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BaoCaoTonKho")) return;
-
-            if (SoLuongTon == null || SoLuongTon.IsDisposed)
-            {
-                SoLuongTon = new frmSoLuongTon();
-                SoLuongTon.MdiParent = this;
-                SoLuongTon.Show();
-            }
-            else
-                SoLuongTon.Activate();
-
+            ShowChildForm(ref SoLuongTon);
         }
 
         frmThongKeTonKho ThongKeTonKho = null;
         private void mnuThongKeTonKho_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BaoCaoTonKho")) return;
-            if (ThongKeTonKho == null || ThongKeTonKho.IsDisposed)
-            {
-                ThongKeTonKho = new frmThongKeTonKho();
-                ThongKeTonKho.MdiParent = this;
-                ThongKeTonKho.Show();
-            }
-            else
-                ThongKeTonKho.Activate();
+            ShowChildForm(ref ThongKeTonKho);
         }
         frmSoLuongBan SoLuongBan = null;
         private void mnuSoLuongBan_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BaoCaoBanHang")) return;
-            if (SoLuongBan == null || SoLuongBan.IsDisposed)
-            {
-                SoLuongBan = new frmSoLuongBan();
-                SoLuongBan.MdiParent = this;
-                SoLuongBan.Show();
-            }
-            else
-                SoLuongBan.Activate();
+            ShowChildForm(ref SoLuongBan);
         }
         frmSanphamHethan SanphamHethan = null;
         private void mnuSanphamHethan_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("BaoCaoTonKho")) return;
-            if (SanphamHethan == null || SanphamHethan.IsDisposed)
-            {
-                SanphamHethan = new frmSanphamHethan();
-                SanphamHethan.MdiParent = this;
-                SanphamHethan.Show();
-            }
-            else
-                SanphamHethan.Activate();
+            ShowChildForm(ref SanphamHethan);
         }
 
         private void mnuThoat_Click(object sender, EventArgs e)
@@ -325,15 +229,7 @@ namespace CuahangNongduoc
         private void mnuTuychinhThongtin_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("QuanTri")) return;
-
-            if (ThongtinCuahang == null || ThongtinCuahang.IsDisposed)
-            {
-                ThongtinCuahang = new frmThongtinCuahang();
-                ThongtinCuahang.MdiParent = this;
-                ThongtinCuahang.Show();
-            }
-            else
-                ThongtinCuahang.Activate();
+            ShowChildForm(ref ThongtinCuahang);
         }
         frmThongtinLienhe ThongtinLienhe = null;
         private void mnuTrogiupLienhe_Click(object sender, EventArgs e)
@@ -345,41 +241,20 @@ namespace CuahangNongduoc
         private void mnuNhaCungCap_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("NhaCungCap")) return;
-            if (NhaCungCap == null || NhaCungCap.IsDisposed)
-            {
-                NhaCungCap = new frmNhaCungCap();
-                NhaCungCap.MdiParent = this;
-                NhaCungCap.Show();
-            }
-            else
-                NhaCungCap.Activate();
+            ShowChildForm(ref NhaCungCap);
         }
         frmLyDoChi LyDoChi = null;
         private void mnuLyDoChi_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("LyDoChi")) return;
-            if (LyDoChi == null || LyDoChi.IsDisposed)
-            {
-                LyDoChi = new frmLyDoChi();
-                LyDoChi.MdiParent = this;
-                LyDoChi.Show();
-            }
-            else
-                LyDoChi.Activate();
+            ShowChildForm(ref LyDoChi);
         }
 
         frmPhieuChi PhieuChi = null;
         private void mnuPhieuChi_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("ThuChi")) return;
-            if (PhieuChi == null || PhieuChi.IsDisposed)
-            {
-                PhieuChi = new frmPhieuChi();
-                PhieuChi.MdiParent = this;
-                PhieuChi.Show();
-            }
-            else
-                PhieuChi.Activate();
+            ShowChildForm(ref PhieuChi);
         }
 
         private void mnuTrogiupHuongdan_Click(object sender, EventArgs e)
@@ -509,7 +384,6 @@ namespace CuahangNongduoc
             mnuThanhChucNang.Checked = showCatalog || showOperations || showReports;
             toolStrip.Visible = true;
             mnuThanhCongCu.Checked = true;
-
         }
 
         private void mnuQuanLyTaiKhoan_Click(object sender, EventArgs e)
