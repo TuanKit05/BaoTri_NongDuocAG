@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
@@ -14,40 +14,12 @@ namespace CuahangNongduoc
 
         //
 
-        public static readonly string DatabasePath = ResolveDatabasePath();
-
-        public static string m_ConnectString = CreateConnectionString();
-
-        private static string ResolveDatabasePath()
-        {
-            // A development build uses the project's database directly.
-            // A deployed application uses Database beside its executable.
-            string applicationDirectory = Path.GetDirectoryName(typeof(DataService).Assembly.Location);
-            DirectoryInfo directory = new DirectoryInfo(applicationDirectory);
-            while (directory != null)
-            {
-                if (File.Exists(Path.Combine(directory.FullName, "CuahangNongduoc.csproj")))
-                {
-                    string projectDatabase = Path.Combine(directory.FullName, @"Database\cuahang.dll");
-                    if (!File.Exists(projectDatabase))
-                        throw new FileNotFoundException("Không tìm thấy cơ sở dữ liệu của dự án.", projectDatabase);
-                    return projectDatabase;
-                }
-                directory = directory.Parent;
-            }
-            string deployedDatabase = Path.Combine(applicationDirectory, @"Database\cuahang.dll");
-            if (!File.Exists(deployedDatabase))
-                throw new FileNotFoundException("Không tìm thấy cơ sở dữ liệu Access.", deployedDatabase);
-            return deployedDatabase;
-        }
-
-        private static string CreateConnectionString()
-        {
-            OleDbConnectionStringBuilder builder = new OleDbConnectionStringBuilder();
-            builder.Provider = "Microsoft.Jet.OLEDB.4.0";
-            builder.DataSource = DatabasePath;
-            return builder.ConnectionString;
-        }
+        public static string m_ConnectString =
+            "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" +
+            Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                @"Database\cuahang.dll"
+            ) + ";";
 
         // The command to execute query or non-query command on a database of this data service.
         private OleDbCommand		m_Command;
@@ -70,7 +42,6 @@ namespace CuahangNongduoc
             if (command == null)
                 throw new ArgumentNullException("command");
 
-            AccessControl.PrepareRead(command);
             try
             {
                 if (m_Connection == null)
@@ -87,7 +58,6 @@ namespace CuahangNongduoc
 
                 this.Clear();
                 m_DataAdapter.Fill(this);
-                AccessControl.HideCosts(this);
             }
             catch (Exception ex)
             {
@@ -116,7 +86,7 @@ namespace CuahangNongduoc
             }
             catch (Exception e)
             {
-                if (m_Connection != null) m_Connection.Close();
+                m_Connection.Close();
                 return false;
             }
             
@@ -135,8 +105,6 @@ namespace CuahangNongduoc
         /// <returns></returns>
         public int ExecuteNoneQuery()
 		{
-            AccessControl.ValidateRows(this, m_Command.CommandText);
-            string auditChanges = AccessControl.DescribeChanges(this);
             int result = 0;
             OleDbTransaction tr = null;
 			try
@@ -152,7 +120,6 @@ namespace CuahangNongduoc
                 OleDbCommandBuilder builder = new OleDbCommandBuilder(m_DataAdapter);                
 
                 result = m_DataAdapter.Update(this);
-                if (result > 0) AccountRepository.Audit(m_Connection, tr, "LUU_DU_LIEU", "DataService", m_Command.CommandText + "\n" + auditChanges);
                
 
                 tr.Commit();
@@ -161,7 +128,7 @@ namespace CuahangNongduoc
 			catch ( Exception e)
             {
                 if (tr != null) tr.Rollback();
-                throw;
+           
             }
             return result;
 		}
@@ -172,7 +139,6 @@ namespace CuahangNongduoc
         /// <returns></returns>
         public int ExecuteNoneQuery(OleDbCommand cmd)
         {
-            AccessControl.DemandWrite(cmd.CommandText);
 
             int result = 0;
             OleDbTransaction tr = null;
@@ -186,7 +152,6 @@ namespace CuahangNongduoc
                 cmd.Transaction = tr;
 
                 result = cmd.ExecuteNonQuery();
-                AccountRepository.Audit(m_Connection, tr, "CAP_NHAT_DU_LIEU", "DataService", cmd.CommandText);
 
                 this.AcceptChanges();
 
@@ -204,7 +169,6 @@ namespace CuahangNongduoc
 
         public object ExecuteScalar(OleDbCommand cmd)
         {
-            AccessControl.PrepareRead(cmd);
             object result = null;
             OleDbTransaction tr = null;
             

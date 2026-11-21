@@ -608,7 +608,6 @@
     <None Include="Resources\Thoat.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Debug\cuahang.dll" />
     <Content Include="bin\Debug\CuahangNongduoc.exe" />
     <Content Include="bin\Debug\CuahangNongduoc.pdb" />
     <Content Include="cuahang.dll" />
