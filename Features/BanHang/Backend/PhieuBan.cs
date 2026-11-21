@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CuahangNongduoc.BusinessObject
 {
-    // Dòng dịch vụ phát sinh trên hóa đơn, chỉ lưu trong phihoadon.xml
+    // Dòng dịch vụ phát sinh trên hóa đơn, lưu trong CHI_TIET_DICH_VU (Ten là MO_TA, TienDV là THANH_TIEN)
     public class DichVuPhieuBan
     {
         private string m_Ten = "";
@@ -87,12 +87,20 @@ namespace CuahangNongduoc.BusinessObject
             set { m_PhiVanChuyen = value; }
         }
 
-        private double m_PhanTramGiam; // 0 đến 100; nhập 10 nghĩa là 10%
+        private double m_PhanTramGiam; // Mức giảm hiệu lực 0 đến 100 = max(mức tay, mức tự động); nhập 10 nghĩa là 10%
 
         public double PhanTramGiam
         {
             get { return m_PhanTramGiam; }
             set { m_PhanTramGiam = value; }
+        }
+
+        private double m_PhanTramGiamTay; // Mức giảm do nhân viên/quản lý nhập tay, dùng để kiểm tra quyền
+
+        public double PhanTramGiamTay
+        {
+            get { return m_PhanTramGiamTay; }
+            set { m_PhanTramGiamTay = value; }
         }
 
         private long m_TienGiam; // đã làm tròn đến bậc 100, từ 50 trở lên làm tròn lên
@@ -274,7 +282,9 @@ namespace CuahangNongduoc.BusinessObject
 
         private long m_TienHang;
         private long m_PhiVanChuyen;
-        private double m_PhanTramGiam;
+        private double m_PhanTramGiamTay;
+        private int m_TongSoLuong;
+        private IList<UuDaiQuyDinh> m_DsUuDai = new List<UuDaiQuyDinh>();
         private IList<DichVuPhieuBan> m_DichVu = new List<DichVuPhieuBan>();
 
         public long TienHang
@@ -289,10 +299,37 @@ namespace CuahangNongduoc.BusinessObject
             set { m_PhiVanChuyen = value; ThongBao(); }
         }
 
-        public double PhanTramGiam
+        // Mức giảm do người nhập tay (0 nghĩa là không nhập)
+        public double PhanTramGiamTay
         {
-            get { return m_PhanTramGiam; }
-            set { m_PhanTramGiam = value; ThongBao(); }
+            get { return m_PhanTramGiamTay; }
+            set { m_PhanTramGiamTay = value; ThongBao(); }
+        }
+
+        // Mức giảm tự động từ ưu đãi HOA_DON đủ điều kiện, theo tiền hàng và số lượng hiện tại
+        public double PhanTramTuDong
+        {
+            get { return ChonUuDai.PhanTramGiamHoaDon(m_TienHang, m_TongSoLuong, m_DsUuDai); }
+        }
+
+        // Mức giảm áp dụng: lấy mức cao hơn giữa mức tay và mức tự động
+        public double PhanTramGiamHieuLuc
+        {
+            get { return Math.Max(m_PhanTramGiamTay, PhanTramTuDong); }
+        }
+
+        // Tổng số lượng mua (không tính hàng tặng), dùng để xét điều kiện ưu đãi
+        public int TongSoLuong
+        {
+            get { return m_TongSoLuong; }
+            set { m_TongSoLuong = value; ThongBao(); }
+        }
+
+        // Nạp danh sách ưu đãi còn hiệu lực
+        public void NapUuDai(IList<UuDaiQuyDinh> dsUuDai)
+        {
+            m_DsUuDai = dsUuDai ?? new List<UuDaiQuyDinh>();
+            ThongBao();
         }
 
         public IList<DichVuPhieuBan> DichVu
@@ -311,7 +348,7 @@ namespace CuahangNongduoc.BusinessObject
         public void DatPhi(long phiVanChuyen, double phanTramGiam, IList<DichVuPhieuBan> dichVu)
         {
             m_PhiVanChuyen = phiVanChuyen;
-            m_PhanTramGiam = phanTramGiam;
+            m_PhanTramGiamTay = phanTramGiam;
             m_DichVu = dichVu == null ? new List<DichVuPhieuBan>() : dichVu;
             ThongBao();
         }
@@ -321,8 +358,9 @@ namespace CuahangNongduoc.BusinessObject
         {
             get
             {
-                if (m_PhanTramGiam > 0)
-                    return new GiamGiaPhanTram(m_PhanTramGiam);
+                double pct = PhanTramGiamHieuLuc;
+                if (pct > 0)
+                    return new GiamGiaPhanTram(pct);
                 return new KhongGiamGia();
             }
         }
@@ -343,7 +381,8 @@ namespace CuahangNongduoc.BusinessObject
             PhieuBan ph = new PhieuBan();
             ph.Id = idPhieu;
             ph.PhiVanChuyen = m_PhiVanChuyen;
-            ph.PhanTramGiam = m_PhanTramGiam;
+            ph.PhanTramGiam = PhanTramGiamHieuLuc;
+            ph.PhanTramGiamTay = m_PhanTramGiamTay;
             ph.TienGiam = TienGiam;
             ph.DichVu = new List<DichVuPhieuBan>();
             foreach (DichVuPhieuBan dv in m_DichVu)

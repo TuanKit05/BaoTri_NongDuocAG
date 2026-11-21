@@ -49,6 +49,12 @@ namespace CuahangNongduoc.Controller
             factory.ChapNhanThayDoi();
         }
 
+        // Cảnh báo tồn kho trước khi lưu (YC-KHO-07). Null nếu đủ tồn.
+        public String KiemTraTonTruocKhiLuu()
+        {
+            return factory.KiemTraTonTruocKhiLuu();
+        }
+
 
         public IList<ChiTietPhieuBan> ChiTietPhieuBan(String idPhieuBan)
         {

@@ -23,6 +23,10 @@ namespace CuahangNongduoc.Controller
                 throw new InvalidOperationException(
                     "Kết quả tổng hợp trước chưa được lưu. Hãy lưu trước khi tổng hợp lại.");
 
+            if (CuahangNongduoc.Controller.PhieuBanController.KyDaChot(thang, nam))
+                throw new InvalidOperationException(
+                    "Kỳ " + thang + "/" + nam + " đã chốt công nợ, không tổng hợp lại.");
+
             int thangTruoc = 0;
             int namTruoc = 0;
             ThamSo.PreMonth(ref thangTruoc, ref namTruoc, thang, nam);
@@ -97,5 +101,28 @@ namespace CuahangNongduoc.Controller
         }
 
         public bool Save() { return factory.Save(); }
+
+        // Chốt kỳ công nợ: đánh dấu DA_CHOT cho mọi khách hàng của kỳ. Phải tổng hợp kỳ trước.
+        // Sau khi chốt, không sửa hoặc xóa phiếu của kỳ và không tổng hợp lại.
+        public int ChotKy(int thang, int nam)
+        {
+            if (thang < 1 || thang > 12 || nam < 2000 || nam > 9999)
+                throw new ArgumentOutOfRangeException("thang", "Kỳ chốt không hợp lệ.");
+
+            DataService ds = new DataService();
+            System.Data.OleDb.OleDbCommand kiem = new System.Data.OleDb.OleDbCommand(
+                "SELECT COUNT(*) FROM DU_NO_KH WHERE THANG = @t AND NAM = @n");
+            kiem.Parameters.Add("t", System.Data.OleDb.OleDbType.Integer).Value = thang;
+            kiem.Parameters.Add("n", System.Data.OleDb.OleDbType.Integer).Value = nam;
+            object dem = ds.ExecuteScalar(kiem);
+            if (dem == null || Convert.ToInt32(dem) == 0)
+                throw new InvalidOperationException("Chưa tổng hợp công nợ kỳ " + thang + "/" + nam + ". Hãy tổng hợp trước khi chốt.");
+
+            System.Data.OleDb.OleDbCommand cmd = new System.Data.OleDb.OleDbCommand(
+                "UPDATE DU_NO_KH SET DA_CHOT = TRUE WHERE THANG = @t AND NAM = @n");
+            cmd.Parameters.Add("t", System.Data.OleDb.OleDbType.Integer).Value = thang;
+            cmd.Parameters.Add("n", System.Data.OleDb.OleDbType.Integer).Value = nam;
+            return ds.ExecuteNoneQuery(cmd);
+        }
     }
 }

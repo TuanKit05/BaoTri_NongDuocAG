@@ -17,7 +17,6 @@ namespace CuahangNongduoc
         MaSanPhamController ctrlMaSanPham = new MaSanPhamController();
         PhieuBanController ctrlPhieuBan = new PhieuBanController();
         ChiTietPhieuBanController ctrlChiTiet = new ChiTietPhieuBanController();
-        IList<MaSanPham> deleted = new List<MaSanPham>();
         Controll status = Controll.Normal;
 
         // OBSERVER (refactoring.guru): mô hình hóa đơn đang nhập.
@@ -56,6 +55,7 @@ namespace CuahangNongduoc
             dangNapDuLieu = true;
             try
             {
+                hoaDon.NapUuDai(PhieuBanController.DanhSachUuDaiHieuLuc());
                 ctrlSanPham.HienthiAutoComboBox(cmbSanPham);
                 ctrlMaSanPham.HienThiDataGridViewComboBox(colMaSanPham);
                 cmbSanPham.SelectedIndexChanged -= cmbSanPham_SelectedIndexChanged;
@@ -138,24 +138,29 @@ namespace CuahangNongduoc
         {
             if (cmbMaSanPham.SelectedValue == null)
             {
-                MessageBox.Show("Vui lòng chọn Mã sản phẩm !", "Phieu Nhap", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Vui lòng chọn Mã sản phẩm !", "Phiếu bán", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (numSoLuong.Value <= 0)
             {
-                MessageBox.Show("Vui lòng nhập Số lượng !", "Phieu Nhap", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else if (numDonGia.Value * numSoLuong.Value != numThanhTien.Value)
-            {
-                MessageBox.Show("Thành tiền sai!", "Phieu Nhap", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Vui lòng nhập Số lượng !", "Phiếu bán", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
+                // Thành tiền luôn lấy từ đơn giá x số lượng; đồng bộ lại trước khi thêm dòng
+                numThanhTien.Value = numDonGia.Value * numSoLuong.Value;
                 DataRow row = ctrlChiTiet.NewRow();
                 row["ID_MA_SAN_PHAM"] = cmbMaSanPham.SelectedValue;
                 row["ID_PHIEU_BAN"] = txtMaPhieu.Text;
                 row["DON_GIA"] = numDonGia.Value;
                 row["SO_LUONG"] = numSoLuong.Value;
                 row["THANH_TIEN"] = numThanhTien.Value;
+                // Hàng tặng (YC-BH-05): vẫn trừ tồn và tính giá vốn, nhưng không thu tiền
+                row["LA_HANG_TANG"] = chkHangTang.Checked;
+                if (chkHangTang.Checked)
+                {
+                    row["DON_GIA"] = 0m;
+                    row["THANH_TIEN"] = 0m;
+                }
                 ctrlChiTiet.Add(row);
                 DongBoTienHang();
             }
@@ -176,10 +181,18 @@ namespace CuahangNongduoc
 
         // ---------- Phí phát sinh và giảm giá (dùng HoaDonDangLap) ----------
 
-        // Đọc tiền hàng từ lưới chi tiết vào mô hình
+        // Hàng tặng (LA_HANG_TANG = true) không tính vào số lượng mua để xét điều kiện ưu đãi
+        static bool LaHangTang(DataRowView rv)
+        {
+            object o = rv["LA_HANG_TANG"];
+            return o != null && o != DBNull.Value && Convert.ToBoolean(o);
+        }
+
+        // Đọc tiền hàng và số lượng mua từ lưới chi tiết vào mô hình
         void DongBoTienHang()
         {
             long tienHang = 0;
+            int tongSoLuong = 0;
             BindingSource bs = dgvDanhsachSP.DataSource as BindingSource;
             if (bs != null)
             {
@@ -187,8 +200,11 @@ namespace CuahangNongduoc
                 {
                     DataRowView rv = (DataRowView)o;
                     tienHang += Convert.ToInt64(rv["THANH_TIEN"]);
+                    if (!LaHangTang(rv))
+                        tongSoLuong += Convert.ToInt32(rv["SO_LUONG"]);
                 }
             }
+            hoaDon.TongSoLuong = tongSoLuong;
             hoaDon.TienHang = tienHang;
         }
 
@@ -233,7 +249,7 @@ namespace CuahangNongduoc
             PhieuBan phi = PhieuBanController.DocPhi(idPhieu);
             dangNapPhi = true;
             numPhiVanChuyen.Value = phi.PhiVanChuyen;
-            numPhanTramGiam.Value = (decimal)phi.PhanTramGiam;
+            numPhanTramGiam.Value = (decimal)phi.PhanTramGiamTay;
             dgvDichVu.Rows.Clear();
             foreach (DichVuPhieuBan dv in phi.DichVu)
             {
@@ -283,28 +299,51 @@ namespace CuahangNongduoc
         // Trả về true nếu lưu thành công
         bool Luu()
         {
+            // Kiểm tra khách hàng, dòng hàng và số tiền đã trả trước khi ghi
+            DongBoPhi();
+            DongBoTienHang();
+            int soDongHang = (dgvDanhsachSP.DataSource is BindingSource) ? ((BindingSource)dgvDanhsachSP.DataSource).Count : 0;
+            String loi = PhieuBanController.KiemTraTruocKhiLuu(cmbKhachHang.SelectedValue, soDongHang, numTongTien.Value, numDaTra.Value);
+            if (loi != null)
+            {
+                MessageBox.Show(loi, "Phieu Ban Si", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            // Cảnh báo tồn kho (YC-KHO-07): không lưu khi lô không đủ hoặc đã hết hạn
+            String canhBaoTon = ctrlChiTiet.KiemTraTonTruocKhiLuu();
+            if (canhBaoTon != null)
+            {
+                MessageBox.Show("Cảnh báo: số lượng bán vượt tồn hoặc lô đã hết hạn. Phiếu chưa được lưu.\n" + canhBaoTon,
+                    "Phiếu bán", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
             if (status == Controll.AddNew)
             {
                 return ThemMoi();
             }
             if (!AccessControl.Can("SuaPhieuBan"))
             { MessageBox.Show("Bạn chỉ được xem phiếu đã lập. Chỉ quản lý được sửa phiếu.", "Phân quyền"); return false; }
-            CapNhat();
+            try
+            {
+                CapNhat();
+            }
+            catch (Exception ex)
+            {
+                // Transaction đã rollback; giữ nguyên dữ liệu đang sửa để người dùng lưu lại
+                MessageBox.Show("Cập nhật phiếu bán thất bại. Chi tiết: " + ex.Message, "Phieu Ban Si", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
             return true;
         }
 
+        // Sửa phiếu đã lưu: phiếu, chi tiết, tồn kho và phí cùng một giao dịch
         void CapNhat()
         {
             AccessControl.DemandCurrent("SuaPhieuBan");
-            // Sửa phiếu đã lưu: chỉ hoàn tồn cho dòng bị gỡ khỏi phiếu (không phải xóa cả phiếu)
-            foreach (MaSanPham masp in deleted)
-            {
-                CuahangNongduoc.DataLayer.MaSanPhanFactory.CapNhatSoLuong(masp.Id, masp.SoLuong);
-            }
-            deleted.Clear();
-
-            ctrlChiTiet.Save();
-            ctrlPhieuBan.Update();
+            DongBoPhi();
+            DongBoTienHang();
+            ctrlPhieuBan.CapNhatPhieuVaChiTiet(ctrlChiTiet, hoaDon.ToPhieuBan(txtMaPhieu.Text));
         }
 
         // TEMPLATE METHOD: lập hóa đơn mới qua LapHoaDonMoi (kiểm tra -> lưu -> thông báo)
@@ -337,8 +376,10 @@ namespace CuahangNongduoc
 
             if (!daLuu)
             {
-                // Dòng chưa được lưu: bỏ khỏi DataTable, không đổi mã phiếu
+                // Dòng chưa được lưu: bỏ khỏi DataTable. Nếu trùng mã thì điền mã gợi ý vào ô mã phiếu.
                 row.Delete();
+                if (lap.MaGoiY != null)
+                    txtMaPhieu.Text = lap.MaGoiY;
                 return false;
             }
 
@@ -356,6 +397,7 @@ namespace CuahangNongduoc
         private void toolLuu_Them_Click(object sender, EventArgs e)
         {
             ctrlPhieuBan = new PhieuBanController();
+            hoaDon.NapUuDai(PhieuBanController.DanhSachUuDaiHieuLuc());
             status = Controll.AddNew;
             txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
             ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, txtMaPhieu.Text);
@@ -376,8 +418,7 @@ namespace CuahangNongduoc
             if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Si", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 BindingSource bs = ((BindingSource)dgvDanhsachSP.DataSource);
-                DataRowView row = (DataRowView)bs.Current;
-                deleted.Add(new MaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]), Convert.ToInt32(row["SO_LUONG"])));
+                // Hoàn tồn cho dòng bị gỡ được xử lý khi lưu, trong cùng giao dịch
                 bs.RemoveCurrent();
                 DongBoTienHang();
             }
@@ -391,9 +432,7 @@ namespace CuahangNongduoc
             }
             else
             {
-                BindingSource bs = ((BindingSource)dgvDanhsachSP.DataSource);
-                DataRowView row = (DataRowView)bs.Current;
-                deleted.Add(new MaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]), Convert.ToInt32(row["SO_LUONG"])));
+                // Hoàn tồn cho dòng bị gỡ được xử lý khi lưu, trong cùng giao dịch
                 // Tính lại sau khi dòng bị xóa khỏi lưới
                 this.BeginInvoke(new MethodInvoker(DongBoTienHang));
             }
