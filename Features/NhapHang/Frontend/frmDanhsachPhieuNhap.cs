@@ -15,6 +15,8 @@ namespace CuahangNongduoc
         public frmDanhsachPhieuNhap()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            this.Load += delegate { SecuredUi.ApplyForm(this); };
         }
 
         PhieuNhapController ctrl = new PhieuNhapController();

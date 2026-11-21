@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,6 +13,7 @@ namespace CuahangNongduoc
         public frmSanphamHethan()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         private void btnXem_Click(object sender, EventArgs e)

@@ -27,9 +27,11 @@ namespace CuahangNongduoc
                             break;
                     }
 
+                    Application.Idle += ResponsiveLayout.ApplyOpenForms;
                     Application.Idle += SecuredUi.ApplyOpenForms;
                     Application.Run(new frmMain());
                     Application.Idle -= SecuredUi.ApplyOpenForms;
+                    Application.Idle -= ResponsiveLayout.ApplyOpenForms;
                     runLoginAgain = AppSession.LogoutRequested;
                     AppSession.CurrentUser = null;
                 }

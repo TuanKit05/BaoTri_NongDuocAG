@@ -21,6 +21,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
         public frmThongKeUuDai()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
             this.Load += new EventHandler(frmThongKeUuDai_Load);
             this.btnThongKe.Click += new EventHandler(btnThongKe_Click);
             this.btnKhoiPhuc.Click += new EventHandler(btnKhoiPhuc_Click);

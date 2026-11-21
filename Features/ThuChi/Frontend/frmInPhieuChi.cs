@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,6 +14,7 @@ namespace CuahangNongduoc
         public frmInPhieuChi(CuahangNongduoc.BusinessObject.PhieuChi ph)
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
             m_PhieuChi = ph;
         }
 

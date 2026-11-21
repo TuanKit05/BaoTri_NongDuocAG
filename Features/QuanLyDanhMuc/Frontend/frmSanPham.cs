@@ -1,4 +1,4 @@
-using CuahangNongduoc.Controller;
+﻿using CuahangNongduoc.Controller;
 using System;
 using System.Data;
 using System.Drawing;
@@ -17,9 +17,10 @@ namespace CuahangNongduoc
         public frmSanPham()
         {
             InitializeComponent();
-            this.dataGridView = dataGridView;
-            this.bindingNavigator = bindingNavigator;
-            this.bindingNavigatorPositionItem = bindingNavigatorPositionItem;
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            base.dataGridView = this.dataGridView;
+            base.bindingNavigator = this.bindingNavigator;
+            base.bindingNavigatorPositionItem = this.bindingNavigatorPositionItem;
         }
 
         protected override void LoadData()

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
@@ -10,6 +10,7 @@ namespace CuahangNongduoc
         public frmTaoTaiKhoanAdmin()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
             txtUsername.Text = "admin";
         }
 

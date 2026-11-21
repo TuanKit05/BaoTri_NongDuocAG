@@ -15,6 +15,7 @@ namespace CuahangNongduoc
         public frmSoLuongBan()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
             reportViewer.LocalReport.ExecuteReportInCurrentAppDomain(System.Reflection.Assembly.GetExecutingAssembly().Evidence);
         }
 

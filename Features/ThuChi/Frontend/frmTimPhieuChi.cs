@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,6 +14,7 @@ namespace CuahangNongduoc
         public frmTimPhieuChi()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         private void frmTimPhieuChi_Load(object sender, EventArgs e)

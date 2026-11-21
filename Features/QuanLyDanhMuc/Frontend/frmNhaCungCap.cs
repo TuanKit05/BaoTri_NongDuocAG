@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -16,9 +16,10 @@ namespace CuahangNongduoc
         public frmNhaCungCap()
         {
             InitializeComponent();
-            this.dataGridView = dataGridView;
-            this.bindingNavigator = bindingNavigator;
-            this.bindingNavigatorPositionItem = bindingNavigatorPositionItem;
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            base.dataGridView = this.dataGridView;
+            base.bindingNavigator = this.bindingNavigator;
+            base.bindingNavigatorPositionItem = this.bindingNavigatorPositionItem;
         }
 
         protected override void LoadData()

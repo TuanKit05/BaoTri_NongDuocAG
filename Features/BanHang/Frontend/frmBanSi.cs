@@ -24,10 +24,16 @@ namespace CuahangNongduoc
         // Form là người quan sát: mỗi lần mô hình đổi, HoaDon_DaThayDoi cập nhật ô tổng và tiền giảm.
         HoaDonDangLap hoaDon = new HoaDonDangLap();
         bool dangNapPhi = false;
+        private bool dangNapDuLieu = true;
+        private BindingSource nguonPhieu;
 
         public frmBanSi()
         {
             InitializeComponent();
+            this.FormClosed += delegate { NgatTheoDoiPhieu(); };
+            this.Disposed += delegate { NgatTheoDoiPhieu(); };
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            this.Load += delegate { SecuredUi.ApplyForm(this); };
             this.Shown += delegate {
                 if (!AccessControl.Can("ThietLapUuDai"))
                 {
@@ -47,57 +53,80 @@ namespace CuahangNongduoc
 
         private void frmNhapHang_Load(object sender, EventArgs e)
         {
-            ctrlSanPham.HienthiAutoComboBox(cmbSanPham);
-            ctrlMaSanPham.HienThiDataGridViewComboBox(colMaSanPham);
-
-            cmbSanPham.SelectedIndexChanged += new EventHandler(cmbSanPham_SelectedIndexChanged);
-
-            ctrlKhachHang.HienthiAutoComboBox(cmbKhachHang, true);
-
-            ctrlPhieuBan.HienthiPhieuBan(bindingNavigator, cmbKhachHang, txtMaPhieu, dtNgayLapPhieu, numTongTien, numDaTra, numConNo);
-
-            bindingNavigator.BindingSource.CurrentChanged -= new EventHandler(BindingSource_CurrentChanged);
-            bindingNavigator.BindingSource.CurrentChanged += new EventHandler(BindingSource_CurrentChanged);
-
-            ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, txtMaPhieu.Text);
-
+            dangNapDuLieu = true;
+            try
+            {
+                ctrlSanPham.HienthiAutoComboBox(cmbSanPham);
+                ctrlMaSanPham.HienThiDataGridViewComboBox(colMaSanPham);
+                cmbSanPham.SelectedIndexChanged -= cmbSanPham_SelectedIndexChanged;
+                cmbSanPham.SelectedIndexChanged += cmbSanPham_SelectedIndexChanged;
+                ctrlKhachHang.HienthiAutoComboBox(cmbKhachHang, true);
+                ctrlPhieuBan.HienthiPhieuBan(bindingNavigator, cmbKhachHang, txtMaPhieu,
+                    dtNgayLapPhieu, numTongTien, numDaTra, numConNo);
+                NgatTheoDoiPhieu();
+                nguonPhieu = bindingNavigator.BindingSource;
+                if (nguonPhieu != null) nguonPhieu.CurrentChanged += BindingSource_CurrentChanged;
+                if (status == Controll.AddNew)
+                {
+                    txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
+                    // A new invoice must not load the detail rows of an existing ID.
+                    ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, "-1");
+                }
+                else this.Allow(false);
+            }
+            finally { dangNapDuLieu = false; }
             if (status == Controll.AddNew)
             {
-                txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
+                cmbSanPham_SelectedIndexChanged(cmbSanPham, EventArgs.Empty);
                 DongBoTienHang();
             }
-            else
-            {
-                this.Allow(false);
-                HienThiPhi(txtMaPhieu.Text);
-            }
+            else BindingSource_CurrentChanged(nguonPhieu, EventArgs.Empty);
+        }
+
+        private void NgatTheoDoiPhieu()
+        {
+            if (nguonPhieu != null) nguonPhieu.CurrentChanged -= BindingSource_CurrentChanged;
+            nguonPhieu = null;
         }
 
         void BindingSource_CurrentChanged(object sender, EventArgs e)
         {
-            if (status == Controll.Normal)
+            if (dangNapDuLieu || IsDisposed || Disposing || status != Controll.Normal) return;
+            DataRowView current = nguonPhieu == null ? null : nguonPhieu.Current as DataRowView;
+            string id = current == null ? "-1" : Convert.ToString(current["ID"]);
+            dangNapDuLieu = true;
+            try
             {
-                ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, txtMaPhieu.Text);
-                HienThiPhi(txtMaPhieu.Text);
+                ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, id);
+                HienThiPhi(id);
             }
+            finally { dangNapDuLieu = false; }
         }
 
         void cmbSanPham_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cmbSanPham.SelectedValue != null)
-            {
-                MaSanPhamController ctrlMSP = new MaSanPhamController();
-
-                cmbMaSanPham.SelectedIndexChanged -= new EventHandler(cmbMaSanPham_SelectedIndexChanged);
-                ctrlMSP.HienThiAutoComboBox(cmbSanPham.SelectedValue.ToString(), cmbMaSanPham);
-                cmbMaSanPham.SelectedIndexChanged += new EventHandler(cmbMaSanPham_SelectedIndexChanged);
-            }
+            if (dangNapDuLieu || cmbSanPham.SelectedValue == null ||
+                cmbSanPham.SelectedValue == DBNull.Value || cmbSanPham.SelectedValue is DataRowView) return;
+            MaSanPhamController ctrlMSP = new MaSanPhamController();
+            cmbMaSanPham.SelectedIndexChanged -= cmbMaSanPham_SelectedIndexChanged;
+            try { ctrlMSP.HienThiAutoComboBox(Convert.ToString(cmbSanPham.SelectedValue), cmbMaSanPham); }
+            finally { cmbMaSanPham.SelectedIndexChanged += cmbMaSanPham_SelectedIndexChanged; }
+            cmbMaSanPham_SelectedIndexChanged(cmbMaSanPham, EventArgs.Empty);
         }
 
         void cmbMaSanPham_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (dangNapDuLieu) return;
+            if (cmbMaSanPham.SelectedValue == null || cmbMaSanPham.SelectedValue == DBNull.Value ||
+                cmbMaSanPham.SelectedValue is DataRowView)
+            {
+                txtGiaNhap.Clear(); txtGiaBanSi.Clear(); txtGiaBanLe.Clear(); txtGiaBQGQ.Clear();
+                numDonGia.Value = 0;
+                return;
+            }
             MaSanPhamController ctrl = new MaSanPhamController();
-            MaSanPham masp = ctrl.LayMaSanPham(cmbMaSanPham.SelectedValue.ToString());
+            MaSanPham masp = ctrl.LayMaSanPham(Convert.ToString(cmbMaSanPham.SelectedValue));
+            if (masp == null || masp.SanPham == null) return;
             numDonGia.Value = masp.SanPham.GiaBanSi;
             txtGiaNhap.Text = masp.GiaNhap.ToString("#,###0");
             txtGiaBanSi.Text = masp.SanPham.GiaBanSi.ToString("#,###0");
@@ -134,12 +163,15 @@ namespace CuahangNongduoc
 
         private void numDonGia_ValueChanged(object sender, EventArgs e)
         {
+            if (dangNapDuLieu) return;
             numThanhTien.Value = numDonGia.Value * numSoLuong.Value;
         }
 
         private void numTongTien_ValueChanged(object sender, EventArgs e)
         {
-            numConNo.Value = numTongTien.Value - numDaTra.Value;
+            if (dangNapDuLieu || status == Controll.Normal) return;
+            decimal conNo = Math.Max(0, numTongTien.Value - numDaTra.Value);
+            if (numConNo.Value != conNo) numConNo.Value = conNo;
         }
 
         // ---------- Phí phát sinh và giảm giá (dùng HoaDonDangLap) ----------
@@ -171,6 +203,7 @@ namespace CuahangNongduoc
         // Người quan sát: cập nhật ô tổng tiền và tiền giảm mỗi khi mô hình đổi
         void HoaDon_DaThayDoi(object sender, EventArgs e)
         {
+            if (dangNapDuLieu || status == Controll.Normal) return;
             numTongTien.Value = hoaDon.TongTien;
             lblTienGiam.Text = hoaDon.TienGiam.ToString("#,###0");
         }
@@ -207,8 +240,12 @@ namespace CuahangNongduoc
                 dgvDichVu.Rows.Add(dv.Ten, dv.TienDV);
             }
             dangNapPhi = false;
-            DongBoPhi();
-            DongBoTienHang();
+            lblTienGiam.Text = phi.TienGiam.ToString("#,###0");
+            if (status != Controll.Normal)
+            {
+                DongBoPhi();
+                DongBoTienHang();
+            }
         }
 
         private void numPhiVanChuyen_ValueChanged(object sender, EventArgs e)
@@ -250,6 +287,8 @@ namespace CuahangNongduoc
             {
                 return ThemMoi();
             }
+            if (!AccessControl.Can("SuaPhieuBan"))
+            { MessageBox.Show("Bạn chỉ được xem phiếu đã lập. Chỉ quản lý được sửa phiếu.", "Phân quyền"); return false; }
             CapNhat();
             return true;
         }
@@ -401,12 +440,16 @@ namespace CuahangNongduoc
             numTongTien.Enabled = false;
             btnAdd.Enabled = val;
             btnRemove.Enabled = val;
-            dgvDanhsachSP.Enabled = val;
+            dgvDanhsachSP.Enabled = true;
+            dgvDanhsachSP.ReadOnly = !val;
+            toolLuu.Enabled = val || AccessControl.Can("SuaPhieuBan");
+            cmbKhachHang.Enabled = val;
+            numDaTra.Enabled = val;
 
             // Phí chỉ nhập khi lập phiếu mới; phiếu đã lưu không sửa phí
             bool choPhi = val && status == Controll.AddNew;
             numPhiVanChuyen.Enabled = choPhi;
-            numPhanTramGiam.Enabled = choPhi;
+            numPhanTramGiam.Enabled = choPhi && AccessControl.Can("ThietLapUuDai");
             dgvDichVu.Enabled = choPhi;
         }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
@@ -11,6 +11,7 @@ namespace CuahangNongduoc
         public frmDoiMatKhau()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         public frmDoiMatKhau(AccountRepository repository, bool firstLogin) : this()

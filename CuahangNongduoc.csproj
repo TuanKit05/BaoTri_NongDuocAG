@@ -213,6 +213,7 @@
     <Compile Include="Features\QuanLyDanhMuc\Frontend\frmDaiLy.Designer.cs">
       <DependentUpon>frmDaiLy.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\ResponsiveLayout.cs" />
     <Compile Include="Common\DataService.cs">
       <SubType>Component</SubType>
     </Compile>

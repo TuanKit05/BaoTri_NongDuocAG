@@ -14,15 +14,26 @@ namespace CuahangNongduoc
         private System.Windows.Forms.ToolStripMenuItem mnuQuanLyTaiKhoan;
         private System.Windows.Forms.ToolStripMenuItem mnuDoiMatKhau;
         private System.Windows.Forms.ToolStripMenuItem mnuDangXuat;
+        private frmQuanLyTaiKhoan quanLyTaiKhoan;
+        private frmDoiMatKhau doiMatKhau;
 
         public frmMain()
         {
             InitializeComponent();
+            this.MdiChildActivate += new EventHandler(frmMain_MdiChildActivate);
             KhoiTaoMenuTaiKhoan();
         }
         frmDonViTinh DonViTinh = null;
 
 
+
+        // Apply to every MDI child, including forms opened from menus and toolbars.
+        private void frmMain_MdiChildActivate(object sender, EventArgs e)
+        {
+            Form child = this.ActiveMdiChild;
+            if (child != null && !child.IsDisposed && child.WindowState != FormWindowState.Maximized)
+                child.WindowState = FormWindowState.Maximized;
+        }
 
         private void ShowChildForm<T>(ref T form) where T : Form, new()
         {
@@ -412,21 +423,19 @@ namespace CuahangNongduoc
             mnuNhapHang.Visible = CoQuyen("NhapHang");
             mnuBanHangKH.Visible = CoQuyen("BanHang");
             mnuBanHangDL.Visible = CoQuyen("BanHang");
-            mnuBanHang.Visible = mnuBanHangKH.Visible || mnuBanHangDL.Visible;
+            mnuBanHang.Visible = CoQuyen("BanHang");
             mnuPhieuChi.Visible = CoQuyen("ThuChi");
             mnuThanhtoan.Visible = CoQuyen("ThuChi");
             mnuTonghopDuno.Visible = CoQuyen("ThuChi");
-            mnuQuanLy.Visible = mnuLyDoChi.Visible || mnuDonViTinh.Visible || mnuSanPham.Visible ||
-                mnuKhachHang.Visible || mnuDaiLy.Visible || mnuNhaCungCap.Visible;
-            mnuNghiepVu.Visible = mnuNhapHang.Visible || mnuBanHang.Visible || mnuPhieuChi.Visible ||
-                mnuThanhtoan.Visible || mnuTonghopDuno.Visible;
+            mnuQuanLy.Visible = CoQuyen("LyDoChi") || CoQuyen("DonViTinh") || CoQuyen("SanPham") ||
+                CoQuyen("KhachHang") || CoQuyen("DaiLy") || CoQuyen("NhaCungCap");
+            mnuNghiepVu.Visible = CoQuyen("NhapHang") || CoQuyen("BanHang") || CoQuyen("ThuChi");
 
             mnuBaocaoSoluongton.Visible = CoQuyen("BaoCaoTonKho");
             mnuThongKeTonKho.Visible = CoQuyen("BaoCaoTonKho");
             mnuSanphamHethan.Visible = CoQuyen("BaoCaoTonKho");
             mnuSoLuongBan.Visible = CoQuyen("BaoCaoBanHang");
-            mnuBaocao.Visible = mnuBaocaoSoluongton.Visible || mnuThongKeTonKho.Visible ||
-                mnuSanphamHethan.Visible || mnuSoLuongBan.Visible;
+            mnuBaocao.Visible = CoQuyen("BaoCaoTonKho") || CoQuyen("BaoCaoBanHang");
 
             mnuTuychinh.Visible = CoQuyen("QuanTri");
             mnuQuanLyTaiKhoan.Visible = CoQuyen("QuanLyTaiKhoan");
@@ -454,24 +463,47 @@ namespace CuahangNongduoc
             itemTonghopDoanhthu.Visible = CoQuyen("BaoCaoBanHang");
             itemTonKho.Visible = CoQuyen("BaoCaoTonKho");
 
-            expando1.Visible = itemDaiLy.Visible || itemKhachHang.Visible || itemSanPham.Visible || itemNhaCungCap.Visible;
-            expando2.Visible = itemNhapHang.Visible || itemBanSi.Visible || itemBanLe.Visible || itemThanhToan.Visible || itemPhieuChi.Visible;
-            expando3.Visible = itemTonghopDoanhthu.Visible || itemTonKho.Visible;
-            taskPane.Visible = expando1.Visible || expando2.Visible || expando3.Visible;
+            // Visible on a child also returns false when its parent is hidden.
+            // Calculate group visibility from permissions instead of child controls.
+            bool showCatalog = CoQuyen("DaiLy") || CoQuyen("KhachHang") ||
+                CoQuyen("SanPham") || CoQuyen("NhaCungCap");
+            bool showOperations = CoQuyen("NhapHang") || CoQuyen("BanHang") || CoQuyen("ThuChi");
+            bool showReports = CoQuyen("BaoCaoBanHang") || CoQuyen("BaoCaoTonKho");
+            expando1.Visible = showCatalog;
+            expando2.Visible = showOperations;
+            expando3.Visible = showReports;
+            taskPane.Visible = showCatalog || showOperations || showReports;
+            mnuThanhChucNang.Checked = showCatalog || showOperations || showReports;
+            toolStrip.Visible = true;
+            mnuThanhCongCu.Checked = true;
+
         }
 
         private void mnuQuanLyTaiKhoan_Click(object sender, EventArgs e)
         {
             if (!KiemTraQuyen("QuanLyTaiKhoan")) return;
-            using (frmQuanLyTaiKhoan form = new frmQuanLyTaiKhoan(new AccountRepository()))
-                form.ShowDialog(this);
+            if (quanLyTaiKhoan == null || quanLyTaiKhoan.IsDisposed)
+            {
+                quanLyTaiKhoan = new frmQuanLyTaiKhoan(new AccountRepository());
+                quanLyTaiKhoan.MdiParent = this;
+                quanLyTaiKhoan.Show();
+            }
+            else quanLyTaiKhoan.Activate();
         }
 
         private void mnuDoiMatKhau_Click(object sender, EventArgs e)
         {
             if (AppSession.CurrentUser == null) return;
-            using (frmDoiMatKhau form = new frmDoiMatKhau(new AccountRepository(), false))
-                form.ShowDialog(this);
+            if (doiMatKhau == null || doiMatKhau.IsDisposed)
+            {
+                doiMatKhau = new frmDoiMatKhau(new AccountRepository(), false);
+                doiMatKhau.FormBorderStyle = FormBorderStyle.Sizable;
+                doiMatKhau.MaximizeBox = true;
+                doiMatKhau.MinimizeBox = true;
+                doiMatKhau.MdiParent = this;
+                doiMatKhau.Show();
+            }
+            else doiMatKhau.Activate();
         }
 
         private void mnuDangXuat_Click(object sender, EventArgs e)

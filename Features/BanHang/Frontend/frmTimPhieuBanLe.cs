@@ -14,6 +14,7 @@ namespace CuahangNongduoc
         public frmTimPhieuBanLe()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
         public frmTimPhieuBanLe(bool loai):this()
         {

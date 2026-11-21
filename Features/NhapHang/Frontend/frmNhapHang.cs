@@ -25,6 +25,8 @@ namespace CuahangNongduoc
         public frmNhapHang()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            this.Load += delegate { SecuredUi.ApplyForm(this); };
             status = Controll.AddNew;
             CauHinhONhapTien();
             dtNgayNhap.ValueChanged += dtNgayNhap_ValueChanged;

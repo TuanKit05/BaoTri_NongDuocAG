@@ -35,11 +35,11 @@ namespace CuahangNongduoc
 
     public static class AccountRoles
     {
-        public const string Admin="ADMIN", Warehouse="KHO", Sales="BANHANG", Accountant="KETOAN", Cashier="KETOAN";
+        public const string Admin="ADMIN", Warehouse="KHO", Sales="BANHANG", Accountant="KETOAN";
         public static string Normalize(string role)
         {
             role=(role??"").Trim();
-            if(role=="Quánr lý") return Admin;
+            if(role=="Quản lý") return Admin;
             if(role=="Thủ kho") return Warehouse;
             if(role=="Bán hàng") return Sales;
             if(role=="Kế toán") return Accountant;

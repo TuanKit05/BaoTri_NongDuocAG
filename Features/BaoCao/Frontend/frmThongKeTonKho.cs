@@ -21,6 +21,7 @@ namespace CuahangNongduoc
         public frmThongKeTonKho()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         private void frmThongKeTonKho_Load(object sender, EventArgs e)

@@ -25,7 +25,11 @@ namespace CuahangNongduoc
     {
         private readonly UserAccount user;
         public DatabaseRolePolicy(UserAccount account){user=account;}
-        public bool CanAccess(string feature){return user!=null && user.IsActive && !user.IsDeleted && user.Permissions.Contains(feature);}
+        public bool CanAccess(string feature)
+        {
+            return user != null && user.IsActive && !user.IsDeleted && !String.IsNullOrEmpty(feature) &&
+                (AccountRoles.IsAdmin(user.Role) || user.Permissions.Contains(feature));
+        }
     }
     public static class RolePolicyFactory
     {
@@ -97,14 +101,21 @@ namespace CuahangNongduoc
                 command.CommandText=head+" "+sql.Substring(tail);
             }
         }
+        public static bool IsCostField(string name)
+        {
+            string normalized=(name??"").Normalize(System.Text.NormalizationForm.FormD);
+            System.Text.StringBuilder letters=new System.Text.StringBuilder();
+            foreach(char value in normalized)
+                if(System.Globalization.CharUnicodeInfo.GetUnicodeCategory(value)!=System.Globalization.UnicodeCategory.NonSpacingMark) letters.Append(value);
+            string key=letters.ToString().ToUpperInvariant().Replace("_", "").Replace(" ", "");
+            return key.Contains("GIANHAP") || key.Contains("GIAVON") || key.Contains("GIABQGQ");
+        }
         public static void HideCosts(DataTable table)
         {
             if(Can("XemGiaNhap") && Can("XemGiaVon")) return;
             foreach(DataColumn column in table.Columns)
             {
-                string name=column.ColumnName.ToUpperInvariant();
-                bool cost=name=="GIA_VON" || name=="GIA_BQGQ" || name=="DON_GIA_NHAP" || name=="GIA_NHAP";
-                if(!cost) continue;
+                if(!IsCostField(column.ColumnName)) continue;
                 foreach(DataRow row in table.Rows) row[column]=0;
             }
             table.AcceptChanges();
@@ -182,51 +193,54 @@ namespace CuahangNongduoc
         {
             List<System.Windows.Forms.Form> forms = new List<System.Windows.Forms.Form>();
             foreach(System.Windows.Forms.Form form in System.Windows.Forms.Application.OpenForms) forms.Add(form);
-            foreach(System.Windows.Forms.Form form in forms)
+            foreach(System.Windows.Forms.Form form in forms) ApplyForm(form);
+        }
+        public static void ApplyForm(System.Windows.Forms.Form form)
+        {
+            if(form == null || configured.ContainsKey(form) || form.IsDisposed) return;
+            configured[form]=true;
+            form.FormClosed += delegate { configured.Remove(form); };
+            string name=form.GetType().Name;
+            string permission=null;
+            if(name=="frmQuanLyTaiKhoan") permission="QuanLyTaiKhoan";
+            else if(name=="frmSanPham") permission="SanPham";
+            else if(name=="frmNhaCungCap") permission="NhaCungCap";
+            else if(name=="frmDonViTinh") permission="DonViTinh";
+            else if(name=="frmKhachHang") permission="KhachHang";
+            else if(name=="frmDaiLy") permission="DaiLy";
+            else if(name=="frmLyDoChi") permission="LyDoChi";
+            else if(name=="frmBanLe" || name=="frmBanSi" || name.StartsWith("frmDanhsachPhieuBan")) permission="BanHang";
+            else if(name=="frmNhapHang" || name=="frmDanhsachPhieuNhap") permission="NhapHang";
+            else if(name=="frmThanhToan" || name=="frmPhieuChi" || name=="frmDunoKhachhang") permission="ThuChi";
+            else if(name=="frmSoLuongTon" || name=="frmThongKeTonKho" || name=="frmSanphamHethan") permission="BaoCaoTonKho";
+            else if(name=="frmSoLuongBan" || name=="frmDoanhThu" || name=="frmThongKeUuDai") permission="BaoCaoBanHang";
+            else if(name=="frmThongtinCuahang") permission="QuanTri";
+            if(permission!=null && !AccessControl.Can(permission))
             {
-                if(configured.ContainsKey(form) || form.IsDisposed) continue;
-                configured[form]=true;
-                form.FormClosed += delegate { configured.Remove(form); };
-                string name=form.GetType().Name;
-                string permission=null;
-                if(name=="frmQuanLyTaiKhoan") permission="QuanLyTaiKhoan";
-                else if(name=="frmSanPham") permission="SanPham";
-                else if(name=="frmNhaCungCap") permission="NhaCungCap";
-                else if(name=="frmDonViTinh") permission="DonViTinh";
-                else if(name=="frmKhachHang" || name=="frmDaiLy") permission="KhachHang";
-                else if(name=="frmLyDoChi") permission="LyDoChi";
-                else if(name=="frmBanLe" || name=="frmBanSi" || name.StartsWith("frmDanhsachPhieuBan")) permission="BanHang";
-                else if(name=="frmNhapHang" || name=="frmDanhsachPhieuNhap") permission="NhapHang";
-                else if(name=="frmThanhToan" || name=="frmPhieuChi" || name=="frmDunoKhachhang") permission="ThuChi";
-                else if(name=="frmSoLuongTon" || name=="frmThongKeTonKho" || name=="frmSanphamHethan") permission="BaoCaoTonKho";
-                else if(name=="frmSoLuongBan" || name=="frmDoanhThu" || name=="frmThongKeUuDai") permission="BaoCaoBanHang";
-                else if(name=="frmThongtinCuahang") permission="QuanTri";
-                if(permission!=null && !AccessControl.Can(permission))
-                {
-                    System.Windows.Forms.MessageBox.Show("Bạn không có quyền mở chức năng này.","Phân quyền"); form.Close(); continue;
-                }
-                bool catalog=name=="frmSanPham" || name=="frmNhaCungCap" || name=="frmDonViTinh" || name=="frmKhachHang" || name=="frmDaiLy" || name=="frmLyDoChi";
-                ConfigureControls(form,catalog && !AccessControl.Can("SuaDanhMuc"),name=="frmBanLe" || name=="frmBanSi");
+                System.Windows.Forms.MessageBox.Show("Bạn không có quyền mở chức năng này.","Phân quyền"); form.Close(); return;
             }
+            bool catalog=name=="frmSanPham" || name=="frmNhaCungCap" || name=="frmDonViTinh" || name=="frmKhachHang" || name=="frmDaiLy" || name=="frmLyDoChi";
+            ConfigureControls(form,catalog && !AccessControl.Can("SuaDanhMuc"),name=="frmBanLe" || name=="frmBanSi");
+        }
+        private static void ConfigureCostColumn(System.Windows.Forms.DataGridViewColumn column)
+        {
+            if(!AccessControl.Can("XemGiaNhap") && AccessControl.IsCostField(column.Name+" "+column.DataPropertyName)) column.Visible=false;
         }
         private static void ConfigureControls(System.Windows.Forms.Control parent,bool readOnly,bool sale)
         {
             foreach(System.Windows.Forms.Control control in parent.Controls)
             {
                 string name=control.Name.ToLowerInvariant();
-                if(!AccessControl.Can("XemGiaNhap") && (name.Contains("gianhap") || name.Contains("giabqgq") || name.Contains("giavon"))) control.Visible=false;
+                if(!AccessControl.Can("XemGiaNhap") && AccessControl.IsCostField(name+" "+control.Text)) control.Visible=false;
                 System.Windows.Forms.DataGridView grid=control as System.Windows.Forms.DataGridView;
                 if(grid!=null)
                 {
                     if(readOnly){grid.ReadOnly=true;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;}
                     else if(!AccessControl.Can("XoaPhieu") && !sale) grid.AllowUserToDeleteRows=false;
-                    foreach(System.Windows.Forms.DataGridViewColumn column in grid.Columns)
-                    {
-                        string key=(column.Name+" "+column.DataPropertyName).ToUpperInvariant().Replace("_","");
-                        if(!AccessControl.Can("XemGiaNhap") && (key.Contains("GIANHAP") || key.Contains("GIAVON") || key.Contains("GIABQGQ"))) column.Visible=false;
-                    }
+                    foreach(System.Windows.Forms.DataGridViewColumn column in grid.Columns) ConfigureCostColumn(column);
+                    grid.ColumnAdded += delegate(object sender, System.Windows.Forms.DataGridViewColumnEventArgs e) { ConfigureCostColumn(e.Column); };
                 }
-                if(readOnly && (control is System.Windows.Forms.TextBox || control is System.Windows.Forms.ComboBox || control is System.Windows.Forms.NumericUpDown)) control.Enabled=false;
+                if(readOnly && !(control.Parent is System.Windows.Forms.ToolStrip) && (control is System.Windows.Forms.TextBox || control is System.Windows.Forms.ComboBox || control is System.Windows.Forms.NumericUpDown)) control.Enabled=false;
                 if(readOnly && control is System.Windows.Forms.Button && !name.Contains("thoat") && !name.Contains("close") && !name.Contains("tim")) control.Enabled=false;
                 if(sale && !AccessControl.Can("ThietLapUuDai") && (name.Contains("chietkhau") || name.Contains("giamgia") || name.Contains("phantramgiam"))) control.Enabled=false;
                 System.Windows.Forms.ToolStrip strip=control as System.Windows.Forms.ToolStrip;

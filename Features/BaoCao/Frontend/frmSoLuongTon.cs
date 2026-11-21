@@ -13,6 +13,7 @@ namespace CuahangNongduoc
         public frmSoLuongTon()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         private void frmSoLuongTon_Load(object sender, EventArgs e)

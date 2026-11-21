@@ -11,6 +11,7 @@ namespace CuahangNongduoc
         public frmQuanLyTaiKhoan()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         public frmQuanLyTaiKhoan(AccountRepository repository) : this()
@@ -155,6 +156,11 @@ namespace CuahangNongduoc
         private void btnDelete_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Nhân viên nghỉ việc được khóa tài khoản để giữ lịch sử. Dùng nút Khóa / Mở khóa.", "Quản lý tài khoản");
+        }
+
+        private void frmQuanLyTaiKhoan_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,6 +15,7 @@ namespace CuahangNongduoc
         public frmDanhsachPhieuBanSi()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         PhieuBanController ctrl = new PhieuBanController();
@@ -30,9 +31,11 @@ namespace CuahangNongduoc
 
         private void dataGridView_DoubleClick(object sender, EventArgs e)
         {
+            if (bindingNavigator.BindingSource == null || bindingNavigator.BindingSource.Current == null) return;
             if (BanLe == null || BanLe.IsDisposed)
             {
                 BanLe = new frmBanSi(ctrl);
+                if (this.MdiParent != null) BanLe.MdiParent = this.MdiParent;
                 BanLe.Show();
             }
             else
@@ -44,6 +47,7 @@ namespace CuahangNongduoc
             if (BanLe == null || BanLe.IsDisposed)
             {
                 BanLe = new frmBanSi();
+                if (this.MdiParent != null) BanLe.MdiParent = this.MdiParent;
                 BanLe.Show();
             }
             else

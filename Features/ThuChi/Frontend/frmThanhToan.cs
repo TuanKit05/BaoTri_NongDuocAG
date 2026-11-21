@@ -16,6 +16,8 @@ namespace CuahangNongduoc
         public frmThanhToan()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            this.Load += delegate { SecuredUi.ApplyForm(this); };
         }
 
         private void frmThanhToan_Load(object sender, EventArgs e)

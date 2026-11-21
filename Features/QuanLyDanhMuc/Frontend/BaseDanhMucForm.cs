@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Windows.Forms;
 using CuahangNongduoc.Controller;
@@ -17,6 +17,7 @@ namespace CuahangNongduoc
         protected virtual void Base_Load(object sender, EventArgs e)
         {
             LoadData();
+            SecuredUi.ApplyForm(this);
         }
 
         protected virtual void LoadData()
@@ -31,6 +32,7 @@ namespace CuahangNongduoc
         {
             try
             {
+                AccessControl.DemandCurrent("SuaDanhMuc");
                 if (Controller != null)
                 {
                     if (bindingNavigator != null && bindingNavigator.BindingSource != null)
@@ -62,6 +64,8 @@ namespace CuahangNongduoc
 
         protected virtual void XoaDongHienTai()
         {
+            if (!AccessControl.Can("SuaDanhMuc"))
+            { MessageBox.Show("Bạn chỉ được xem danh mục này.", "Phân quyền"); return; }
             if (dataGridView != null && dataGridView.CurrentRow != null && !dataGridView.CurrentRow.IsNewRow)
             {
                 dataGridView.Rows.Remove(dataGridView.CurrentRow);
@@ -70,6 +74,7 @@ namespace CuahangNongduoc
 
         protected virtual void HuyXoaDong(DataGridViewRowCancelEventArgs e)
         {
+            if (!AccessControl.Can("SuaDanhMuc")) e.Cancel = true;
         }
     }
 }

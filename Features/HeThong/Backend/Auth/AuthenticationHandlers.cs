@@ -65,7 +65,7 @@
     {
         public override bool Handle(LoginContext context)
         {
-            if (context.Account.Permissions.Count == 0)
+            if (context.Account.Permissions.Count == 0 && !AccountRoles.IsAdmin(context.Account.Role))
             {
                 context.ErrorMessage = "Tài khoản chưa được gán vai trò hoặc quyền hợp lệ. Vui lòng liên hệ quản lý.";
                 return false;

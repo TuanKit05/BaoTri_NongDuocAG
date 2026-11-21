@@ -1,4 +1,4 @@
-using CuahangNongduoc.Controller;
+﻿using CuahangNongduoc.Controller;
 using System;
 using System.Windows.Forms;
 
@@ -14,8 +14,9 @@ namespace CuahangNongduoc
         public frmDonViTinh()
         {
             InitializeComponent();
-            this.dataGridView = dataGridView;
-            this.bindingNavigator = bindingNavigator;
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
+            base.dataGridView = this.dataGridView;
+            base.bindingNavigator = this.bindingNavigator;
         }
 
         private void frmDonViTinh_Load(object sender, EventArgs e)

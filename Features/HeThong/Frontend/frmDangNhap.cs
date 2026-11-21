@@ -12,6 +12,7 @@ namespace CuahangNongduoc
         public frmDangNhap()
         {
             InitializeComponent();
+            CuahangNongduoc.ResponsiveLayout.Attach(this);
         }
 
         public frmDangNhap(AuthService authService, AccountRepository repository) : this()
