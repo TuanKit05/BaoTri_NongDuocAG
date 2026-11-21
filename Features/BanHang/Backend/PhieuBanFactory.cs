@@ -101,6 +101,9 @@ namespace CuahangNongduoc.DataLayer
         /// </summary>
         public bool SaveTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr)
         {
+            if (!AccessControl.Can("SuaPhieuBan") && m_Ds.GetChanges(DataRowState.Added) == null)
+                throw new UnauthorizedAccessException("Chỉ quản lý được sửa phiếu đã lập.");
+            AccessControl.ValidateRows(m_Ds, m_Ds.Command.CommandText);
             OleDbCommand cmdSelect = m_Ds.Command;
             cmdSelect.Connection = conn;
             cmdSelect.Transaction = tr;
@@ -114,7 +117,10 @@ namespace CuahangNongduoc.DataLayer
                 e.Command.Transaction = tr;
             };
 
-            return adapter.Update(m_Ds) > 0;
+            string auditChanges = AccessControl.DescribeChanges(m_Ds);
+            int changed = adapter.Update(m_Ds);
+            if (changed > 0) AccountRepository.Audit(conn, tr, "LAP_SUA_PHIEU_BAN", "PHIEU_BAN", auditChanges);
+            return changed > 0;
         }
 
         /// <summary>
@@ -122,6 +128,8 @@ namespace CuahangNongduoc.DataLayer
         /// </summary>
         public void XoaPhieuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieu)
         {
+            AccessControl.DemandCurrent("XoaPhieu");
+            AccountRepository.Audit(conn, tr, "XOA_PHIEU_BAN", idPhieu, "Hoàn tồn và xóa chi tiết cùng giao dịch");
             OleDbCommand cmd = new OleDbCommand("DELETE FROM PHIEU_BAN WHERE ID = @id", conn, tr);
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieu;
             if (cmd.ExecuteNonQuery() != 1)

@@ -66,6 +66,7 @@ namespace CuahangNongduoc.DataLayer
         /// </summary>
         public bool Save()
         {
+            AccessControl.DemandCurrent("BanHang");
             if (!CoDongMoi())
                 return true;
 
@@ -97,6 +98,9 @@ namespace CuahangNongduoc.DataLayer
         /// </summary>
         public bool SaveTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr)
         {
+            AccessControl.DemandCurrent("BanHang");
+            if (!AccessControl.Can("SuaPhieuBan") && AccessControl.SaleTransaction != tr)
+                throw new UnauthorizedAccessException("Chi tiết phiếu mới phải được lưu cùng đầu phiếu.");
             if (!CoDongMoi())
                 return true;
 
@@ -106,10 +110,21 @@ namespace CuahangNongduoc.DataLayer
                 if (row.RowState != DataRowState.Added)
                     continue;
 
-                OleDbCommand cmdTon = new OleDbCommand("UPDATE MA_SAN_PHAM SET SO_LUONG = SO_LUONG + @so WHERE ID = @id", conn, tr);
-                cmdTon.Parameters.Add("so", OleDbType.Integer).Value = -Convert.ToInt32(row["SO_LUONG"]);
-                cmdTon.Parameters.Add("id", OleDbType.VarChar, 50).Value = Convert.ToString(row["ID_MA_SAN_PHAM"]);
-                cmdTon.ExecuteNonQuery();
+                int quantity = Convert.ToInt32(row["SO_LUONG"]);
+                if (quantity <= 0) throw new InvalidOperationException("Số lượng bán phải lớn hơn không.");
+                if (!AccessControl.Can("XemTatCaPhieuBan"))
+                {
+                    object owner = AccountRepository.Scalar(conn, tr, "SELECT ID_NHAN_VIEN FROM PHIEU_BAN WHERE ID=?", Convert.ToString(row["ID_PHIEU_BAN"]));
+                    if (!String.Equals(Convert.ToString(owner), AppSession.CurrentUser.Id, StringComparison.Ordinal))
+                        throw new UnauthorizedAccessException("Không được ghi chi tiết phiếu của người khác.");
+                }
+                OleDbCommand cmdTon = new OleDbCommand("UPDATE MA_SAN_PHAM SET SO_LUONG = SO_LUONG + ? WHERE ID = ? AND SO_LUONG >= ? AND NGAY_HET_HAN >= ?", conn, tr);
+                cmdTon.Parameters.Add("pQuantity", OleDbType.Integer).Value = -quantity;
+                cmdTon.Parameters.Add("pLot", OleDbType.VarWChar, 50).Value = Convert.ToString(row["ID_MA_SAN_PHAM"]);
+                cmdTon.Parameters.Add("pMinimum", OleDbType.Integer).Value = quantity;
+                cmdTon.Parameters.Add("pDate", OleDbType.Date).Value = DateTime.Today;
+                if (cmdTon.ExecuteNonQuery() != 1)
+                    throw new InvalidOperationException("Lô không đủ tồn hoặc đã hết hạn: " + Convert.ToString(row["ID_MA_SAN_PHAM"]));
             }
 
             // 2. Ghi các dòng chi tiết mới
@@ -137,6 +152,7 @@ namespace CuahangNongduoc.DataLayer
         public void XoaTheoPhieuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieuBan)
         {
             // Đọc trước, đóng reader, rồi mới chạy lệnh khác trên cùng connection
+            AccessControl.DemandCurrent("XoaPhieu");
             List<KeyValuePair<String, int>> dong = new List<KeyValuePair<String, int>>();
             OleDbCommand cmdChon = new OleDbCommand("SELECT ID_MA_SAN_PHAM, SO_LUONG FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id", conn, tr);
             cmdChon.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieuBan;

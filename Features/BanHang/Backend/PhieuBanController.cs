@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using CuahangNongduoc.DataLayer;
@@ -46,6 +46,7 @@ namespace CuahangNongduoc.Controller
         /// </summary>
         public void LuuPhieuVaChiTiet(ChiTietPhieuBanController ctrlChiTiet)
         {
+            AccessControl.DemandCurrent("BanHang");
             using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
             {
                 conn.Open();
@@ -53,12 +54,15 @@ namespace CuahangNongduoc.Controller
                 {
                     try
                     {
+                        AccessControl.SaleTransaction = tr;
                         factory.SaveTrongGiaoDich(conn, tr);
                         ctrlChiTiet.SaveTrongGiaoDich(conn, tr);
                         tr.Commit();
+                        AccessControl.SaleTransaction = null;
                     }
                     catch
                     {
+                        AccessControl.SaleTransaction = null;
                         tr.Rollback();
                         throw;
                     }
@@ -74,6 +78,7 @@ namespace CuahangNongduoc.Controller
         /// </summary>
         public void XoaPhieuBan(String id)
         {
+            AccessControl.DemandCurrent("XoaPhieu");
             ChiTietPhieuBanController ctrlChiTiet = new ChiTietPhieuBanController();
             using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
             {
@@ -128,6 +133,9 @@ namespace CuahangNongduoc.Controller
 
         public static void GhiPhi(PhieuBan phi)
         {
+            AccessControl.DemandCurrent("BanHang");
+            if (!AccessControl.Can("ThietLapUuDai") && (phi.PhanTramGiam != 0 || phi.TienGiam != 0))
+                throw new UnauthorizedAccessException("Nhân viên không được tự nhập mức ưu đãi.");
             String path = ThamSo.LayDuongDanPhiHoaDon();
             XmlDocument doc = new XmlDocument();
             if (File.Exists(path))

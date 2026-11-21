@@ -29,6 +29,7 @@ namespace CuahangNongduoc.DataLayer
 
             try
             {
+                AccessControl.DemandCurrent("NhapHang");
                 // Kiem tra lai tai tang nghiep vu/du lieu, khong chi phu thuoc giao dien.
                 string loiPhieu = NhapHangValidator.KiemTraThongTinPhieuNhap(
                     maPhieu, maNhaCungCap, tongTien, daTra);
@@ -89,6 +90,7 @@ namespace CuahangNongduoc.DataLayer
 
                 CapNhatGiaNhapBinhQuan(connection, transaction, tongHop);
 
+                AccountRepository.Audit(connection, transaction, "NHAP_HANG", maPhieu, "Nhập hoặc cập nhật phiếu / lô hàng");
                 transaction.Commit();
                 thongBao = "Lưu phiếu nhập thành công.";
                 return true;
@@ -125,6 +127,7 @@ namespace CuahangNongduoc.DataLayer
 
             try
             {
+                AccessControl.DemandCurrent("XoaPhieu");
                 connection = new OleDbConnection(CuahangNongduoc.DataService.m_ConnectString);
                 connection.Open();
                 transaction = connection.BeginTransaction();
@@ -149,6 +152,7 @@ namespace CuahangNongduoc.DataLayer
 
                 XoaDauPhieu(connection, transaction, maPhieu);
 
+                AccountRepository.Audit(connection, transaction, "XOA_PHIEU_NHAP", maPhieu, "Hoàn tác phiếu nhập");
                 transaction.Commit();
                 thongBao = "Xóa phiếu nhập thành công.";
                 return true;

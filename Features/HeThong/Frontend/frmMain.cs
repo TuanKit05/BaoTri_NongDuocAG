@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -41,6 +41,7 @@ namespace CuahangNongduoc
 
         private void mnuDonViTinh_Click(object sender, EventArgs e)
         {
+            if (!KiemTraQuyen("DonViTinh")) return;
             ShowChildForm(ref DonViTinh);
         }
 
@@ -351,6 +352,29 @@ namespace CuahangNongduoc
             mnuDangXuat = new System.Windows.Forms.ToolStripMenuItem("Đăng xuất");
             mnuDangXuat.Click += new EventHandler(mnuDangXuat_Click);
 
+            ToolStripMenuItem report = new ToolStripMenuItem("Hóa đơn ưu đãi theo nhân viên");
+            report.Visible = AccessControl.Can("BaoCaoBanHang");
+            report.Click += delegate {
+                if (!KiemTraQuyen("BaoCaoBanHang")) return;
+                new CuahangNongduoc.Features.BaoCao.ThongKeUuDai.frmThongKeUuDai().ShowDialog(this);
+            };
+            mnuBaocao.DropDownItems.Add(report);
+            ToolStripMenuItem audit = new ToolStripMenuItem("Nhật ký thao tác");
+            audit.Visible = AccessControl.Can("XemNhatKy");
+            audit.Click += delegate {
+                if (!KiemTraQuyen("XemNhatKy")) return;
+                DataService rows = new DataService();
+                rows.Load(new System.Data.OleDb.OleDbCommand("SELECT * FROM NHAT_KY ORDER BY THOI_GIAN DESC, ID DESC"));
+                using (Form viewer = new Form())
+                {
+                    viewer.Text = "Nhật ký thao tác"; viewer.Width = 1050; viewer.Height = 550;
+                    DataGridView grid = new DataGridView(); grid.Dock = DockStyle.Fill;
+                    grid.ReadOnly = true; grid.AllowUserToAddRows = false; grid.AllowUserToDeleteRows = false;
+                    grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+                    grid.DataSource = rows; viewer.Controls.Add(grid); viewer.ShowDialog(this);
+                }
+            };
+            mnuHeThong.DropDownItems.Add(audit);
             mnuHeThong.DropDownItems.Insert(0, mnuQuanLyTaiKhoan);
             mnuHeThong.DropDownItems.Insert(1, mnuDoiMatKhau);
             mnuHeThong.DropDownItems.Insert(2, new System.Windows.Forms.ToolStripSeparator());

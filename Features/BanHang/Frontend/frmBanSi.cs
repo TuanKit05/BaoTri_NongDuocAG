@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -28,6 +28,12 @@ namespace CuahangNongduoc
         public frmBanSi()
         {
             InitializeComponent();
+            this.Shown += delegate {
+                if (!AccessControl.Can("ThietLapUuDai"))
+                {
+                    numPhanTramGiam.Enabled = false;
+                }
+            };
             status = Controll.AddNew;
             hoaDon.DaThayDoi += new EventHandler(HoaDon_DaThayDoi);
         }
@@ -250,6 +256,7 @@ namespace CuahangNongduoc
 
         void CapNhat()
         {
+            AccessControl.DemandCurrent("SuaPhieuBan");
             // Sửa phiếu đã lưu: chỉ hoàn tồn cho dòng bị gỡ khỏi phiếu (không phải xóa cả phiếu)
             foreach (MaSanPham masp in deleted)
             {
@@ -380,6 +387,8 @@ namespace CuahangNongduoc
 
         private void toolChinhSua_Click(object sender, EventArgs e)
         {
+            if (!AccessControl.Can("SuaPhieuBan"))
+            { MessageBox.Show("Chỉ quản lý được sửa phiếu đã lập.", "Phân quyền"); return; }
             status = Controll.Edit;
             this.Allow(true);
         }

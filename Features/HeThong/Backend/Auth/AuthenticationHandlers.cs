@@ -1,4 +1,4 @@
-namespace CuahangNongduoc
+﻿namespace CuahangNongduoc
 {
     public interface IAuthenticationHandler
     {
@@ -65,6 +65,11 @@ namespace CuahangNongduoc
     {
         public override bool Handle(LoginContext context)
         {
+            if (context.Account.Permissions.Count == 0)
+            {
+                context.ErrorMessage = "Tài khoản chưa được gán vai trò hoặc quyền hợp lệ. Vui lòng liên hệ quản lý.";
+                return false;
+            }
             if (context.Account.IsDeleted)
             {
                 context.ErrorMessage =
@@ -87,8 +92,7 @@ namespace CuahangNongduoc
     {
         public override bool Handle(LoginContext context)
         {
-            if (!PasswordHasher.VerifyPassword(context.Password,
-                context.Account.Salt, context.Account.PasswordHash))
+            if (!AccountRepository.VerifyPassword(context.Account, context.Password))
             {
                 context.ErrorMessage = "Tên đăng nhập hoặc mật khẩu không chính xác.";
                 return false;

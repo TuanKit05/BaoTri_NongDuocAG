@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
@@ -16,15 +16,6 @@ namespace CuahangNongduoc
                 AccountRepository repository = new AccountRepository();
                 repository.EnsureSchema();
 
-                if (repository.GetAccountCount() == 0)
-                {
-                    using (frmTaoTaiKhoanAdmin setup = new frmTaoTaiKhoanAdmin(repository))
-                    {
-                        if (setup.ShowDialog() != DialogResult.OK)
-                            return;
-                    }
-                }
-
                 AuthService authService = new AuthService(repository);
                 bool runLoginAgain = true;
                 while (runLoginAgain)
@@ -36,7 +27,9 @@ namespace CuahangNongduoc
                             break;
                     }
 
+                    Application.Idle += SecuredUi.ApplyOpenForms;
                     Application.Run(new frmMain());
+                    Application.Idle -= SecuredUi.ApplyOpenForms;
                     runLoginAgain = AppSession.LogoutRequested;
                     AppSession.CurrentUser = null;
                 }

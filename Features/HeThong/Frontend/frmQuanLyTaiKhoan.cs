@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace CuahangNongduoc
@@ -6,6 +6,7 @@ namespace CuahangNongduoc
     public partial class frmQuanLyTaiKhoan : Form
     {
         private AccountRepository _repository;
+        private System.Data.DataTable _roleTable;
 
         public frmQuanLyTaiKhoan()
         {
@@ -15,28 +16,49 @@ namespace CuahangNongduoc
         public frmQuanLyTaiKhoan(AccountRepository repository) : this()
         {
             _repository = repository;
+            LoadRoles();
             LoadAccounts();
         }
 
         private string SelectedRole()
         {
-            string value = Convert.ToString(cboRole.SelectedItem);
-            int separator = value.IndexOf(" - ");
-            if (separator >= 0) value = value.Substring(0, separator);
-            return value;
+            if (cboRole.SelectedIndex < 0 || cboRole.SelectedValue == null)
+                throw new InvalidOperationException("Vui lòng chọn vai trò.");
+            return Convert.ToString(cboRole.SelectedValue);
         }
 
-        private int SelectedAccountId()
+        private void LoadRoles()
+        {
+            if (_repository == null) return;
+            cboRole.DataSource = null;
+            _roleTable = _repository.GetRoles();
+            cboRole.DataSource = _roleTable;
+            cboRole.DisplayMember = "TenVaiTro";
+            cboRole.ValueMember = "MaVaiTro";
+            cboRole.SelectedIndex = -1;
+            btnCreate.Enabled = btnRole.Enabled = _roleTable.Rows.Count > 0;
+        }
+
+        private void SelectRole(string role)
+        {
+            cboRole.SelectedIndex = -1;
+            string[] codes = AccountRoles.Split(role);
+            if (codes.Length == 1) cboRole.SelectedValue = codes[0];
+        }
+
+        private string SelectedAccountId()
         {
             if (grid.CurrentRow == null || grid.CurrentRow.Cells["MaTaiKhoan"].Value == null)
                 throw new InvalidOperationException("Vui lòng chọn một tài khoản trong danh sách.");
-            return Convert.ToInt32(grid.CurrentRow.Cells["MaTaiKhoan"].Value);
+            return Convert.ToString(grid.CurrentRow.Cells["MaTaiKhoan"].Value);
         }
 
         private void LoadAccounts()
         {
             if (_repository == null) return;
             grid.DataSource = _repository.GetAllAccounts();
+            if (grid.Columns.Contains("VaiTro")) grid.Columns["VaiTro"].Visible = false;
+            if (grid.Columns.Contains("TenVaiTro")) grid.Columns["TenVaiTro"].HeaderText = "Vai trò";
             if (grid.Columns.Contains("MaTaiKhoan")) grid.Columns["MaTaiKhoan"].HeaderText = "Mã";
             if (grid.Columns.Contains("TenDangNhap")) grid.Columns["TenDangNhap"].HeaderText = "Tên đăng nhập";
             if (grid.Columns.Contains("HoTen")) grid.Columns["HoTen"].HeaderText = "Họ tên";
@@ -50,15 +72,7 @@ namespace CuahangNongduoc
             if (grid.CurrentRow == null || !grid.Columns.Contains("VaiTro")) return;
             if (grid.CurrentRow.Cells["VaiTro"].Value == null) return;
             string role = Convert.ToString(grid.CurrentRow.Cells["VaiTro"].Value);
-            int i;
-            for (i = 0; i < cboRole.Items.Count; i++)
-            {
-                if (Convert.ToString(cboRole.Items[i]).StartsWith(role + " - "))
-                {
-                    cboRole.SelectedIndex = i;
-                    break;
-                }
-            }
+            SelectRole(role);
         }
 
         private void btnCreate_Click(object sender, EventArgs e)
@@ -80,7 +94,7 @@ namespace CuahangNongduoc
         {
             try
             {
-                int id = SelectedAccountId();
+                string id = SelectedAccountId();
                 UserAccount selected = _repository.GetById(id);
                 if (selected == null) throw new InvalidOperationException("Không tìm thấy tài khoản.");
                 if (AppSession.CurrentUser != null && selected.Id == AppSession.CurrentUser.Id)
@@ -98,7 +112,7 @@ namespace CuahangNongduoc
         {
             try
             {
-                int id = SelectedAccountId();
+                string id = SelectedAccountId();
                 UserAccount selected = _repository.GetById(id);
                 if (selected == null) throw new InvalidOperationException("Không tìm thấy tài khoản.");
                 if (AppSession.CurrentUser != null && selected.Id == AppSession.CurrentUser.Id)
@@ -127,57 +141,20 @@ namespace CuahangNongduoc
             }
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e) { LoadAccounts(); }
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            try { LoadRoles(); LoadAccounts(); }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Không thể tải danh sách tài khoản và vai trò",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
         private void btnClose_Click(object sender, EventArgs e) { this.Close(); }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            try
-            {
-                int id = SelectedAccountId();
-
-                UserAccount selected = _repository.GetById(id);
-
-                if (selected == null || selected.IsDeleted)
-                    throw new InvalidOperationException(
-                        "Không tìm thấy tài khoản.");
-
-                if (AppSession.CurrentUser != null &&
-                    selected.Id == AppSession.CurrentUser.Id)
-                {
-                    throw new InvalidOperationException(
-                        "Không thể xóa tài khoản đang đăng nhập.");
-                }
-
-                DialogResult result = MessageBox.Show(
-                    "Bạn có chắc muốn xóa tài khoản: " +
-                    selected.Username + "?\n\n" +
-                    "Tài khoản sẽ không thể đăng nhập nữa.",
-                    "Xác nhận xóa tài khoản",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-                if (result != DialogResult.Yes)
-                    return;
-
-                _repository.DeleteAccount(id);
-
-                MessageBox.Show(
-                    "Xóa tài khoản thành công!",
-                    "Thông báo",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-
-                LoadAccounts();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    ex.Message,
-                    "Không thể xóa tài khoản",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-            }
+            MessageBox.Show("Nhân viên nghỉ việc được khóa tài khoản để giữ lịch sử. Dùng nút Khóa / Mở khóa.", "Quản lý tài khoản");
         }
     }
 }

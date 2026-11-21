@@ -37,7 +37,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
 
         public static bool CoQuyenXemToanBo
         {
-            get { return coQuyenXemToanBo; }
+            get { return AccessControl.Can("XemTatCaPhieuBan"); }
         }
 
         public static void GanQuyen(bool quanLyHoacChuCuaHang)

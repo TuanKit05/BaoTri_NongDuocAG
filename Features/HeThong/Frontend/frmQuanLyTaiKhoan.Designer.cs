@@ -1,4 +1,4 @@
-namespace CuahangNongduoc
+﻿namespace CuahangNongduoc
 {
     partial class frmQuanLyTaiKhoan
     {
@@ -131,11 +131,6 @@ namespace CuahangNongduoc
             // cboRole
             //
             this.cboRole.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboRole.Items.AddRange(new object[] {
-            "ADMIN - Quản lý hệ thống",
-            "KHO - Nhân viên kho",
-            "BANHANG - Nhân viên bán hàng",
-            "THUNGAN - Thu ngân"});
             this.cboRole.Location = new System.Drawing.Point(485, 290);
             this.cboRole.Name = "cboRole";
             this.cboRole.Size = new System.Drawing.Size(285, 24);
@@ -216,6 +211,7 @@ namespace CuahangNongduoc
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 470);
+            this.btnDelete.Visible = false;
             this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnRefresh);
