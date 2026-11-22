@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
   <DataSources>
     <DataSource Name="DummyDataSource">
@@ -14,25 +14,21 @@
   <InteractiveWidth>21cm</InteractiveWidth>
   <rd:GridSpacing>0.25cm</rd:GridSpacing>
   <rd:SnapToGrid>true</rd:SnapToGrid>
-  <RightMargin>2.5cm</RightMargin>
-  <LeftMargin>2.5cm</LeftMargin>
-  <BottomMargin>2.5cm</BottomMargin>
+  <RightMargin>1.5cm</RightMargin>
+  <LeftMargin>1.5cm</LeftMargin>
+  <BottomMargin>1.5cm</BottomMargin>
   <rd:ReportID>e708ef94-5f3d-48d0-abce-c38666b0c833</rd:ReportID>
   <PageWidth>21cm</PageWidth>
   <DataSets>
     <DataSet Name="CuahangNongduoc_BusinessObject_ChiTietPhieuBan">
       <Fields>
+        <Field Name="TenSanPham">
+          <DataField>TenSanPham</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
         <Field Name="DonGia">
           <DataField>DonGia</DataField>
           <rd:TypeName>System.Int64</rd:TypeName>
-        </Field>
-        <Field Name="MaSanPham">
-          <DataField>MaSanPham</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.MaSanPham</rd:TypeName>
-        </Field>
-        <Field Name="PhieuBan">
-          <DataField>PhieuBan</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.PhieuBan</rd:TypeName>
         </Field>
         <Field Name="SoLuong">
           <DataField>SoLuong</DataField>
@@ -48,14 +44,9 @@
         <CommandText />
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
-      <rd:DataSetInfo>
-        <rd:DataSetName>CuahangNongduoc.BusinessObject</rd:DataSetName>
-        <rd:TableName>ChiTietPhieuBan</rd:TableName>
-        <rd:ObjectDataSourceType>CuahangNongduoc.BusinessObject.ChiTietPhieuBan, CuahangNongduoc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</rd:ObjectDataSourceType>
-      </rd:DataSetInfo>
     </DataSet>
   </DataSets>
-  <Width>12.25cm</Width>
+  <Width>17.8cm</Width>
   <Body>
     <ColumnSpacing>1cm</ColumnSpacing>
     <ReportItems>
@@ -73,12 +64,14 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <TextAlign>Center</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>4</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -94,15 +87,17 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <FontFamily>Arial</FontFamily>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>3</ZIndex>
                       <CanGrow>true</CanGrow>
-                      <Value>=Fields!MaSanPham.Value.SanPham.TenSanPham</Value>
+                      <Value>=Fields!TenSanPham.Value</Value>
                     </Textbox>
                   </ReportItems>
                 </TableCell>
@@ -114,13 +109,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
-                        <Format>#,###0</Format>
+                        <FontFamily>Arial</FontFamily>
+                        <Format>N0</Format>
                         <TextAlign>Right</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>2</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -136,13 +133,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <Format>#,###0</Format>
                         <TextAlign>Right</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>1</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -158,13 +157,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
-                        <Format>#,###0</Format>
+                        <FontFamily>Arial</FontFamily>
+                        <Format>N0</Format>
                         <TextAlign>Right</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <CanGrow>true</CanGrow>
                       <Value>=Fields!ThanhTien.Value</Value>
@@ -172,7 +173,7 @@
                   </ReportItems>
                 </TableCell>
               </TableCells>
-              <Height>0.63492cm</Height>
+              <Height>0.8cm</Height>
             </TableRow>
           </TableRows>
         </Details>
@@ -191,13 +192,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <FontWeight>700</FontWeight>
                         <TextAlign>Center</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>9</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -213,13 +216,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <FontWeight>700</FontWeight>
                         <TextAlign>Center</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>8</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -235,13 +240,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <FontWeight>700</FontWeight>
                         <TextAlign>Center</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>7</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -257,13 +264,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <FontWeight>700</FontWeight>
                         <TextAlign>Center</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>6</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -279,13 +288,15 @@
                         <BorderStyle>
                           <Default>Solid</Default>
                         </BorderStyle>
-                        <FontFamily>Times New Roman</FontFamily>
+                        <FontFamily>Arial</FontFamily>
                         <FontWeight>700</FontWeight>
                         <TextAlign>Center</TextAlign>
-                        <PaddingLeft>2pt</PaddingLeft>
-                        <PaddingRight>2pt</PaddingRight>
-                        <PaddingTop>2pt</PaddingTop>
-                        <PaddingBottom>2pt</PaddingBottom>
+                        <PaddingLeft>3pt</PaddingLeft>
+                        <PaddingRight>3pt</PaddingRight>
+                        <PaddingTop>3pt</PaddingTop>
+                        <PaddingBottom>3pt</PaddingBottom>
+                        <FontSize>10pt</FontSize>
+                        <VerticalAlign>Middle</VerticalAlign>
                       </Style>
                       <ZIndex>5</ZIndex>
                       <CanGrow>true</CanGrow>
@@ -294,32 +305,33 @@
                   </ReportItems>
                 </TableCell>
               </TableCells>
-              <Height>0.63492cm</Height>
+              <Height>0.8cm</Height>
             </TableRow>
           </TableRows>
+          <RepeatOnNewPage>true</RepeatOnNewPage>
         </Header>
         <TableColumns>
           <TableColumn>
             <Width>1cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>4cm</Width>
+            <Width>7.5cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>2.5cm</Width>
+            <Width>3cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>2.25cm</Width>
+            <Width>2cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>2.5cm</Width>
+            <Width>4.3cm</Width>
           </TableColumn>
         </TableColumns>
       </Table>
     </ReportItems>
-    <Height>1.26984cm</Height>
+    <Height>1.6cm</Height>
   </Body>
-  <Language>en-US</Language>
-  <TopMargin>2.5cm</TopMargin>
+  <Language>vi-VN</Language>
+  <TopMargin>1.5cm</TopMargin>
   <PageHeight>29.7cm</PageHeight>
 </Report>

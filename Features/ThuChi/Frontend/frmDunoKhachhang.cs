@@ -72,7 +72,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể tổng hợp dư nợ: " + ex.Message,
+                MessageBox.Show("Không thể tổng hợp dư nợ: " + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
                     "Lỗi tổng hợp", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -97,7 +97,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể lưu dư nợ: " + ex.Message,
+                MessageBox.Show("Không thể lưu dư nợ: " + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
                     "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

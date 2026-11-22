@@ -22,12 +22,36 @@ namespace CuahangNongduoc
         private Controll status = Controll.AddNew;
         private readonly NhapHangService dichVuNhapHang = new NhapHangService();
 
+        private BindingSource observedSource;
+        private bool loading;
+        private decimal savedTotal;
+        private string savedInvoiceId;
+        private readonly ToolStripButton toolHuy = new ToolStripButton("H\u1ee7y");
+
         public frmNhapHang()
         {
             InitializeComponent();
+            dataGridView.AutoGenerateColumns = false;
+            toolHuy.Name = "toolHuy";
+            bindingNavigator.Items.Insert(bindingNavigator.Items.IndexOf(toolLuuThoat) + 1, toolHuy);
+            toolHuy.Click += delegate { CancelChanges(); };
+            toolLuuThoat.Text = "L\u01b0u";
+            toolLuuThem.Text = "Th\u00eam";
+            FormClosed += delegate {
+                if (observedSource != null) observedSource.CurrentChanged -= BindingSource_CurrentChanged;
+            };
+
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             this.Load += delegate { SecuredUi.ApplyForm(this); };
             status = Controll.AddNew;
+            FormClosing += delegate(object sender, FormClosingEventArgs e) {
+                if (status == Controll.Normal) return;
+                DialogResult answer = MessageBox.Show("Bạn có muốn lưu thay đổi phiếu nhập trước khi đóng?",
+                    "Phiếu nhập", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                if (answer == DialogResult.Cancel) e.Cancel = true;
+                else if (answer == DialogResult.Yes && !Luu()) e.Cancel = true;
+                else if (answer == DialogResult.No) CancelChanges();
+            };
             CauHinhONhapTien();
             dtNgayNhap.ValueChanged += dtNgayNhap_ValueChanged;
         }
@@ -56,7 +80,7 @@ namespace CuahangNongduoc
 
         private void BindingSource_CurrentChanged(object sender, EventArgs e)
         {
-            if (status != Controll.Normal)
+            if (loading || status != Controll.Normal)
                 return;
 
             if (bindingNavigator.BindingSource == null || bindingNavigator.BindingSource.Current == null)
@@ -65,7 +89,23 @@ namespace CuahangNongduoc
                 return;
             }
 
-            ctrlMaSP.HienThiChiTietPhieuNhap(txtMaPhieu.Text, dataGridView);
+            DataRowView current = bindingNavigator.BindingSource.Current as DataRowView;
+            if (current == null) return;
+            loading = true;
+            try
+            {
+                savedInvoiceId = Convert.ToString(current["ID"]);
+                savedTotal = Convert.ToDecimal(current["TONG_TIEN"]);
+                txtMaPhieu.Text = savedInvoiceId;
+                cmbNhaCungCap.SelectedValue = current["ID_NHA_CUNG_CAP"];
+                dtNgayNhap.Value = Convert.ToDateTime(current["NGAY_NHAP"]);
+                numTongTien.Value = savedTotal;
+                numDaTra.Value = Convert.ToDecimal(current["DA_TRA"]);
+                numConNo.Value = Convert.ToDecimal(current["CON_NO"]);
+                ctrlMaSP.HienThiChiTietPhieuNhap(savedInvoiceId, dataGridView);
+            }
+            finally { loading = false; }
+
         }
 
         /// <summary>
@@ -74,11 +114,9 @@ namespace CuahangNongduoc
         /// </summary>
         private void GanSuKienBindingSource()
         {
-            if (bindingNavigator.BindingSource == null)
-                return;
-
-            bindingNavigator.BindingSource.CurrentChanged -= BindingSource_CurrentChanged;
-            bindingNavigator.BindingSource.CurrentChanged += BindingSource_CurrentChanged;
+            if (observedSource != null) observedSource.CurrentChanged -= BindingSource_CurrentChanged;
+            observedSource = bindingNavigator.BindingSource;
+            if (observedSource != null) observedSource.CurrentChanged += BindingSource_CurrentChanged;
         }
 
         private void frmNhapHang_Load(object sender, EventArgs e)
@@ -98,7 +136,7 @@ namespace CuahangNongduoc
             }
             else
             {
-                ctrlMaSP.HienThiChiTietPhieuNhap(txtMaPhieu.Text, dataGridView);
+                BindingSource_CurrentChanged(this, EventArgs.Empty);
                 Allow(false);
             }
         }
@@ -153,7 +191,7 @@ namespace CuahangNongduoc
             if (!KiemTraMaLoChuaTonTai())
                 return;
 
-            string maSanPham = cmbSanPham.SelectedValue == null
+            string maSanPham = (cmbSanPham.SelectedIndex < 0 || cmbSanPham.SelectedValue == null || cmbSanPham.SelectedValue == DBNull.Value)
                 ? String.Empty
                 : Convert.ToString(cmbSanPham.SelectedValue);
 
@@ -246,17 +284,19 @@ namespace CuahangNongduoc
             numThanhTien.Value = 0;
             dtNgaySanXuat.Value = dtNgayNhap.Value.Date;
             dtNgayHetHan.Value = dtNgayNhap.Value.Date.AddMonths(1);
-            txtMaSo.Focus();
+            if (txtMaSo.Enabled) txtMaSo.Focus();
         }
 
         private decimal TinhTongTienHienTai()
         {
-            decimal tong = 0;
+            decimal tong = status == Controll.Edit ? savedTotal : 0;
             foreach (DataGridViewRow view in dataGridView.Rows)
             {
                 if (view.IsNewRow)
                     continue;
 
+                DataRowView item = view.DataBoundItem as DataRowView;
+                if (status == Controll.Edit && (item == null || item.Row.RowState != DataRowState.Added)) continue;
                 object gia = view.Cells["colDonGiaNhap"].Value;
                 object soLuong = view.Cells["colSoLuong"].Value;
                 if (gia == null || gia == DBNull.Value || soLuong == null || soLuong == DBNull.Value)
@@ -292,6 +332,7 @@ namespace CuahangNongduoc
 
         private void CapNhatCongNo()
         {
+            if (loading || status == Controll.Normal) return;
             decimal conNo = numTongTien.Value - numDaTra.Value;
             numConNo.Value = conNo > 0 ? conNo : 0;
         }
@@ -336,7 +377,7 @@ namespace CuahangNongduoc
                 return false;
             }
 
-            string maNCC = cmbNhaCungCap.SelectedValue == null
+            string maNCC = (cmbNhaCungCap.SelectedIndex < 0 || cmbNhaCungCap.SelectedValue == null || cmbNhaCungCap.SelectedValue == DBNull.Value)
                 ? String.Empty
                 : Convert.ToString(cmbNhaCungCap.SelectedValue);
 
@@ -385,34 +426,14 @@ namespace CuahangNongduoc
                 return false;
             }
 
-            if (laPhieuMoi)
-                CapNhatBoDemMaPhieuNhap();
 
-            NapLaiDuLieuSauKhiLuu(maPhieu);
+
             status = Controll.Normal;
+            NapLaiDuLieuSauKhiLuu(maPhieu);
+            BindingSource_CurrentChanged(this, EventArgs.Empty);
             Allow(false);
             MessageBox.Show(thongBao, "Phiếu nhập", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return true;
-        }
-
-        private void CapNhatBoDemMaPhieuNhap()
-        {
-            if (!ThamSo.LaSoNguyen(txtMaPhieu.Text))
-                return;
-
-            long so = Convert.ToInt64(txtMaPhieu.Text);
-            if (so < ThamSo.LayMaPhieuNhap())
-                return;
-
-            try
-            {
-                ThamSo.GanMaPhieuNhap(so + 1);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Phiếu đã lưu nhưng chưa cập nhật được bộ đếm mã phiếu. " + ex.Message,
-                    "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
         }
 
         private void NapLaiDuLieuSauKhiLuu(string maPhieu)
@@ -439,7 +460,7 @@ namespace CuahangNongduoc
             GanSuKienBindingSource();
 
             status = Controll.AddNew;
-            txtMaPhieu.Text = ThamSo.LayMaPhieuNhap().ToString();
+            txtMaPhieu.Text = IdGenerator.Next("PHIEU_NHAP");
             cmbNhaCungCap.SelectedIndex = -1;
             dtNgayNhap.Value = DateTime.Today;
             numTongTien.Value = 0;
@@ -447,7 +468,7 @@ namespace CuahangNongduoc
             numConNo.Value = 0;
 
             ctrlMaSP = new MaSanPhamController();
-            ctrlMaSP.HienThiChiTietPhieuNhap(txtMaPhieu.Text, dataGridView);
+            ctrlMaSP.HienThiChiTietPhieuNhap("-1", dataGridView);
             Allow(true);
             LamMoiOThongTinLo();
         }
@@ -463,8 +484,7 @@ namespace CuahangNongduoc
 
         private void toolLuuThem_Click(object sender, EventArgs e)
         {
-            if (status != Controll.Normal && !Luu())
-                return;
+            if (status != Controll.Normal) return;
 
             BatDauPhieuNhapMoi(true);
         }
@@ -493,18 +513,6 @@ namespace CuahangNongduoc
 
         private void toolThoat_Click(object sender, EventArgs e)
         {
-            if (status != Controll.Normal)
-            {
-                DialogResult ketQua = MessageBox.Show(
-                    "Phiếu nhập đang có thay đổi. Bạn có muốn lưu trước khi thoát không?",
-                    "Phiếu nhập", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-
-                if (ketQua == DialogResult.Cancel)
-                    return;
-                if (ketQua == DialogResult.Yes && !Luu())
-                    return;
-            }
-
             Close();
         }
 
@@ -531,6 +539,7 @@ namespace CuahangNongduoc
             numConNo.Enabled = false;
 
             txtMaSo.Enabled = val;
+            txtMaSo.ReadOnly = !val;
             cmbSanPham.Enabled = val;
             numGiaNhap.Enabled = val;
             numSoLuong.Enabled = val;
@@ -542,11 +551,49 @@ namespace CuahangNongduoc
             btnRemove.Enabled = val;
             btnThemSanPham.Enabled = val;
             btnThemNCC.Enabled = val;
-            dataGridView.Enabled = val;
+            dataGridView.Enabled = true;
+            dataGridView.ReadOnly = true;
+            dataGridView.AllowUserToDeleteRows = false;
+            bool hasInvoice = bindingNavigator.BindingSource != null && bindingNavigator.BindingSource.Current != null;
+            toolLuuThoat.Enabled = val;
+            toolHuy.Enabled = val;
+            toolLuuThem.Enabled = !val && AccessControl.Can("NhapHang");
+            toolChinhsua.Enabled = !val && hasInvoice && AccessControl.Can("NhapHang");
+            toolXoa.Enabled = !val && hasInvoice && AccessControl.Can("XoaPhieu");
+            toolSavePrint.Enabled = !val && hasInvoice;
+            foreach (ToolStripItem item in new ToolStripItem[] { bindingNavigatorMoveFirstItem,
+                bindingNavigatorMovePreviousItem, bindingNavigatorMoveNextItem, bindingNavigatorMoveLastItem,
+                bindingNavigatorPositionItem }) item.Enabled = !val;
+
+        }
+
+        private void CancelChanges()
+        {
+            string restoreId = savedInvoiceId;
+            status = Controll.Normal;
+            ctrl.TaiNapDanhSach();
+            ctrl.HienthiPhieuNhap(bindingNavigator, txtMaPhieu, cmbNhaCungCap,
+                dtNgayNhap, numTongTien, numDaTra, numConNo);
+            GanSuKienBindingSource();
+            if (!String.IsNullOrEmpty(restoreId)) ctrl.ChonPhieuNhap(restoreId);
+            BindingSource_CurrentChanged(this, EventArgs.Empty);
+            LamMoiOThongTinLo();
+            Allow(false);
+        }
+
+        private void toolXemLai_Click(object sender, EventArgs e)
+        {
+            CancelChanges();
+        }
+
+        internal void BatDauChinhSua()
+        {
+            toolChinhsua_Click(this, EventArgs.Empty);
         }
 
         private void toolChinhsua_Click(object sender, EventArgs e)
         {
+            if (status != Controll.Normal || !AccessControl.Can("NhapHang")) return;
             if (bindingNavigator.BindingSource == null || bindingNavigator.BindingSource.Current == null)
             {
                 MessageBox.Show("Không có phiếu nhập để chỉnh sửa.", "Phiếu nhập",
@@ -554,12 +601,15 @@ namespace CuahangNongduoc
                 return;
             }
 
+            BindingSource_CurrentChanged(this, EventArgs.Empty);
             status = Controll.Edit;
             Allow(true);
+            LamMoiOThongTinLo();
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
+            if (status == Controll.Normal) return;
             if (dataGridView.CurrentRow == null || dataGridView.CurrentRow.IsNewRow)
             {
                 MessageBox.Show("Vui lòng chọn lô cần bỏ khỏi phiếu.", "Phiếu nhập",

@@ -10,17 +10,35 @@ namespace CuahangNongduoc.DataLayer
     {
         DataService m_Ds = new DataService();
 
+        private void LoadFresh(OleDbCommand command)
+        {
+            AccessControl.PrepareRead(command);
+            OleDbConnectionStringBuilder settings = new OleDbConnectionStringBuilder(DataService.m_ConnectString);
+            settings["OLE DB Services"] = -2;
+            using (OleDbConnection connection = new OleDbConnection(settings.ConnectionString))
+            {
+                connection.Open();
+                command.Connection = connection;
+                if (m_Ds.Columns.Contains("SO_LUONG")) m_Ds.Columns["SO_LUONG"].ReadOnly = false;
+                m_Ds.Clear();
+                using (OleDbDataAdapter adapter = new OleDbDataAdapter(command)) adapter.Fill(m_Ds);
+            }
+            m_Ds.Command = command;
+            AccessControl.HideCosts(m_Ds);
+        }
+
+
         public void LoadSchema()
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE ID = '-1'");
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
         }
 
         public DataTable DanhsachMaSanPham(String sp)
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE ID_SAN_PHAM=@id AND SO_LUONG > 0");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = sp;
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
 
             return m_Ds;
         }
@@ -28,16 +46,17 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE ID_PHIEU_NHAP=@id");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = sp;
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
 
             return m_Ds;
         }
 
         public DataTable LaySanPham(String idMaSanPham)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT SP.* FROM SAN_PHAM SP INNER JOIN MA_SAN_PHAM MSP ON SP.ID = MSP.ID_SAN_PHAM WHERE MSP.ID = @id");
+            OleDbCommand cmd = new OleDbCommand(SanPhamFactory.ProductStockSelect + " WHERE SP.ID IN (SELECT ID_SAN_PHAM FROM MA_SAN_PHAM WHERE ID=@id)");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idMaSanPham;
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
+            m_Ds.Columns["SO_LUONG"].ReadOnly = true;
             return m_Ds;
         }
 
@@ -45,7 +64,7 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM MSP WHERE MSP.ID = @id");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idMaSanPham;
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
             return m_Ds;
         }
 
@@ -53,7 +72,7 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE SO_LUONG > 0 AND NGAY_HET_HAN <= @ngay");
             cmd.Parameters.Add("ngay", OleDbType.Date).Value = dt;
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
 
             return m_Ds;
         }
@@ -61,7 +80,7 @@ namespace CuahangNongduoc.DataLayer
         public DataTable DanhsachMaSanPham()
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE SO_LUONG > 0");
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
 
             return m_Ds;
         }
@@ -79,7 +98,7 @@ namespace CuahangNongduoc.DataLayer
             OleDbCommand cmd = TaoLenhThongKeTonKho(
                 tuNgay, denNgay);
 
-            m_Ds.Load(cmd);
+            LoadFresh(cmd);
             return m_Ds;
         }
 

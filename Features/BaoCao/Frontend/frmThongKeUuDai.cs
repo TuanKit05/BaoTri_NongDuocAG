@@ -334,7 +334,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
 
         private void HienThiLoi(string noiDung, Exception ex)
         {
-            MessageBox.Show(this, noiDung + ": " + ex.Message, "Lỗi",
+            MessageBox.Show(this, noiDung + ": " + ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), "Lỗi",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }

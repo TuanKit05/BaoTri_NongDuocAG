@@ -1,4 +1,4 @@
-using CuahangNongduoc.BusinessObject;
+﻿using CuahangNongduoc.BusinessObject;
 using CuahangNongduoc.DataLayer;
 using System;
 using System.Collections.Generic;
@@ -48,13 +48,7 @@ namespace CuahangNongduoc.Controller
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    "Lỗi tải danh sách sản phẩm:\n" + ex.ToString(),
-                    "Lỗi dữ liệu",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                throw;
+                throw ErrorLog.Wrap(ex, "Không thể tải danh sách sản phẩm");
             }
 
             // Bind dữ liệu chi tiết lên các control nếu có
@@ -110,10 +104,14 @@ namespace CuahangNongduoc.Controller
                     long thanh_tien = gia_moi * so_luong + tong_gia * tong_so;
                     tong_so += so_luong;
                     tbl.Rows[0]["DON_GIA_NHAP"] = thanh_tien / tong_so;
-                    tbl.Rows[0]["SO_LUONG"] = tong_so;
                 }
                 factory.Save();
             }
+        }
+
+        public void TaiNapSanPham()
+        {
+            factory.DanhSach();
         }
 
         public void TimMaSanPham(string ma)

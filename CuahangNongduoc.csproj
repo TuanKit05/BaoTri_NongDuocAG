@@ -214,6 +214,8 @@
       <DependentUpon>frmDaiLy.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\ResponsiveLayout.cs" />
+    <Compile Include="Common\ErrorLog.cs" />
+    <Compile Include="Common\IdGenerator.cs" />
     <Compile Include="Common\DataService.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -559,6 +561,10 @@
     </Compile>
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\ThamSo.cs" />
+    <Compile Include="Common\WarehouseSettings.cs" />
+    <Compile Include="Features\HeThong\Frontend\frmCauHinhKho.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\save.png" />
@@ -612,8 +618,6 @@
     <None Include="Resources\Thoat.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Debug\CuahangNongduoc.exe" />
-    <Content Include="bin\Debug\CuahangNongduoc.pdb" />
     <Content Include="cuahang.dll" />
     <Content Include="CuahangNongduoc.ico" />
     <Content Include="Database\cuahang.dll">

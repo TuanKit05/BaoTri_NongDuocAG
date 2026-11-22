@@ -245,7 +245,7 @@ namespace CuahangNongduoc
 
         private void ShowError(Exception ex)
         {
-            MessageBox.Show(ex.Message, "Không thể lưu thay đổi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"), "Không thể lưu thay đổi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         
         private void btnClose_Click(object sender, EventArgs e)

@@ -45,6 +45,7 @@
             this.bindingNavigatorMoveLastItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
+            this.toolChinhSua = new System.Windows.Forms.ToolStripButton();
             this.toolXemLai = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorDeleteItem = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -78,6 +79,7 @@
             this.bindingNavigatorMoveLastItem,
             this.bindingNavigatorSeparator2,
             this.bindingNavigatorAddNewItem,
+            this.toolChinhSua,
             this.toolXemLai,
             this.bindingNavigatorDeleteItem,
             this.toolStripSeparator1,
@@ -172,6 +174,17 @@
             this.bindingNavigatorAddNewItem.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.bindingNavigatorAddNewItem.Click += new System.EventHandler(this.bindingNavigatorAddNewItem_Click);
             // 
+            // toolChinhSua
+            this.toolChinhSua.Name = "toolChinhSua";
+            this.toolChinhSua.Text = "S\u1eeda";
+            this.toolChinhSua.ToolTipText = "S\u1eeda phi\u1ebfu nh\u1eadp \u0111ang ch\u1ecdn";
+            this.toolChinhSua.Image = global::CuahangNongduoc.Properties.Resources.edit;
+            this.toolChinhSua.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolChinhSua.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
+            this.toolChinhSua.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.toolChinhSua.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            this.toolChinhSua.Click += new System.EventHandler(this.toolChinhSua_Click);
+            //
             // toolXemLai
             // 
             this.toolXemLai.Image = global::CuahangNongduoc.Properties.Resources.reload_24;
@@ -225,6 +238,8 @@
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 46);
             this.dataGridView.Name = "dataGridView";
+            this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridView.MultiSelect = false;
             this.dataGridView.ReadOnly = true;
             this.dataGridView.Size = new System.Drawing.Size(673, 300);
             this.dataGridView.TabIndex = 1;
@@ -304,6 +319,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.ClientSize = new System.Drawing.Size(673, 346);
             this.Controls.Add(this.dataGridView);
             this.Controls.Add(this.bindingNavigator);
@@ -335,6 +352,7 @@
         private System.Windows.Forms.ToolStripButton bindingNavigatorMoveLastItem;
         private System.Windows.Forms.ToolStripSeparator bindingNavigatorSeparator2;
         private System.Windows.Forms.DataGridView dataGridView;
+        private System.Windows.Forms.ToolStripButton toolChinhSua;
         private System.Windows.Forms.ToolStripButton toolXemLai;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolIn;

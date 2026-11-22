@@ -58,6 +58,13 @@ namespace CuahangNongduoc
         private void frmMain_MdiChildActivate(object sender, EventArgs e)
         {
             Form child = this.ActiveMdiChild;
+            frmSanPham products = child as frmSanPham;
+            if (products != null) products.RefreshProductView();
+            if (ResponsiveLayout.IsCenteredDocument(child))
+            {
+                if (child.WindowState != FormWindowState.Normal) child.WindowState = FormWindowState.Normal;
+                return;
+            }
             frmDoiMatKhau passwordForm = child as frmDoiMatKhau;
             if (passwordForm != null)
             {
@@ -389,6 +396,14 @@ namespace CuahangNongduoc
 
         private void KhoiTaoMenuTaiKhoan()
         {
+            ToolStripMenuItem warehouse = new ToolStripMenuItem("Cấu hình xuất kho");
+            warehouse.Visible = AccessControl.Can("QuanTri");
+            warehouse.Click += delegate {
+                if (!KiemTraQuyen("QuanTri")) return;
+                try { using (frmCauHinhKho form = new frmCauHinhKho()) form.ShowDialog(this); }
+                catch (Exception error) { MessageBox.Show(this, error.Message, "Cấu hình xuất kho", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            };
+            mnuTuychinh.DropDownItems.Add(warehouse);
             mnuQuanLyTaiKhoan = new System.Windows.Forms.ToolStripMenuItem("Quản lý tài khoản");
             mnuQuanLyTaiKhoan.Click += new EventHandler(mnuQuanLyTaiKhoan_Click);
             mnuDoiMatKhau = new System.Windows.Forms.ToolStripMenuItem("Đổi mật khẩu");

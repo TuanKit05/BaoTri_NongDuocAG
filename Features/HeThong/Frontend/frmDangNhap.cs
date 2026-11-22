@@ -64,7 +64,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể đăng nhập. Vui lòng kiểm tra kết nối cơ sở dữ liệu.\r\n" + ex.Message,
+                MessageBox.Show("Không thể đăng nhập. Vui lòng kiểm tra kết nối cơ sở dữ liệu.\r\n" + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
                     "Lỗi đăng nhập", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

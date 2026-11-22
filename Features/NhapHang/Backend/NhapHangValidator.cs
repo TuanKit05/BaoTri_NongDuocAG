@@ -40,6 +40,9 @@ namespace CuahangNongduoc.Validation
             if (soLuong <= 0)
                 return "Số lượng nhập phải lớn hơn 0.";
 
+            if (soLuong != Decimal.Truncate(soLuong))
+                return "Số lượng nhập phải là số nguyên.";
+
             if (soLuong > Int32.MaxValue)
                 return "Số lượng nhập vượt quá giới hạn cho phép.";
 

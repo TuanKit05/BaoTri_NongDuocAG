@@ -26,7 +26,36 @@ namespace CuahangNongduoc
         {
             ctrlNCC.HienthiDataGridviewComboBox(colNhaCungCap);
             ctrl.HienthiPhieuNhap(bindingNavigator, dataGridView);
+            bindingNavigator.BindingSource.CurrentChanged += delegate { CapNhatNutSua(); };
+            CapNhatNutSua();
         }
+        private void CapNhatNutSua()
+        {
+            toolChinhSua.Enabled = AccessControl.Can("NhapHang") &&
+                bindingNavigator.BindingSource != null && bindingNavigator.BindingSource.Current != null;
+        }
+
+        private void toolChinhSua_Click(object sender, EventArgs e)
+        {
+            if (!AccessControl.Can("NhapHang")) return;
+            DataRowView row = bindingNavigator.BindingSource == null ? null :
+                bindingNavigator.BindingSource.Current as DataRowView;
+            if (row == null) return;
+            string id = Convert.ToString(row["ID"]);
+            PhieuNhapController editor = new PhieuNhapController();
+            editor.TaiNapDanhSach();
+            editor.ChonPhieuNhap(id);
+            frmNhapHang form = new frmNhapHang(editor);
+            form.Shown += delegate { form.BatDauChinhSua(); };
+            form.FormClosed += delegate {
+                ctrl.TaiNapDanhSach();
+                ctrl.ChonPhieuNhap(id);
+                CapNhatNutSua();
+                form.Dispose();
+            };
+            form.Show(this);
+        }
+
         frmNhapHang NhapHang = null;
         private void dataGridView_DoubleClick(object sender, EventArgs e)
         {

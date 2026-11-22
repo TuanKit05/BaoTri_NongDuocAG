@@ -8,7 +8,7 @@ namespace CuahangNongduoc
 {
     public partial class frmNhaCungCap : BaseDanhMucForm
     {
-        private readonly NhaCungCapController _ctrl = new NhaCungCapController();
+        private readonly NhaCungCapController _ctrl;
 
         protected override BaseController Controller => _ctrl;
         protected override string TenDanhMuc => "Nhà cung cấp";
@@ -16,6 +16,8 @@ namespace CuahangNongduoc
         public frmNhaCungCap()
         {
             InitializeComponent();
+            if (IsDesignMode) return;
+            _ctrl = new NhaCungCapController();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             base.dataGridView = this.dataGridView;
             base.bindingNavigator = this.bindingNavigator;
@@ -54,8 +56,7 @@ namespace CuahangNongduoc
 
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
         {
-            long maso = ThamSo.NhaCungCap;
-            ThamSo.NhaCungCap = maso + 1;
+            string maso = IdGenerator.Next("NHA_CUNG_CAP");
 
             DataRowView row = (DataRowView)bindingNavigator.BindingSource.AddNew();
             row["ID"] = maso;

@@ -16,6 +16,8 @@ namespace CuahangNongduoc
         public frmThanhToan()
         {
             InitializeComponent();
+            txtMaPhieu.ReadOnly = true;
+            dataGridView.AllowUserToAddRows = false;
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             this.Load += delegate { SecuredUi.ApplyForm(this); };
         }
@@ -40,8 +42,7 @@ namespace CuahangNongduoc
                 MessageBox.Show("Vui lòng chọn khách hàng trước khi tạo phiếu.");
                 return;
             }
-            long maphieu = ThamSo.LayMaPhieuThanhToan(); ;
-            ThamSo.GanMaPhieuThanhToan(maphieu + 1);
+            string maphieu = IdGenerator.Next("PHIEU_THANH_TOAN");
 
             DataRow row = ctrl.NewRow();
             row["ID"] = maphieu;
@@ -89,7 +90,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể lưu phiếu thanh toán: " + ex.Message,
+                MessageBox.Show("Không thể lưu phiếu thanh toán: " + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
                     "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

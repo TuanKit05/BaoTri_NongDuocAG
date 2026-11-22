@@ -68,8 +68,10 @@ namespace CuahangNongduoc
                         }
                         tr.Commit();
                     }
-                    catch { tr.Rollback(); throw; }
+                    catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
+                IdGenerator.EnsureSchema(c);
+                WarehouseSettings.EnsureSchema(c);
             }
         }
 
@@ -178,7 +180,7 @@ namespace CuahangNongduoc
             username = username == null ? "" : username.Trim(); fullName = fullName == null ? "" : fullName.Trim();
             if (username.Length == 0 || username.Length > 50 || fullName.Length > 100) throw new ArgumentException("Tên đăng nhập hoặc họ tên không hợp lệ.");
             if (FindByUsername(username) != null) throw new InvalidOperationException("Tên đăng nhập đã tồn tại.");
-            string id = "TK" + Guid.NewGuid().ToString("N").Substring(0, 8); string salt = PasswordHasher.CreateSalt();
+            string id = IdGenerator.Next("TAI_KHOAN"); string salt = PasswordHasher.CreateSalt();
             using (OleDbConnection c = CreateConnection())
             {
                 c.Open(); using (OleDbTransaction tr = c.BeginTransaction())
@@ -190,7 +192,7 @@ namespace CuahangNongduoc
                             id, username, fullName, PasswordHasher.HashPassword(password,salt), salt, roles, true, true, false, DateTime.Now);
                         WriteRoles(c, tr, id, roles); Audit(c, tr, "TAO_TAI_KHOAN", id, roles); tr.Commit();
                     }
-                    catch { tr.Rollback(); throw; }
+                    catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
             }
         }
@@ -224,7 +226,7 @@ namespace CuahangNongduoc
                         Execute(c,tr,"UPDATE TAI_KHOAN SET VAI_TRO=? WHERE ID=?",roles,id); WriteRoles(c,tr,id,roles);
                         Audit(c,tr,"DOI_VAI_TRO",id,account.Role+" -> "+roles); tr.Commit();
                     }
-                    catch { tr.Rollback(); throw; }
+                    catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
             }
         }
@@ -256,7 +258,7 @@ namespace CuahangNongduoc
                         Audit(c, tr, "SUA_TAI_KHOAN", id, account.Role + " -> " + roles);
                         tr.Commit();
                     }
-                    catch { tr.Rollback(); throw; }
+                    catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
             }
         }
@@ -277,7 +279,7 @@ namespace CuahangNongduoc
                     try { if(!active && AccountRoles.IsAdmin(account.Role)) ProtectLastAdmin(c,tr,id);
                         Execute(c,tr,"UPDATE TAI_KHOAN SET DANG_HOAT_DONG=? WHERE ID=?",active,id);
                         Audit(c,tr,active?"MO_KHOA":"KHOA_TAI_KHOAN",id,""); tr.Commit(); }
-                    catch { tr.Rollback(); throw; }
+                    catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
             }
         }
@@ -300,7 +302,7 @@ namespace CuahangNongduoc
                     try {
                         if(Execute(c,tr,"UPDATE TAI_KHOAN SET MatKhauHash=?,Salt=?,MAT_KHAU=NULL,DoiMatKhau=? WHERE ID=?",PasswordHasher.HashPassword(password,salt),salt,mustChange,id)!=1) throw new InvalidOperationException("Không tìm thấy tài khoản.");
                         Audit(c,tr,mustChange?"DAT_LAI_MAT_KHAU":"DOI_MAT_KHAU",id,""); tr.Commit();
-                    } catch { tr.Rollback(); throw; }
+                    } catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
             }
         }

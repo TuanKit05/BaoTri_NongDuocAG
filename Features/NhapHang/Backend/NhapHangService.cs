@@ -36,7 +36,7 @@ namespace CuahangNongduoc.DataLayer
                 if (!String.IsNullOrEmpty(loiPhieu))
                     throw new InvalidOperationException(loiPhieu);
 
-                if (conNo != Math.Max(0L, tongTien - daTra))
+                if (conNo != tongTien - daTra)
                     throw new InvalidOperationException("Công nợ không khớp với tổng tiền trừ số tiền đã trả.");
 
                 if (cacLoMoi == null)
@@ -76,6 +76,17 @@ namespace CuahangNongduoc.DataLayer
                 transaction = connection.BeginTransaction();
 
                 KiemTraMaPhieu(connection, transaction, maPhieu, laPhieuMoi);
+                if (!laPhieuMoi)
+                {
+                    using (OleDbCommand current = new OleDbCommand("SELECT TONG_TIEN FROM PHIEU_NHAP WHERE ID=?", connection, transaction))
+                    {
+                        current.Parameters.Add("id", OleDbType.VarWChar, 50).Value = maPhieu;
+                        decimal previousTotal = Convert.ToDecimal(current.ExecuteScalar());
+                        if (previousTotal + tongTienCacLoMoi != tongTien)
+                            throw new InvalidOperationException("Tong tien phai bang tong phieu da luu cong cac lo moi.");
+                    }
+                }
+
                 GhiThongTinPhieuNhap(connection, transaction, maPhieu, ngayNhap,
                     tongTien, maNhaCungCap, daTra, conNo, laPhieuMoi);
 
@@ -99,11 +110,10 @@ namespace CuahangNongduoc.DataLayer
             {
                 if (transaction != null)
                 {
-                    try { transaction.Rollback(); }
-                    catch { }
+                    ErrorLog.Rollback(transaction, "Hoàn tác phiếu nhập");
                 }
 
-                thongBao = "Không thể lưu phiếu nhập. Dữ liệu đã được hoàn tác. Chi tiết: " + ex.Message;
+                thongBao = "Không thể lưu phiếu nhập. Dữ liệu đã được hoàn tác. Chi tiết: " + ErrorLog.UserMessage(ex, "Không thể xử lý phiếu nhập");
                 return false;
             }
             finally
@@ -161,11 +171,10 @@ namespace CuahangNongduoc.DataLayer
             {
                 if (transaction != null)
                 {
-                    try { transaction.Rollback(); }
-                    catch { }
+                    ErrorLog.Rollback(transaction, "Hoàn tác phiếu nhập");
                 }
 
-                thongBao = "Không thể xóa phiếu nhập. " + ex.Message;
+                thongBao = "Không thể xóa phiếu nhập. " + ErrorLog.UserMessage(ex, "Không thể xử lý phiếu nhập");
                 return false;
             }
             finally
@@ -297,16 +306,15 @@ namespace CuahangNongduoc.DataLayer
             foreach (KeyValuePair<string, TongGiaNhapTheoSanPham> item in tongHop)
             {
                 OleDbCommand select = TaoLenh(connection, transaction,
-                    "SELECT SO_LUONG, DON_GIA_NHAP FROM SAN_PHAM WHERE ID = ?");
+                    "SELECT DON_GIA_NHAP FROM SAN_PHAM WHERE ID = ?");
                 select.Parameters.Add("p1", OleDbType.VarChar, 50).Value = item.Key;
 
-                long soLuongCu;
+                long soLuongCu = 0;
                 long giaNhapCu;
                 using (OleDbDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
                         throw new InvalidOperationException("Không tìm thấy sản phẩm " + item.Key + ".");
-                    soLuongCu = reader["SO_LUONG"] == DBNull.Value ? 0 : Convert.ToInt64(reader["SO_LUONG"]);
                     giaNhapCu = reader["DON_GIA_NHAP"] == DBNull.Value ? 0 : Convert.ToInt64(reader["DON_GIA_NHAP"]);
                 }
 
@@ -314,6 +322,14 @@ namespace CuahangNongduoc.DataLayer
                     throw new InvalidOperationException("Dữ liệu tồn/giá nhập hiện tại của sản phẩm " + item.Key + " không hợp lệ.");
 
                 long soLuongNhap = item.Value.SoLuongNhap;
+                using (OleDbCommand stock = TaoLenh(connection, transaction,
+                    "SELECT SUM(SO_LUONG) FROM MA_SAN_PHAM WHERE ID_SAN_PHAM=?"))
+                {
+                    stock.Parameters.Add("product", OleDbType.VarWChar, 50).Value = item.Key;
+                    object total = stock.ExecuteScalar();
+                    soLuongCu = (total == DBNull.Value || total == null ? 0 : Convert.ToInt64(total)) - soLuongNhap;
+                }
+
                 long tongSoLuong = soLuongCu + soLuongNhap;
                 if (tongSoLuong <= 0 || tongSoLuong > Int32.MaxValue)
                     throw new InvalidOperationException("Tổng số lượng tồn của sản phẩm " + item.Key + " vượt giới hạn lưu trữ.");
@@ -324,8 +340,7 @@ namespace CuahangNongduoc.DataLayer
                     giaTriTonMoi / tongSoLuong, 0, MidpointRounding.AwayFromZero));
 
                 OleDbCommand update = TaoLenh(connection, transaction,
-                    "UPDATE SAN_PHAM SET SO_LUONG = ?, DON_GIA_NHAP = ? WHERE ID = ?");
-                update.Parameters.Add("p1", OleDbType.Integer).Value = Convert.ToInt32(tongSoLuong);
+                    "UPDATE SAN_PHAM SET DON_GIA_NHAP = ? WHERE ID = ?");
                 update.Parameters.Add("p2", OleDbType.Currency).Value = giaNhapBinhQuan;
                 update.Parameters.Add("p3", OleDbType.VarChar, 50).Value = item.Key;
                 if (update.ExecuteNonQuery() <= 0)
@@ -390,6 +405,13 @@ namespace CuahangNongduoc.DataLayer
         private static void XoaChiTietLienKet(OleDbConnection connection,
             OleDbTransaction transaction, string maPhieu)
         {
+            // Older databases store import lines directly in MA_SAN_PHAM.
+            // Delete the separate detail rows only when that optional table exists.
+            using (System.Data.DataTable tables = connection.GetOleDbSchemaTable(
+                OleDbSchemaGuid.Tables, new object[] { null, null, "CHI_TIET_PHIEU_NHAP", "TABLE" }))
+            {
+                if (tables == null || tables.Rows.Count == 0) return;
+            }
             OleDbCommand command = TaoLenh(connection, transaction,
                 "DELETE FROM CHI_TIET_PHIEU_NHAP WHERE ID_PHIEU_NHAP = ?");
             command.Parameters.Add("p1", OleDbType.VarChar, 50).Value = maPhieu;
@@ -434,8 +456,7 @@ namespace CuahangNongduoc.DataLayer
                 tongGiaTri / soLuong, 0, MidpointRounding.AwayFromZero));
 
             OleDbCommand update = TaoLenh(connection, transaction,
-                "UPDATE SAN_PHAM SET SO_LUONG = ?, DON_GIA_NHAP = ? WHERE ID = ?");
-            update.Parameters.Add("p1", OleDbType.Integer).Value = Convert.ToInt32(soLuong);
+                "UPDATE SAN_PHAM SET DON_GIA_NHAP = ? WHERE ID = ?");
             update.Parameters.Add("p2", OleDbType.Currency).Value = giaNhapBinhQuan;
             update.Parameters.Add("p3", OleDbType.VarChar, 50).Value = maSanPham;
             if (update.ExecuteNonQuery() <= 0)

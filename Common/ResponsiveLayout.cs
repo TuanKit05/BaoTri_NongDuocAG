@@ -17,6 +17,28 @@ namespace CuahangNongduoc
                 LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;
             attached.Add(form, true);
             form.Disposed += delegate { attached.Remove(form); };
+            if (IsCenteredDocument(form))
+            {
+                Size normalSize = form.Size;
+                form.StartPosition = FormStartPosition.CenterScreen;
+                form.WindowState = FormWindowState.Normal;
+                form.Shown += delegate {
+                    form.BeginInvoke(new MethodInvoker(delegate {
+                        if (!form.IsDisposed && !form.Disposing) CenterDocument(form, normalSize);
+                    }));
+                };
+            }
+            if (form is frmDanhsachPhieuBanLe || form is frmDanhsachPhieuBanSi || form is frmDanhsachPhieuNhap)
+            {
+                form.WindowState = FormWindowState.Maximized;
+                form.Shown += delegate {
+                    form.BeginInvoke(new MethodInvoker(delegate {
+                        if (form.IsDisposed || form.Disposing) return;
+                        form.WindowState = FormWindowState.Normal;
+                        form.WindowState = FormWindowState.Maximized;
+                    }));
+                };
+            }
             form.SuspendLayout();
             try
             {
@@ -29,9 +51,58 @@ namespace CuahangNongduoc
             finally { form.ResumeLayout(true); }
         }
 
+        public static bool IsCenteredDocument(Form form)
+        {
+            return form is frmBanLe || form is frmBanSi || form is frmNhapHang;
+        }
+
+        private static void CenterDocument(Form form, Size normalSize)
+        {
+            form.WindowState = FormWindowState.Normal;
+            Rectangle area = Screen.FromControl(form).WorkingArea;
+            if (form.MdiParent != null)
+                foreach (Control control in form.MdiParent.Controls)
+                    if (control is MdiClient) { area = control.ClientRectangle; break; }
+            int width = Math.Min(normalSize.Width, Math.Max(1, area.Width - 24));
+            int height = Math.Min(normalSize.Height, Math.Max(1, area.Height - 24));
+            form.SetBounds(area.Left + (area.Width - width) / 2, area.Top + (area.Height - height) / 2, width, height);
+        }
+
         public static void ApplyOpenForms(object sender, EventArgs e)
         {
             foreach (Form form in Application.OpenForms) Attach(form);
+        }
+
+        public static void ConfigureSaleList(DataGridView grid, bool wholesale)
+        {
+            grid.AutoGenerateColumns = false;
+            grid.ReadOnly = true;
+            grid.AllowUserToAddRows = false;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.MultiSelect = false;
+            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            string[] fields = { "ID", "ID_KHACH_HANG", "NGAY_BAN", "TONG_TIEN", "DA_TRA", "CON_NO" };
+            string[] titles = { "Mã phiếu", wholesale ? "Đại lý" : "Khách hàng", "Ngày bán", "Tổng tiền", "Đã trả", "Còn nợ" };
+            int[] widths = { 90, 220, 120, 130, 130, 130 };
+            foreach (DataGridViewColumn column in grid.Columns)
+            {
+                int index = Array.IndexOf(fields, column.DataPropertyName);
+                column.Visible = index >= 0;
+                if (index < 0) continue;
+                column.HeaderText = titles[index];
+                column.DisplayIndex = index;
+                column.MinimumWidth = widths[index];
+                column.FillWeight = widths[index];
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                if (index == 2) column.DefaultCellStyle.Format = "dd/MM/yyyy";
+                if (index >= 3)
+                {
+                    column.DefaultCellStyle.Format = "N0";
+                    column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                }
+                DataGridViewComboBoxColumn customer = column as DataGridViewComboBoxColumn;
+                if (customer != null) customer.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing;
+            }
         }
 
         private static List<Control> Children(Control control)
@@ -139,6 +210,7 @@ namespace CuahangNongduoc
         {
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             Action<DataGridViewColumn> configure = delegate(DataGridViewColumn column) {
+                if (String.Equals(column.DataPropertyName, "ID", StringComparison.OrdinalIgnoreCase)) column.ReadOnly = true;
                 if (column.Frozen) return;
                 column.FillWeight = Math.Max(50, Math.Min(250, column.Width));
                 column.MinimumWidth = Math.Max(column.MinimumWidth, 60);
