@@ -17,7 +17,7 @@ namespace CuahangNongduoc
             WarehouseSettings.DemandManage();
             Text = "Cấu hình xuất kho";
             ClientSize = new Size(540, 415);
-            StartPosition = FormStartPosition.CenterParent;
+            StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -64,7 +64,7 @@ namespace CuahangNongduoc
                     {
                         viewer.Text = "Lịch sử cấu hình kho";
                         viewer.Size = new Size(1050, 480);
-                        viewer.StartPosition = FormStartPosition.CenterParent;
+                        viewer.StartPosition = FormStartPosition.CenterScreen;
                         DataGridView grid = new DataGridView();
                         grid.Dock = DockStyle.Fill;
                         grid.ReadOnly = true;

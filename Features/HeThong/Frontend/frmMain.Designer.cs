@@ -884,6 +884,7 @@
             this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip;
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmMain";
             this.Text = "QUAN LY CUA HANG NONG DUOC";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;

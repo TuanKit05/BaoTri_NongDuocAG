@@ -119,6 +119,7 @@
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmSanphamHethan";
             this.Text = "SAN PHAM HET HAN";
             this.Load += new System.EventHandler(this.frmSanphamHethan_Load);

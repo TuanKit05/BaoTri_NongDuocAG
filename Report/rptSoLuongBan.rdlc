@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
   <DataSources>
     <DataSource Name="DummyDataSource">
@@ -33,13 +33,13 @@
           <DataField>DonGia</DataField>
           <rd:TypeName>System.Int64</rd:TypeName>
         </Field>
-        <Field Name="MaSanPham">
-          <DataField>MaSanPham</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.MaSanPham</rd:TypeName>
+        <Field Name="MaLo">
+          <DataField>MaLo</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="PhieuBan">
-          <DataField>PhieuBan</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.PhieuBan</rd:TypeName>
+        <Field Name="TenSanPham">
+          <DataField>TenSanPham</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="SoLuong">
           <DataField>SoLuong</DataField>
@@ -62,7 +62,7 @@
       </rd:DataSetInfo>
     </DataSet>
   </DataSets>
-  <Width>16.33333cm</Width>
+  <Width>15.5cm</Width>
   <Body>
     <ColumnSpacing>1cm</ColumnSpacing>
     <ReportItems>
@@ -72,7 +72,7 @@
           <TableGroup>
             <Grouping Name="sanpham">
               <GroupExpressions>
-                <GroupExpression>=Fields!MaSanPham.Value.SanPham.TenSanPham</GroupExpression>
+                <GroupExpression>=Fields!TenSanPham.Value</GroupExpression>
               </GroupExpressions>
             </Grouping>
             <Header>
@@ -80,7 +80,7 @@
                 <TableRow>
                   <TableCells>
                     <TableCell>
-                      <ColSpan>3</ColSpan>
+                      <ColSpan>4</ColSpan>
                       <ReportItems>
                         <Textbox Name="textbox5">
                           <rd:DefaultName>textbox5</rd:DefaultName>
@@ -97,7 +97,7 @@
                           </Style>
                           <ZIndex>7</ZIndex>
                           <CanGrow>true</CanGrow>
-                          <Value>=Fields!MaSanPham.Value.SanPham.TenSanPham</Value>
+                          <Value>=Fields!TenSanPham.Value</Value>
                         </Textbox>
                       </ReportItems>
                     </TableCell>
@@ -191,7 +191,26 @@
                       </Style>
                       <ZIndex>3</ZIndex>
                       <CanGrow>true</CanGrow>
-                      <Value>=Fields!MaSanPham.Value.Id</Value>
+                      <Value>=Fields!MaLo.Value</Value>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="TenSanPhamCot_1">
+                      <rd:DefaultName>MaSanPham</rd:DefaultName>
+                      <Style>
+                        <BorderStyle>
+                          <Default>Solid</Default>
+                        </BorderStyle>
+                        <PaddingLeft>2pt</PaddingLeft>
+                        <PaddingRight>2pt</PaddingRight>
+                        <PaddingTop>2pt</PaddingTop>
+                        <PaddingBottom>2pt</PaddingBottom>
+                      </Style>
+                      <ZIndex>3</ZIndex>
+                      <CanGrow>true</CanGrow>
+                      <Value>=Fields!TenSanPham.Value</Value>
                     </Textbox>
                   </ReportItems>
                 </TableCell>
@@ -267,7 +286,7 @@
             <TableRow>
               <TableCells>
                 <TableCell>
-                  <ColSpan>5</ColSpan>
+                  <ColSpan>6</ColSpan>
                   <ReportItems>
                     <Textbox Name="textbox18">
                       <rd:DefaultName>textbox18</rd:DefaultName>
@@ -293,7 +312,7 @@
             <TableRow>
               <TableCells>
                 <TableCell>
-                  <ColSpan>5</ColSpan>
+                  <ColSpan>6</ColSpan>
                   <ReportItems>
                     <Textbox Name="textbox14">
                       <rd:DefaultName>textbox14</rd:DefaultName>
@@ -346,6 +365,33 @@
                 <TableCell>
                   <ReportItems>
                     <Textbox Name="textbox7">
+                      <rd:DefaultName>textbox7</rd:DefaultName>
+                      <Style>
+                        <BorderColor>
+                          <Bottom>Black</Bottom>
+                        </BorderColor>
+                        <BorderStyle>
+                          <Bottom>Solid</Bottom>
+                        </BorderStyle>
+                        <BorderWidth>
+                          <Bottom>1pt</Bottom>
+                        </BorderWidth>
+                        <FontWeight>700</FontWeight>
+                        <TextAlign>Center</TextAlign>
+                        <PaddingLeft>2pt</PaddingLeft>
+                        <PaddingRight>2pt</PaddingRight>
+                        <PaddingTop>2pt</PaddingTop>
+                        <PaddingBottom>2pt</PaddingBottom>
+                      </Style>
+                      <ZIndex>16</ZIndex>
+                      <CanGrow>true</CanGrow>
+                      <Value />
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="TenSanPhamCot_4">
                       <rd:DefaultName>textbox7</rd:DefaultName>
                       <Style>
                         <BorderColor>
@@ -494,7 +540,28 @@
                       </Style>
                       <ZIndex>11</ZIndex>
                       <CanGrow>true</CanGrow>
-                      <Value>Mã sản phẩm</Value>
+                      <Value>Số lô</Value>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="TenSanPhamCot_5">
+                      <rd:DefaultName>textbox2</rd:DefaultName>
+                      <Style>
+                        <BorderStyle>
+                          <Default>Solid</Default>
+                        </BorderStyle>
+                        <FontWeight>700</FontWeight>
+                        <TextAlign>Center</TextAlign>
+                        <PaddingLeft>2pt</PaddingLeft>
+                        <PaddingRight>2pt</PaddingRight>
+                        <PaddingTop>2pt</PaddingTop>
+                        <PaddingBottom>2pt</PaddingBottom>
+                      </Style>
+                      <ZIndex>11</ZIndex>
+                      <CanGrow>true</CanGrow>
+                      <Value>Tên sản phẩm</Value>
                     </Textbox>
                   </ReportItems>
                 </TableCell>
@@ -568,19 +635,22 @@
         </Header>
         <TableColumns>
           <TableColumn>
-            <Width>1.25cm</Width>
+            <Width>1cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>5.33333cm</Width>
+            <Width>3cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>3.25cm</Width>
+            <Width>4cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>3.25cm</Width>
+            <Width>2.5cm</Width>
           </TableColumn>
           <TableColumn>
-            <Width>3.25cm</Width>
+            <Width>2cm</Width>
+          </TableColumn>
+          <TableColumn>
+            <Width>3cm</Width>
           </TableColumn>
         </TableColumns>
       </Table>

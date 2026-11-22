@@ -59,6 +59,7 @@ namespace CuahangNongduoc
             this.ClientSize = new System.Drawing.Size(506, 380);
             this.Controls.Add(this.reportViewer);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmInPhieuBan";
             this.Text = "frmInPhieuBan";
             this.Load += new System.EventHandler(this.frmInPhieuBan_Load);

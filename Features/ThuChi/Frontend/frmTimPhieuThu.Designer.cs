@@ -112,7 +112,7 @@
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "frmTimPhieuThu";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Tim Phieu Thu";
             this.Load += new System.EventHandler(this.frmTimPhieuThu_Load);
             this.ResumeLayout(false);

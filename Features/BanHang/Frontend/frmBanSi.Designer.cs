@@ -1052,7 +1052,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.WindowState = System.Windows.Forms.FormWindowState.Normal;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.ClientSize = new System.Drawing.Size(750, 535);
+            this.ClientSize = new System.Drawing.Size(1000, 659);
             this.Controls.Add(this.grpPhi);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.groupBox1);

@@ -397,6 +397,7 @@
             this.Controls.Add(this.panel2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmDunoKhachhang";
             this.Text = "DU NO KHACH HANG";
             this.Load += new System.EventHandler(this.frmDunoKhachhang_Load);

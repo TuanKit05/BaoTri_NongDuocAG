@@ -16,13 +16,31 @@ namespace CuahangNongduoc
         {
             InitializeComponent();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
-            reportViewer.LocalReport.ExecuteReportInCurrentAppDomain(System.Reflection.Assembly.GetExecutingAssembly().Evidence);
+            reportViewer.LocalReport.ExecuteReportInSandboxAppDomain();
         }
 
         private void frmSoLuongBan_Load(object sender, EventArgs e)
         {
             cmbThang.SelectedIndex = DateTime.Now.Month - 1;
             numNam.Value = DateTime.Now.Year;
+        }
+
+        private static DataTable DuLieuBaoCao(IList<ChiTietPhieuBan> details)
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add("MaLo", typeof(string));
+            table.Columns.Add("TenSanPham", typeof(string));
+            table.Columns.Add("DonGia", typeof(long));
+            table.Columns.Add("SoLuong", typeof(int));
+            table.Columns.Add("ThanhTien", typeof(long));
+            foreach (ChiTietPhieuBan detail in details)
+            {
+                string lot = detail.MaSanPham == null ? "" : detail.MaSanPham.Id;
+                string product = detail.MaSanPham == null || detail.MaSanPham.SanPham == null
+                    ? lot : detail.MaSanPham.SanPham.TenSanPham;
+                table.Rows.Add(lot, product, detail.DonGia, detail.SoLuong, detail.ThanhTien);
+            }
+            return table;
         }
 
         ChiTietPhieuBanController ctrl = new ChiTietPhieuBanController();
@@ -35,7 +53,7 @@ namespace CuahangNongduoc
 
             this.reportViewer.LocalReport.SetParameters(param);
 
-            this.ChiTietPhieuBanBindingSource.DataSource = ctrl.ChiTietPhieuBan(dtNgay.Value.Date);
+            this.ChiTietPhieuBanBindingSource.DataSource = DuLieuBaoCao(ctrl.ChiTietPhieuBan(dtNgay.Value.Date));
             this.reportViewer.RefreshReport();
         }
 
@@ -48,7 +66,7 @@ namespace CuahangNongduoc
             this.reportViewer.LocalReport.SetParameters(param);
 
 
-            this.ChiTietPhieuBanBindingSource.DataSource = ctrl.ChiTietPhieuBan(cmbThang.SelectedIndex + 1, Convert.ToInt32(numNam.Value));
+            this.ChiTietPhieuBanBindingSource.DataSource = DuLieuBaoCao(ctrl.ChiTietPhieuBan(cmbThang.SelectedIndex + 1, Convert.ToInt32(numNam.Value)));
             this.reportViewer.RefreshReport();
         }
 

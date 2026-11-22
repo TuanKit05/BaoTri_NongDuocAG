@@ -222,7 +222,7 @@
             this.Controls.Add(this.grid);
             this.MinimumSize = new System.Drawing.Size(800, 510);
             this.Name = "frmQuanLyTaiKhoan";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "QUẢN LÝ TÀI KHOẢN";
             ((System.ComponentModel.ISupportInitialize)(this.grid)).EndInit();
             this.ResumeLayout(false);

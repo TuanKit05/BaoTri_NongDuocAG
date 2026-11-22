@@ -13,10 +13,13 @@ namespace CuahangNongduoc
 
         public static void Attach(Form form)
         {
+            if (form != null && !form.IsDisposed) form.StartPosition = FormStartPosition.CenterScreen;
             if (form == null || form.IsDisposed || form.IsMdiContainer || attached.ContainsKey(form) ||
                 LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;
             attached.Add(form, true);
             form.Disposed += delegate { attached.Remove(form); };
+            bool saleDocument = form is frmBanLe || form is frmBanSi;
+            if (saleDocument) ArrangeSaleDocument(form);
             if (IsCenteredDocument(form))
             {
                 Size normalSize = form.Size;
@@ -39,6 +42,7 @@ namespace CuahangNongduoc
                     }));
                 };
             }
+            if (saleDocument) return;
             form.SuspendLayout();
             try
             {
@@ -54,6 +58,62 @@ namespace CuahangNongduoc
         public static bool IsCenteredDocument(Form form)
         {
             return form is frmBanLe || form is frmBanSi || form is frmNhapHang;
+        }
+
+        private static void ArrangeSaleDocument(Form form)
+        {
+            Control header = form.Controls["panel1"];
+            Control lines = form.Controls["groupBox1"];
+            Control fees = form.Controls["grpPhi"];
+            Control navigator = form.Controls["bindingNavigator"];
+            Control product = header.Controls["groupBox2"];
+            Control invoice = header.Controls["grpPhieuBanLe"];
+            int productWidth = 0;
+            foreach (Control child in product.Controls) productWidth = Math.Max(productWidth, child.Right + 12);
+            int width = Math.Max(header.Width, invoice.Width + productWidth);
+            foreach (Control child in fees.Controls) width = Math.Max(width, child.Right + 12);
+            int height = header.Height + Math.Max(lines.Height, 180) + fees.Height;
+            Panel viewport = new Panel();
+            viewport.Name = "saleViewport";
+            viewport.Dock = DockStyle.Fill;
+            viewport.AutoScroll = true;
+            Panel content = new Panel();
+            content.Name = "saleContent";
+            content.Size = new Size(width, height);
+            viewport.Controls.Add(content);
+            form.SuspendLayout();
+            content.SuspendLayout();
+            header.Dock = DockStyle.Top;
+            fees.Dock = DockStyle.Bottom;
+            lines.Dock = DockStyle.Fill;
+            content.Controls.Add(lines);
+            content.Controls.Add(fees);
+            content.Controls.Add(header);
+            content.Controls.SetChildIndex(lines, 0);
+            form.Controls.Add(viewport);
+            form.Controls.SetChildIndex(viewport, 0);
+            navigator.Dock = DockStyle.Top;
+            foreach (Control child in product.Controls)
+                child.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            Control serviceGrid = fees.Controls["dgvDichVu"];
+            serviceGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            foreach (Control child in Children(content)) ConfigureSaleGrids(child);
+            viewport.AutoScrollMinSize = new Size(width, height);
+            EventHandler resize = delegate {
+                content.Size = new Size(Math.Max(width, viewport.ClientSize.Width), Math.Max(height, viewport.ClientSize.Height));
+            };
+            viewport.ClientSizeChanged += resize;
+            form.ClientSize = new Size(width, height + navigator.Height);
+            content.ResumeLayout(true);
+            form.ResumeLayout(true);
+            resize(viewport, EventArgs.Empty);
+        }
+
+        private static void ConfigureSaleGrids(Control parent)
+        {
+            DataGridView grid = parent as DataGridView;
+            if (grid != null) ConfigureGrid(grid);
+            foreach (Control child in parent.Controls) ConfigureSaleGrids(child);
         }
 
         private static void CenterDocument(Form form, Size normalSize)

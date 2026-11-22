@@ -62,27 +62,27 @@
             // 
             // btnXuatExcel
             // 
-            this.btnXuatExcel.Location = new System.Drawing.Point(668, 64);
+            this.btnXuatExcel.Location = new System.Drawing.Point(675, 56);
             this.btnXuatExcel.Name = "btnXuatExcel";
-            this.btnXuatExcel.Size = new System.Drawing.Size(83, 23);
+            this.btnXuatExcel.Size = new System.Drawing.Size(94, 32);
             this.btnXuatExcel.TabIndex = 3;
             this.btnXuatExcel.Text = "Xuất Excel";
             this.btnXuatExcel.UseVisualStyleBackColor = true;
             // 
             // btnKhoiPhuc
             // 
-            this.btnKhoiPhuc.Location = new System.Drawing.Point(587, 64);
+            this.btnKhoiPhuc.Location = new System.Drawing.Point(571, 56);
             this.btnKhoiPhuc.Name = "btnKhoiPhuc";
-            this.btnKhoiPhuc.Size = new System.Drawing.Size(75, 23);
+            this.btnKhoiPhuc.Size = new System.Drawing.Size(89, 32);
             this.btnKhoiPhuc.TabIndex = 3;
             this.btnKhoiPhuc.Text = "Khôi phục";
             this.btnKhoiPhuc.UseVisualStyleBackColor = true;
             // 
             // btnThongKe
             // 
-            this.btnThongKe.Location = new System.Drawing.Point(506, 64);
+            this.btnThongKe.Location = new System.Drawing.Point(467, 56);
             this.btnThongKe.Name = "btnThongKe";
-            this.btnThongKe.Size = new System.Drawing.Size(75, 23);
+            this.btnThongKe.Size = new System.Drawing.Size(89, 32);
             this.btnThongKe.TabIndex = 3;
             this.btnThongKe.Text = "Thống kê";
             this.btnThongKe.UseVisualStyleBackColor = true;
@@ -91,7 +91,7 @@
             // 
             this.dateTimePicker1.CustomFormat = "dd/MM/yyyy";
             this.dateTimePicker1.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePicker1.Location = new System.Drawing.Point(368, 64);
+            this.dateTimePicker1.Location = new System.Drawing.Point(331, 61);
             this.dateTimePicker1.Name = "dateTimePicker1";
             this.dateTimePicker1.Size = new System.Drawing.Size(121, 22);
             this.dateTimePicker1.TabIndex = 2;
@@ -100,7 +100,7 @@
             // 
             this.dtpTuNgay.CustomFormat = "dd/MM/yyyy";
             this.dtpTuNgay.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dtpTuNgay.Location = new System.Drawing.Point(137, 64);
+            this.dtpTuNgay.Location = new System.Drawing.Point(114, 61);
             this.dtpTuNgay.Name = "dtpTuNgay";
             this.dtpTuNgay.Size = new System.Drawing.Size(121, 22);
             this.dtpTuNgay.TabIndex = 2;
@@ -108,7 +108,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(287, 67);
+            this.label3.Location = new System.Drawing.Point(250, 64);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(66, 16);
             this.label3.TabIndex = 0;
@@ -117,7 +117,7 @@
             // cbTenNV
             // 
             this.cbTenNV.FormattingEnabled = true;
-            this.cbTenNV.Location = new System.Drawing.Point(137, 21);
+            this.cbTenNV.Location = new System.Drawing.Point(116, 20);
             this.cbTenNV.Name = "cbTenNV";
             this.cbTenNV.Size = new System.Drawing.Size(233, 24);
             this.cbTenNV.TabIndex = 1;
@@ -125,7 +125,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(50, 67);
+            this.label2.Location = new System.Drawing.Point(40, 64);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(59, 16);
             this.label2.TabIndex = 0;
@@ -134,7 +134,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(50, 25);
+            this.label1.Location = new System.Drawing.Point(40, 24);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(70, 16);
             this.label1.TabIndex = 0;
@@ -161,6 +161,7 @@
             this.Controls.Add(this.dgvThongKeUuDai);
             this.Controls.Add(this.panel1);
             this.Name = "frmThongKeUuDai";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "frmThongKeUuDai";
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();

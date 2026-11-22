@@ -91,7 +91,7 @@
             this.Controls.Add(this.dtNgay);
             this.Controls.Add(this.lblNgay);
             this.Name = "frmTonKhoTaiNgay";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Tồn kho tại ngày";
             ((System.ComponentModel.ISupportInitialize)(this.dgvTonKho)).EndInit();
             this.ResumeLayout(false);

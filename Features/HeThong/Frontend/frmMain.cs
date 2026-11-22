@@ -307,15 +307,9 @@ namespace CuahangNongduoc
             audit.Visible = AccessControl.Can("XemNhatKy");
             audit.Click += delegate {
                 if (!KiemTraQuyen("XemNhatKy")) return;
-                DataService rows = new DataService();
-                rows.Load(new System.Data.OleDb.OleDbCommand("SELECT * FROM NHAT_KY ORDER BY THOI_GIAN DESC, ID DESC"));
-                using (Form viewer = new Form())
+                using (frmNhatKyThaoTac viewer = new frmNhatKyThaoTac())
                 {
-                    viewer.Text = "Nhật ký thao tác"; viewer.Width = 1050; viewer.Height = 550;
-                    DataGridView grid = new DataGridView(); grid.Dock = DockStyle.Fill;
-                    grid.ReadOnly = true; grid.AllowUserToAddRows = false; grid.AllowUserToDeleteRows = false;
-                    grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
-                    grid.DataSource = rows; viewer.Controls.Add(grid); viewer.ShowDialog(this);
+                    viewer.ShowDialog(this);
                 }
             };
             mnuHeThong.DropDownItems.Add(audit);

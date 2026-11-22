@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
   <DataSources>
     <DataSource Name="DummyDataSource">
@@ -29,17 +29,21 @@
   <DataSets>
     <DataSet Name="CuahangNongduoc_BusinessObject_MaSanPham">
       <Fields>
-        <Field Name="GiaNhap">
-          <DataField>GiaNhap</DataField>
-          <rd:TypeName>System.Int64</rd:TypeName>
-        </Field>
         <Field Name="Id">
           <DataField>Id</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="NgayHetHan">
-          <DataField>NgayHetHan</DataField>
-          <rd:TypeName>System.DateTime</rd:TypeName>
+        <Field Name="TenSanPham">
+          <DataField>TenSanPham</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="GiaNhap">
+          <DataField>GiaNhap</DataField>
+          <rd:TypeName>System.Int64</rd:TypeName>
+        </Field>
+        <Field Name="SoLuong">
+          <DataField>SoLuong</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
         </Field>
         <Field Name="NgayNhap">
           <DataField>NgayNhap</DataField>
@@ -49,21 +53,9 @@
           <DataField>NgaySanXuat</DataField>
           <rd:TypeName>System.DateTime</rd:TypeName>
         </Field>
-        <Field Name="PhieuNhap">
-          <DataField>PhieuNhap</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.PhieuNhap</rd:TypeName>
-        </Field>
-        <Field Name="SanPham">
-          <DataField>SanPham</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.SanPham</rd:TypeName>
-        </Field>
-        <Field Name="SoLuong">
-          <DataField>SoLuong</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="ThanhTien">
-          <DataField>ThanhTien</DataField>
-          <rd:TypeName>System.Int64</rd:TypeName>
+        <Field Name="NgayHetHan">
+          <DataField>NgayHetHan</DataField>
+          <rd:TypeName>System.DateTime</rd:TypeName>
         </Field>
       </Fields>
       <Query>
@@ -88,7 +80,7 @@
           <TableGroup>
             <Grouping Name="sanpham">
               <GroupExpressions>
-                <GroupExpression>=Fields!SanPham.Value.TenSanPham</GroupExpression>
+                <GroupExpression>=Fields!TenSanPham.Value</GroupExpression>
               </GroupExpressions>
             </Grouping>
             <Header>
@@ -113,7 +105,7 @@
                           </Style>
                           <ZIndex>7</ZIndex>
                           <CanGrow>true</CanGrow>
-                          <Value>=Fields!SanPham.Value.TenSanPham</Value>
+                          <Value>=Fields!TenSanPham.Value</Value>
                         </Textbox>
                       </ReportItems>
                     </TableCell>

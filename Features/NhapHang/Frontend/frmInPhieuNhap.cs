@@ -17,7 +17,7 @@ namespace CuahangNongduoc
             InitializeComponent();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
 
-            reportViewer.LocalReport.ExecuteReportInCurrentAppDomain(System.Reflection.Assembly.GetExecutingAssembly().Evidence);
+            reportViewer.LocalReport.ExecuteReportInSandboxAppDomain();
             this.reportViewer.LocalReport.SubreportProcessing += new Microsoft.Reporting.WinForms.SubreportProcessingEventHandler(LocalReport_SubreportProcessing);
         }
 

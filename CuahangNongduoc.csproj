@@ -148,6 +148,9 @@
     <Compile Include="Features\HeThong\Backend\Auth\UserAccount.cs" />
     <Compile Include="Features\HeThong\Backend\Auth\PasswordHasher.cs" />
     <Compile Include="Features\HeThong\Backend\Auth\AccountRepository.cs" />
+    <Compile Include="Features\HeThong\Frontend\frmNhatKyThaoTac.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Features\HeThong\Backend\Auth\AuthenticationHandlers.cs" />
     <Compile Include="Features\HeThong\Backend\Auth\AuthService.cs" />
     <Compile Include="Features\HeThong\Backend\Auth\Authorization.cs" />
@@ -406,6 +409,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Features\BanHang\Frontend\frmQLUuDai.resx">
       <DependentUpon>frmQLUuDai.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Features\BaoCao\Frontend\frmThongKeUuDai.resx">
+      <DependentUpon>frmThongKeUuDai.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.resx">
       <DependentUpon>frmTonKhoTaiNgay.cs</DependentUpon>

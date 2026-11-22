@@ -70,6 +70,7 @@
             this.ClientSize = new System.Drawing.Size(776, 467);
             this.Controls.Add(this.panel2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmSoLuongTon";
             this.Text = "SO LUONG TON";
             this.Load += new System.EventHandler(this.frmSoLuongTon_Load);

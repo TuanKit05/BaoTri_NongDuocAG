@@ -311,6 +311,7 @@
             this.Controls.Add(this.dataGridView);
             this.Controls.Add(this.bindingNavigator);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmKhachHang";
             this.Text = "KHACH HANG";
             this.Load += new System.EventHandler(this.frmKhachHang_Load);

@@ -318,6 +318,7 @@
             this.Controls.Add(this.dgvUuDai);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmQLUuDai";
             this.Text = "QUẢN LÝ ƯU ĐÃI";
             ((System.ComponentModel.ISupportInitialize)(this.dgvUuDai)).EndInit();

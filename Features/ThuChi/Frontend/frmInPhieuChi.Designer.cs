@@ -57,6 +57,7 @@ namespace CuahangNongduoc
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(721, 478);
             this.Controls.Add(this.reportViewer);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmInPhieuChi";
             this.Text = "In Phieu Chi";
             this.Load += new System.EventHandler(this.frmInPhieuChi_Load);

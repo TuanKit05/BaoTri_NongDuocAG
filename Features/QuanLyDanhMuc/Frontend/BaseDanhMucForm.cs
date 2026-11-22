@@ -7,6 +7,10 @@ namespace CuahangNongduoc
 {
     public class BaseDanhMucForm : Form
     {
+        public BaseDanhMucForm()
+        {
+            StartPosition = FormStartPosition.CenterScreen;
+        }
         protected DataGridView dataGridView;
         protected BindingNavigator bindingNavigator;
         protected ToolStripTextBox bindingNavigatorPositionItem;

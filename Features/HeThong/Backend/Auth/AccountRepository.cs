@@ -129,6 +129,19 @@ namespace CuahangNongduoc
                 DateTime.Now, AppSession.CurrentUser == null ? "SYSTEM" : AppSession.CurrentUser.Id, action, target, detail);
         }
 
+        public DataTable GetAuditLog()
+        {
+            AccessControl.DemandCurrent("XemNhatKy");
+            using (OleDbConnection connection = CreateConnection())
+            {
+                connection.Open();
+                return ReadTable(connection, null,
+                    "SELECT NK.ID_TAI_KHOAN, IIF(TK.TEN_DANG_NHAP IS NULL, NK.ID_TAI_KHOAN, TK.TEN_DANG_NHAP) AS TEN_TAI_KHOAN, NK.THOI_GIAN, NK.THAO_TAC " +
+                    "FROM NHAT_KY NK LEFT JOIN TAI_KHOAN TK ON NK.ID_TAI_KHOAN=TK.ID " +
+                    "ORDER BY NK.THOI_GIAN DESC, NK.ID DESC");
+            }
+        }
+
         public DataTable GetRoles()
         {
             using (OleDbConnection c = CreateConnection()) { c.Open(); return ReadTable(c, null, "SELECT MaVaiTro, TenVaiTro FROM VAI_TRO WHERE MaVaiTro IN ('ADMIN','KHO','BANHANG','KETOAN') ORDER BY TenVaiTro"); }

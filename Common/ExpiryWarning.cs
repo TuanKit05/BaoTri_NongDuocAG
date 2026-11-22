@@ -34,7 +34,7 @@ namespace CuahangNongduoc
             if (rows.Rows.Count == 0) return null;
             Form warning = new Form();
             warning.Text = "Cảnh báo hàng sắp hết hạn";
-            warning.StartPosition = FormStartPosition.CenterParent;
+            warning.StartPosition = FormStartPosition.CenterScreen;
             warning.Size = new Size(850, 420);
             warning.MinimizeBox = false;
             Label summary = new Label();

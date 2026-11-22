@@ -228,6 +228,7 @@ namespace CuahangNongduoc
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Name = "frmSoLuongBan";
             this.Text = "SO LUONG BAN";
             this.Load += new System.EventHandler(this.frmSoLuongBan_Load);
