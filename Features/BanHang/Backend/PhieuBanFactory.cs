@@ -153,11 +153,101 @@ namespace CuahangNongduoc.DataLayer
                 throw new InvalidOperationException("Không xóa được phiếu bán " + idPhieu);
         }
 
+        // Ghi phí vận chuyển vào cột TIEN_VAN_CHUYEN của phiếu đang nằm trong bộ nhớ (trước khi lưu giao dịch).
+        // Ném lỗi nếu không tìm thấy phiếu, để không lưu thiếu phí.
+        // Ghi tiền giảm (tay + tự động) vào phiếu đang sửa, để báo cáo ưu đãi khớp với tổng đã lưu
+        public void DatTienGiamGia(String id, long tienGiam)
+        {
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState == DataRowState.Deleted)
+                    continue;
+                if (String.Equals(Convert.ToString(row["ID"]), id, StringComparison.Ordinal))
+                {
+                    row["TIEN_GIAM_GIA"] = tienGiam;
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Không tìm thấy phiếu " + id + " để ghi tiền giảm.");
+        }
+
+        public void DatTienVanChuyen(String id, long phiVanChuyen)
+        {
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState == DataRowState.Deleted)
+                    continue;
+                if (String.Equals(Convert.ToString(row["ID"]), id, StringComparison.Ordinal))
+                {
+                    row["TIEN_VAN_CHUYEN"] = phiVanChuyen;
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Không tìm thấy phiếu " + id + " để ghi phí vận chuyển.");
+        }
+
         public void HuyThayDoi() { m_Ds.RejectChanges(); }
 
         public void ChapNhanThayDoi()
         {
             m_Ds.AcceptChanges();
+        }
+
+        // Ưu đãi còn hiệu lực trong ngày: TU_NGAY <= ngày và (DEN_NGAY >= ngày hoặc chưa có DEN_NGAY)
+        public static DataTable LayUuDaiHieuLuc(DateTime ngay)
+        {
+            DataService ds = new DataService();
+            OleDbCommand cmd = new OleDbCommand("SELECT * FROM UU_DAI WHERE TU_NGAY <= ? AND (DEN_NGAY >= ? OR DEN_NGAY IS NULL)");
+            cmd.Parameters.Add("tuNgay", OleDbType.Date).Value = ngay.Date;
+            cmd.Parameters.Add("denNgay", OleDbType.Date).Value = ngay.Date;
+            ds.Load(cmd);
+            return ds;
+        }
+
+        // Ghi dịch vụ của phiếu vào CHI_TIET_DICH_VU trong cùng giao dịch: xóa dòng cũ rồi ghi lại.
+        // Dịch vụ phải có trong danh mục DICH_VU đang sử dụng; nếu không thì ném lỗi và giao dịch được rollback.
+        public void LuuDichVuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieu,
+            System.Collections.Generic.IList<CuahangNongduoc.BusinessObject.DichVuPhieuBan> dichVu)
+        {
+            XoaDichVuTrongGiaoDich(conn, tr, idPhieu);
+            if (dichVu == null)
+                return;
+            foreach (CuahangNongduoc.BusinessObject.DichVuPhieuBan dv in dichVu)
+            {
+                String moTa = dv.Ten == null ? "" : dv.Ten.Trim();
+                object maDichVu = TimMaDichVu(conn, tr, moTa);
+                OleDbCommand cmd = new OleDbCommand(
+                    "INSERT INTO CHI_TIET_DICH_VU (ID_PHIEU_BAN, ID_DICH_VU, MO_TA, SO_LUONG, DON_GIA, THANH_TIEN) VALUES (?, ?, ?, ?, ?, ?)",
+                    conn, tr);
+                cmd.Parameters.Add("idPhieu", OleDbType.VarChar, 50).Value = idPhieu;
+                cmd.Parameters.AddWithValue("idDichVu", maDichVu);
+                cmd.Parameters.Add("moTa", OleDbType.VarWChar, 255).Value = moTa;
+                cmd.Parameters.Add("soLuong", OleDbType.Integer).Value = 1;
+                cmd.Parameters.Add("donGia", OleDbType.Currency).Value = (decimal)dv.TienDV;
+                cmd.Parameters.Add("thanhTien", OleDbType.Currency).Value = (decimal)dv.TienDV;
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // Xóa toàn bộ dịch vụ của một phiếu trong giao dịch do người gọi quản lý
+        public void XoaDichVuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieu)
+        {
+            OleDbCommand cmd = new OleDbCommand("DELETE FROM CHI_TIET_DICH_VU WHERE ID_PHIEU_BAN = ?", conn, tr);
+            cmd.Parameters.Add("idPhieu", OleDbType.VarChar, 50).Value = idPhieu;
+            cmd.ExecuteNonQuery();
+        }
+
+        // Tìm mã dịch vụ trong danh mục DICH_VU đang sử dụng theo tên
+        static object TimMaDichVu(OleDbConnection conn, OleDbTransaction tr, String tenDichVu)
+        {
+            if (tenDichVu.Length == 0)
+                throw new InvalidOperationException("Dịch vụ chưa có tên. Hãy nhập tên dịch vụ hoặc xóa dòng đó.");
+            OleDbCommand cmd = new OleDbCommand("SELECT ID FROM DICH_VU WHERE TEN_DICH_VU = ? AND DANG_SU_DUNG = TRUE", conn, tr);
+            cmd.Parameters.Add("ten", OleDbType.VarWChar, 255).Value = tenDichVu;
+            object ma = cmd.ExecuteScalar();
+            if (ma == null || ma == DBNull.Value)
+                throw new InvalidOperationException("Dịch vụ \"" + tenDichVu + "\" chưa có trong danh mục dịch vụ đang sử dụng. Hãy thêm vào danh mục trước.");
+            return ma;
         }
     }
 }

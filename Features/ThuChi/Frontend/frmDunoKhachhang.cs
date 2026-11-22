@@ -57,6 +57,30 @@ namespace CuahangNongduoc
             e.Cancel = true;
         }
 
+        // Gắn cho nút "Chốt kỳ" (toolChotKy) trên thanh công cụ
+        private void toolChotKy_Click(object sender, EventArgs e)
+        {
+            if (!NamHopLe(toolNam.Text) || toolThang.SelectedIndex < 0)
+            {
+                MessageBox.Show("Tháng hoặc năm chốt không hợp lệ.", "Chốt kỳ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (MessageBox.Show(
+                "Sau khi chốt, không sửa hoặc xóa phiếu của kỳ này. Bạn có chắc chắn chốt kỳ "
+                + (toolThang.SelectedIndex + 1) + "/" + toolNam.Text + " không?",
+                "Chốt kỳ", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+            try
+            {
+                ctrl.ChotKy(toolThang.SelectedIndex + 1, Convert.ToInt32(toolNam.Text));
+                MessageBox.Show("Đã chốt kỳ.", "Chốt kỳ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể chốt kỳ: " + ex.Message, "Chốt kỳ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void toolTongHop_Click(object sender, EventArgs e)
         {
             if (!NamHopLe(toolNam.Text) || toolThang.SelectedIndex < 0)
