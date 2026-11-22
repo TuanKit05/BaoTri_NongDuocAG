@@ -94,7 +94,7 @@ namespace CuahangNongduoc.Controller
     {
         ChiTietPhieuBanFactory factory = new ChiTietPhieuBanFactory();
 
-        public bool ThemTuDong(string customer, string product, string invoice, decimal quantity, decimal price)
+        public bool ThemTuDong(string customer, string product, string invoice, decimal quantity, decimal price, bool gift = false)
         {
             if (WarehouseSettings.Load() != WarehouseSettings.FirstInFirstOut) return false;
             if (String.IsNullOrEmpty(customer)) throw new InvalidOperationException("Vui lòng chọn khách hàng / đại lý.");
@@ -108,7 +108,7 @@ namespace CuahangNongduoc.Controller
                     "SELECT ID, SO_LUONG, NGAY_HET_HAN, NGAY_NHAP FROM MA_SAN_PHAM WHERE ID_SAN_PHAM=? AND NGAY_HET_HAN>=? ORDER BY NGAY_HET_HAN, NGAY_NHAP, ID",
                     product, DateTime.Today);
             }
-            LotAllocation.Add(lots, factory.NewRow().Table, invoice, quantity, price);
+            LotAllocation.Add(lots, factory.NewRow().Table, invoice, quantity, gift ? 0m : price, gift);
             return true;
         }
 
@@ -151,6 +151,12 @@ namespace CuahangNongduoc.Controller
         public void ChapNhanThayDoi()
         {
             factory.ChapNhanThayDoi();
+        }
+
+        // Cảnh báo tồn kho trước khi lưu (YC-KHO-07). Null nếu đủ tồn.
+        public String KiemTraTonTruocKhiLuu()
+        {
+            return factory.KiemTraTonTruocKhiLuu();
         }
 
 

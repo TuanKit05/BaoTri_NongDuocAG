@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using CuahangNongduoc.BusinessObject;
@@ -8,7 +8,7 @@ namespace CuahangNongduoc
     // Input lots are ordered by expiry, receipt date, then lot code.
     public static class LotAllocation
     {
-        public static void Add(DataTable lots, DataTable pending, string invoice, decimal quantity, decimal price)
+        public static void Add(DataTable lots, DataTable pending, string invoice, decimal quantity, decimal price, bool gift = false)
         {
             if (quantity <= 0 || quantity != Decimal.Truncate(quantity) || quantity > Int32.MaxValue)
                 throw new InvalidOperationException("Số lượng phải là số nguyên lớn hơn 0.");
@@ -28,7 +28,8 @@ namespace CuahangNongduoc
                     if (row.RowState != DataRowState.Deleted && Convert.ToString(row["ID_MA_SAN_PHAM"]) == id)
                     {
                         available -= Convert.ToInt64(row["SO_LUONG"]);
-                        existing = row;
+                        bool rowGift = pending.Columns.Contains("LA_HANG_TANG") && row["LA_HANG_TANG"] != DBNull.Value && Convert.ToBoolean(row["LA_HANG_TANG"]);
+                        if (rowGift == gift) existing = row;
                     }
                 }
                 if (available <= 0) continue;
@@ -43,6 +44,7 @@ namespace CuahangNongduoc
                     target["ID_MA_SAN_PHAM"] = id;
                     target["ID_PHIEU_BAN"] = invoice;
                     target["DON_GIA"] = price;
+                    if (pending.Columns.Contains("LA_HANG_TANG")) target["LA_HANG_TANG"] = gift;
                 }
                 plan.Add(new KeyValuePair<DataRow, int>(target, total));
                 remaining -= take;

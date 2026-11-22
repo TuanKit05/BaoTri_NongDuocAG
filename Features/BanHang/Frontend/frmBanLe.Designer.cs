@@ -118,6 +118,7 @@
             this.dgvDichVu = new System.Windows.Forms.DataGridView();
             this.colDichVuTen = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDichVuTien = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.chkHangTang = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator)).BeginInit();
             this.bindingNavigator.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -384,6 +385,7 @@
             this.colMaPhieuBan.Name = "colMaPhieuBan";
             this.colMaPhieuBan.ReadOnly = true;
             this.colMaPhieuBan.Visible = false;
+            this.colMaPhieuBan.Width = 125;
             // 
             // colMaSanPham
             // 
@@ -401,6 +403,7 @@
             this.colDonGia.MinimumWidth = 6;
             this.colDonGia.Name = "colDonGia";
             this.colDonGia.ReadOnly = true;
+            this.colDonGia.Width = 125;
             // 
             // colSoLuong
             // 
@@ -409,6 +412,7 @@
             this.colSoLuong.MinimumWidth = 6;
             this.colSoLuong.Name = "colSoLuong";
             this.colSoLuong.ReadOnly = true;
+            this.colSoLuong.Width = 125;
             // 
             // colThanhTien
             // 
@@ -417,6 +421,7 @@
             this.colThanhTien.MinimumWidth = 6;
             this.colThanhTien.Name = "colThanhTien";
             this.colThanhTien.ReadOnly = true;
+            this.colThanhTien.Width = 125;
             // 
             // panel1
             // 
@@ -431,6 +436,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.chkHangTang);
             this.groupBox2.Controls.Add(this.btnThemSanPham);
             this.groupBox2.Controls.Add(this.groupBox3);
             this.groupBox2.Controls.Add(this.btnAdd);
@@ -1191,6 +1197,16 @@
             this.colDichVuTien.Name = "colDichVuTien";
             this.colDichVuTien.Width = 130;
             // 
+            // chkHangTang
+            // 
+            this.chkHangTang.AutoSize = true;
+            this.chkHangTang.Location = new System.Drawing.Point(472, 186);
+            this.chkHangTang.Name = "chkHangTang";
+            this.chkHangTang.Size = new System.Drawing.Size(91, 20);
+            this.chkHangTang.TabIndex = 65;
+            this.chkHangTang.Text = "Hàng tặng";
+            this.chkHangTang.UseVisualStyleBackColor = true;
+            // 
             // frmBanLe
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -1331,8 +1347,6 @@
         private System.Windows.Forms.DataGridView dgvDichVu;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDichVuTen;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDichVuTien;
-
-
-
+        private System.Windows.Forms.CheckBox chkHangTang;
     }
 }

@@ -28,26 +28,14 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
     }
 
     /// <summary>
-    /// Quyền báo cáo toàn cửa hàng cần được gán sau khi xác thực tài khoản.
+    /// Quyền xem báo cáo toàn cửa hàng lấy trực tiếp từ phiên đăng nhập (AccessControl).
     /// Mặc định không cấp quyền.
     /// </summary>
     public static class ThongKeUuDaiSession
     {
-        private static bool coQuyenXemToanBo;
-
         public static bool CoQuyenXemToanBo
         {
             get { return AccessControl.Can("XemTatCaPhieuBan"); }
-        }
-
-        public static void GanQuyen(bool quanLyHoacChuCuaHang)
-        {
-            coQuyenXemToanBo = quanLyHoacChuCuaHang;
-        }
-
-        public static void DangXuat()
-        {
-            coQuyenXemToanBo = false;
         }
     }
 }
