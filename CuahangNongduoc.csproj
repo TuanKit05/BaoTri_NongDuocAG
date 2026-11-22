@@ -563,6 +563,7 @@
     <Compile Include="Common\ThamSo.cs" />
     <None Include="App.config" />
     <Compile Include="Common\WarehouseSettings.cs" />
+    <Compile Include="Common\ExpiryWarning.cs" />
     <Compile Include="Common\WarehouseCost.cs" />
     <Compile Include="Common\LotAllocation.cs" />
     <Compile Include="Common\SaleLotDisplay.cs" />
