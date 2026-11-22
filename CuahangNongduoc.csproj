@@ -104,7 +104,9 @@
       <DependentUpon>frmQLUuDai.cs</DependentUpon>
     </Compile>
     <Compile Include="Features\BaoCao\Backend\TonKhoTaiNgayService.cs" />
-    <Compile Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.cs" />
+    <Compile Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
