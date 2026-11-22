@@ -103,6 +103,14 @@ namespace CuahangNongduoc.BusinessObject
             set { m_PhanTramGiamTay = value; }
         }
 
+        private double m_PhanTramTuDong; // Mức tự động đã áp khi lập phiếu; phiếu đã lập giữ nguyên mức này
+
+        public double PhanTramTuDong
+        {
+            get { return m_PhanTramTuDong; }
+            set { m_PhanTramTuDong = value; }
+        }
+
         private long m_TienGiam; // đã làm tròn đến bậc 100, từ 50 trở lên làm tròn lên
 
         public long TienGiam
@@ -284,6 +292,7 @@ namespace CuahangNongduoc.BusinessObject
         private long m_PhiVanChuyen;
         private double m_PhanTramGiamTay;
         private int m_TongSoLuong;
+        private double? m_PhanTramTuDongKhoa; // Phiếu đã lập: giữ mức tự động lúc lập, không tính lại theo ưu đãi mới
         private IList<UuDaiQuyDinh> m_DsUuDai = new List<UuDaiQuyDinh>();
         private IList<DichVuPhieuBan> m_DichVu = new List<DichVuPhieuBan>();
 
@@ -309,7 +318,12 @@ namespace CuahangNongduoc.BusinessObject
         // Mức giảm tự động từ ưu đãi HOA_DON đủ điều kiện, theo tiền hàng và số lượng hiện tại
         public double PhanTramTuDong
         {
-            get { return ChonUuDai.PhanTramGiamHoaDon(m_TienHang, m_TongSoLuong, m_DsUuDai); }
+            get
+            {
+                if (m_PhanTramTuDongKhoa.HasValue)
+                    return m_PhanTramTuDongKhoa.Value;
+                return ChonUuDai.PhanTramGiamHoaDon(m_TienHang, m_TongSoLuong, m_DsUuDai);
+            }
         }
 
         // Mức giảm áp dụng: lấy mức cao hơn giữa mức tay và mức tự động
@@ -326,9 +340,18 @@ namespace CuahangNongduoc.BusinessObject
         }
 
         // Nạp danh sách ưu đãi còn hiệu lực
+        // Nạp ưu đãi cho phiếu mới: mở khóa mức tự động của phiếu đã lưu trước đó
         public void NapUuDai(IList<UuDaiQuyDinh> dsUuDai)
         {
             m_DsUuDai = dsUuDai ?? new List<UuDaiQuyDinh>();
+            m_PhanTramTuDongKhoa = null;
+            ThongBao();
+        }
+
+        // Phiếu đã lập: khóa mức tự động đã lưu (null = tính theo ưu đãi hiện hành)
+        public void KhoaPhanTramTuDong(double? phanTram)
+        {
+            m_PhanTramTuDongKhoa = phanTram;
             ThongBao();
         }
 
@@ -383,6 +406,7 @@ namespace CuahangNongduoc.BusinessObject
             ph.PhiVanChuyen = m_PhiVanChuyen;
             ph.PhanTramGiam = PhanTramGiamHieuLuc;
             ph.PhanTramGiamTay = m_PhanTramGiamTay;
+            ph.PhanTramTuDong = PhanTramTuDong;
             ph.TienGiam = TienGiam;
             ph.DichVu = new List<DichVuPhieuBan>();
             foreach (DichVuPhieuBan dv in m_DichVu)

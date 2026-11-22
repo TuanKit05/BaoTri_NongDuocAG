@@ -54,6 +54,11 @@ namespace CuahangNongduoc
 
         private void TinhLaiHoaDon()
         {
+            // Cơ chế chiết khấu/giảm giá cũ không còn tính tổng: chỉ đồng bộ tiền hàng vào HoaDonDangLap
+            if (dangNapDuLieu || status == Controll.Normal) return;
+            DongBoTienHang();
+            return;
+
             if (dangNapDuLieu || status == Controll.Normal) return;
             if (cmbLoaiChietKhau.SelectedIndex < 0 ||
                 cmbLoaiGiamGia.SelectedIndex < 0)
@@ -251,6 +256,7 @@ namespace CuahangNongduoc
 
                 ctrlChiTiet.Add(row);
                 TinhLaiHoaDon();
+                ThemHangTangKhuyenMai(cmbMaSanPham.SelectedValue);
             }
         }
 
@@ -277,6 +283,36 @@ namespace CuahangNongduoc
         }
 
         // ---------- Phí phát sinh và giảm giá (dùng HoaDonDangLap) ----------
+
+        // KHUYEN_MAI: mua đủ MUA_SL thì tặng TANG_SL cùng mặt hàng. Thêm dòng tặng còn thiếu (đơn giá 0, trừ tồn như hàng tặng).
+        void ThemHangTangKhuyenMai(object maSanPham)
+        {
+            String ma = Convert.ToString(maSanPham);
+            if (ma.Length == 0) return;
+            UuDaiQuyDinh quyTac = ChonKhuyenMai.TimQuyTac(PhieuBanController.DanhSachUuDaiHieuLuc(), ma);
+            if (quyTac == null) return;
+            BindingSource bs = dgvDanhsachSP.DataSource as BindingSource;
+            if (bs == null) return;
+            int daMua = 0, daTang = 0;
+            foreach (object o in bs)
+            {
+                DataRowView rv = (DataRowView)o;
+                if (!String.Equals(Convert.ToString(rv["ID_MA_SAN_PHAM"]), ma, StringComparison.OrdinalIgnoreCase)) continue;
+                int sl = Convert.ToInt32(rv["SO_LUONG"]);
+                if (LaHangTang(rv)) daTang += sl; else daMua += sl;
+            }
+            int thieu = ChonKhuyenMai.SoHangTangCanThem(quyTac, daMua, daTang);
+            if (thieu <= 0) return;
+            DataRow row = ctrlChiTiet.NewRow();
+            row["ID_MA_SAN_PHAM"] = maSanPham;
+            row["ID_PHIEU_BAN"] = txtMaPhieu.Text;
+            row["DON_GIA"] = 0m;
+            row["SO_LUONG"] = thieu;
+            row["THANH_TIEN"] = 0m;
+            row["LA_HANG_TANG"] = true;
+            ctrlChiTiet.Add(row);
+            DongBoTienHang();
+        }
 
         // Hàng tặng (LA_HANG_TANG = true) không tính vào số lượng mua để xét điều kiện ưu đãi
         static bool LaHangTang(DataRowView rv)
@@ -347,6 +383,7 @@ namespace CuahangNongduoc
             dangNapPhi = true;
             numPhiVanChuyen.Value = phi.PhiVanChuyen;
             numPhanTramGiam.Value = (decimal)phi.PhanTramGiamTay;
+            hoaDon.KhoaPhanTramTuDong(phi.PhanTramTuDong);
             dgvDichVu.Rows.Clear();
             foreach (DichVuPhieuBan dv in phi.DichVu)
             {
@@ -458,8 +495,8 @@ namespace CuahangNongduoc
             row["TONG_TIEN"] = numTongTien.Value;
             row["DA_TRA"] = numDaTra.Value;
             row["CON_NO"] = numConNo.Value;
-            row["TIEN_CHIET_KHAU"] = tienChietKhau;
-            row["TIEN_GIAM_GIA"] = tienGiamGia;
+            row["TIEN_CHIET_KHAU"] = 0m; // Chiết khấu cũ đã bỏ; mọi ưu đãi gom vào TIEN_GIAM_GIA
+            row["TIEN_GIAM_GIA"] = hoaDon.TienGiam; // Tiền giảm đúng với tổng đang lưu (tay + tự động)
             ctrlPhieuBan.Add(row);
 
             LapHoaDonMoi lap = new LapHoaDonMoi(ctrlPhieuBan, ctrlChiTiet, hoaDon.ToPhieuBan(txtMaPhieu.Text));

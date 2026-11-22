@@ -138,6 +138,22 @@ namespace CuahangNongduoc.DataLayer
 
         // Ghi phí vận chuyển vào cột TIEN_VAN_CHUYEN của phiếu đang nằm trong bộ nhớ (trước khi lưu giao dịch).
         // Ném lỗi nếu không tìm thấy phiếu, để không lưu thiếu phí.
+        // Ghi tiền giảm (tay + tự động) vào phiếu đang sửa, để báo cáo ưu đãi khớp với tổng đã lưu
+        public void DatTienGiamGia(String id, long tienGiam)
+        {
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState == DataRowState.Deleted)
+                    continue;
+                if (String.Equals(Convert.ToString(row["ID"]), id, StringComparison.Ordinal))
+                {
+                    row["TIEN_GIAM_GIA"] = tienGiam;
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Không tìm thấy phiếu " + id + " để ghi tiền giảm.");
+        }
+
         public void DatTienVanChuyen(String id, long phiVanChuyen)
         {
             foreach (DataRow row in m_Ds.Rows)

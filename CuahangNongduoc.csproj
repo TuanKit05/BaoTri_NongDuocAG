@@ -97,6 +97,14 @@
     <Compile Include="Features\BanHang\Backend\TinhTienHoaDon.cs" />
     <Compile Include="Features\BanHang\Backend\UuDaiCoDinh.cs" />
     <Compile Include="Features\BanHang\Backend\UuDaiPhanTram.cs" />
+    <Compile Include="Features\BanHang\Frontend\frmQLUuDai.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Features\BanHang\Frontend\frmQLUuDai.Designer.cs">
+      <DependentUpon>frmQLUuDai.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Features\BaoCao\Backend\TonKhoTaiNgayService.cs" />
+    <Compile Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
@@ -389,6 +397,9 @@
     <Compile Include="Common\Program.cs" />
     <Compile Include="Features\ThuChi\Frontend\ThuChiReportParamaters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Features\BanHang\Frontend\frmQLUuDai.resx">
+      <DependentUpon>frmQLUuDai.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Features\HeThong\Frontend\frmDangNhap.resx">
       <DependentUpon>frmDangNhap.cs</DependentUpon>
     </EmbeddedResource>

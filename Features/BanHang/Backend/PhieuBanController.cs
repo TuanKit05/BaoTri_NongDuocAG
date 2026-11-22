@@ -96,6 +96,7 @@ namespace CuahangNongduoc.Controller
                         {
                             AccessControl.SaleTransaction = tr;
                             factory.DatTienVanChuyen(phiMoi.Id, phiMoi.PhiVanChuyen);
+                            factory.DatTienGiamGia(phiMoi.Id, phiMoi.TienGiam);
                             factory.SaveTrongGiaoDich(conn, tr);
                             factory.LuuDichVuTrongGiaoDich(conn, tr, phiMoi.Id, phiMoi.DichVu);
                             ctrlChiTiet.SaveTrongGiaoDich(conn, tr);
@@ -298,6 +299,7 @@ namespace CuahangNongduoc.Controller
             ThemThuocTinh(doc, el, "PhiVanChuyen", phi.PhiVanChuyen.ToString());
             ThemThuocTinh(doc, el, "PhanTramGiam", phi.PhanTramGiam.ToString(System.Globalization.CultureInfo.InvariantCulture));
             ThemThuocTinh(doc, el, "PhanTramGiamTay", phi.PhanTramGiamTay.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            ThemThuocTinh(doc, el, "PhanTramTuDong", phi.PhanTramTuDong.ToString(System.Globalization.CultureInfo.InvariantCulture));
             ThemThuocTinh(doc, el, "TienGiam", phi.TienGiam.ToString());
             // Dịch vụ không ghi XML nữa: lưu trong CHI_TIET_DICH_VU, cùng giao dịch với phiếu
             goc.AppendChild(el);
@@ -326,6 +328,7 @@ namespace CuahangNongduoc.Controller
             // Dịch vụ lấy từ CHI_TIET_DICH_VU; phiếu cũ còn dịch vụ trong XML thì được nối thêm ở dưới
             ph.DichVu = LayDichVuDb(id);
             bool coPhanTramTay = false;
+            bool coPhanTramTuDong = false;
             String path = ThamSo.LayDuongDanPhiHoaDon();
             if (!File.Exists(path))
                 return ph;
@@ -351,6 +354,12 @@ namespace CuahangNongduoc.Controller
                     ph.PhanTramGiamTay = double.TryParse(con.InnerText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out tay) ? tay : 0;
                     coPhanTramTay = true;
                 }
+                else if (con.Name == "PhanTramTuDong")
+                {
+                    double tuDong;
+                    ph.PhanTramTuDong = double.TryParse(con.InnerText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out tuDong) ? tuDong : 0;
+                    coPhanTramTuDong = true;
+                }
                 else if (con.Name == "PhanTramGiam")
                 {
                     double pct;
@@ -371,6 +380,9 @@ namespace CuahangNongduoc.Controller
             // Phiếu cũ chưa có mức tay trong XML: mức giảm đã lưu chính là mức tay
             if (!coPhanTramTay)
                 ph.PhanTramGiamTay = ph.PhanTramGiam;
+            // Phiếu lưu trước khi có mục PhanTramTuDong: mức hiệu lực lớn hơn mức tay thì phần chênh lệch là mức tự động
+            if (!coPhanTramTuDong)
+                ph.PhanTramTuDong = Math.Max(0, ph.PhanTramGiam - ph.PhanTramGiamTay);
             return ph;
         }
 

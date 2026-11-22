@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -270,7 +271,205 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             this.Text = "Thống kê hóa đơn giảm giá và khuyến mãi";
         }
 
+        // YC-BC-04: xuất Excel (.xls, mở được bằng Excel), PDF (in qua "Microsoft Print to PDF"), CSV
         private void btnXuatExcel_Click(object sender, EventArgs e)
+        {
+            if (this.dgvThongKeUuDai.Rows.Count == 0) return;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Xuất báo cáo ưu đãi";
+                dialog.Filter = "Excel (*.xls)|*.xls|PDF (*.pdf)|*.pdf|CSV (*.csv)|*.csv";
+                dialog.FileName = "ThongKeUuDai";
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                string duoi = Path.GetExtension(dialog.FileName).ToLowerInvariant();
+                try
+                {
+                    if (duoi == ".pdf")
+                    {
+                        XuatPdf();
+                        return;
+                    }
+                    if (duoi == ".xls") XuatExcelXml(dialog.FileName);
+                    else XuatCsv(dialog.FileName);
+                    MessageBox.Show(this, "Đã xuất báo cáo.", "Xuất báo cáo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    HienThiLoi("Không xuất được tệp", ex);
+                }
+            }
+        }
+
+        private void XuatCsv(string path)
+        {
+            using (StreamWriter writer = new StreamWriter(path, false, new UTF8Encoding(true)))
+            {
+                foreach (object[] dong in LayDuLieuXuat())
+                {
+                    for (int i = 0; i < dong.Length; i++)
+                    {
+                        if (i > 0) writer.Write(",");
+                        writer.Write(EscapeCsv(GiaTriCsv(dong[i])));
+                    }
+                    writer.WriteLine();
+                }
+            }
+        }
+
+        // Dòng 0 là tiêu đề cột; các dòng sau là dữ liệu và dòng tổng từng nhân viên (đúng như đang hiển thị)
+        private List<object[]> LayDuLieuXuat()
+        {
+            List<object[]> ds = new List<object[]>();
+            object[] tieuDe = new object[this.dgvThongKeUuDai.Columns.Count];
+            for (int i = 0; i < tieuDe.Length; i++)
+                tieuDe[i] = this.dgvThongKeUuDai.Columns[i].HeaderText;
+            ds.Add(tieuDe);
+            foreach (DataGridViewRow row in this.dgvThongKeUuDai.Rows)
+            {
+                if (row.IsNewRow) continue;
+                object[] dong = new object[row.Cells.Count];
+                for (int i = 0; i < dong.Length; i++)
+                    dong[i] = row.Cells[i].Value;
+                ds.Add(dong);
+            }
+            return ds;
+        }
+
+        // Excel 2003 XML: mở trực tiếp bằng Excel, giữ định dạng số và ngày
+        private void XuatExcelXml(string path)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            sb.Append("<?mso-application progid=\"Excel.Sheet\"?>");
+            sb.Append("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">");
+            sb.Append("<Styles>");
+            sb.Append("<Style ss:ID=\"hdr\"><Font ss:Bold=\"1\"/><Interior ss:Color=\"#DDEBF7\" ss:Pattern=\"Solid\"/></Style>");
+            sb.Append("<Style ss:ID=\"num\"><NumberFormat ss:Format=\"#,##0\"/></Style>");
+            sb.Append("<Style ss:ID=\"date\"><NumberFormat ss:Format=\"dd/mm/yyyy\"/></Style>");
+            sb.Append("</Styles>");
+            sb.Append("<Worksheet ss:Name=\"ThongKeUuDai\"><Table>");
+            bool tieuDe = true;
+            foreach (object[] dong in LayDuLieuXuat())
+            {
+                sb.Append("<Row>");
+                foreach (object v in dong)
+                    sb.Append(OXml(v, tieuDe));
+                sb.Append("</Row>");
+                tieuDe = false;
+            }
+            sb.Append("</Table></Worksheet></Workbook>");
+            File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
+        }
+
+        private static string OXml(object v, bool laTieuDe)
+        {
+            if (laTieuDe)
+                return "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">" + EscXml(Convert.ToString(v)) + "</Data></Cell>";
+            if (v == null || v == DBNull.Value)
+                return "<Cell/>";
+            if (v is DateTime)
+            {
+                DateTime d = (DateTime)v;
+                if (d == DateTime.MinValue) return "<Cell/>";
+                return "<Cell ss:StyleID=\"date\"><Data ss:Type=\"DateTime\">" + d.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture) + "</Data></Cell>";
+            }
+            if (v is decimal || v is double || v is int || v is long)
+                return "<Cell ss:StyleID=\"num\"><Data ss:Type=\"Number\">" + Convert.ToDecimal(v).ToString(CultureInfo.InvariantCulture) + "</Data></Cell>";
+            return "<Cell><Data ss:Type=\"String\">" + EscXml(Convert.ToString(v)) + "</Data></Cell>";
+        }
+
+        private static string EscXml(string s)
+        {
+            if (s == null) return String.Empty;
+            return s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+        }
+
+        // PDF: in qua hộp thoại in của Windows; chọn máy in "Microsoft Print to PDF" để lưu tệp PDF
+        private void XuatPdf()
+        {
+            List<object[]> du = LayDuLieuXuat();
+            if (du.Count <= 1) return;
+
+            MessageBox.Show(this, "Trong hộp thoại in, chọn máy in \"Microsoft Print to PDF\" rồi chọn nơi lưu tệp.",
+                "Xuất PDF", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            float[] trongSo = { 1.0f, 1.0f, 1.0f, 1.6f, 1.3f, 1.5f, 1.3f, 1.3f, 2.0f };
+            Font fChu = new Font("Arial", 8f);
+            Font fDam = new Font("Arial", 8f, FontStyle.Bold);
+            Font fTieuDe = new Font("Arial", 12f, FontStyle.Bold);
+            string khoangNgay = "Từ " + this.dtpTuNgay.Value.ToString("dd/MM/yyyy") + " đến " + this.dateTimePicker1.Value.ToString("dd/MM/yyyy");
+            int dong = 1;
+            bool trangDau = true;
+
+            using (PrintDocument doc = new PrintDocument())
+            using (PrintDialog hop = new PrintDialog())
+            {
+                doc.DefaultPageSettings.Landscape = true;
+                doc.PrintPage += (s, ev) =>
+                {
+                    Graphics g = ev.Graphics;
+                    RectangleF vung = ev.MarginBounds;
+                    float tong = 0;
+                    foreach (float t in trongSo) tong += t;
+                    float[] rong = new float[trongSo.Length];
+                    for (int i = 0; i < rong.Length; i++) rong[i] = vung.Width * trongSo[i] / tong;
+                    float h = fChu.GetHeight(g) + 6;
+                    float y = vung.Top;
+
+                    if (trangDau)
+                    {
+                        g.DrawString("Thống kê hóa đơn giảm giá và khuyến mãi", fTieuDe, Brushes.Black, vung.Left, y);
+                        y += 24;
+                        g.DrawString(khoangNgay, fChu, Brushes.Black, vung.Left, y);
+                        y += 20;
+                        trangDau = false;
+                    }
+
+                    VeMotDong(g, du[0], rong, vung.Left, y, h, fDam);
+                    y += h;
+                    while (dong < du.Count)
+                    {
+                        if (y + h > vung.Bottom)
+                        {
+                            ev.HasMorePages = true;
+                            return;
+                        }
+                        VeMotDong(g, du[dong], rong, vung.Left, y, h, fChu);
+                        y += h;
+                        dong++;
+                    }
+                    ev.HasMorePages = false;
+                };
+
+                hop.Document = doc;
+                hop.UseEXDialog = true;
+                if (hop.ShowDialog(this) == DialogResult.OK)
+                    doc.Print();
+            }
+        }
+
+        private static void VeMotDong(Graphics g, object[] d, float[] rong, float x, float y, float h, Font font)
+        {
+            StringFormat fmt = new StringFormat(StringFormatFlags.NoWrap);
+            fmt.Trimming = StringTrimming.EllipsisCharacter;
+            float cx = x;
+            for (int i = 0; i < d.Length && i < rong.Length; i++)
+            {
+                g.DrawRectangle(Pens.Gray, cx, y, rong[i], h);
+                g.DrawString(GiaTriIn(d[i]), font, Brushes.Black, new RectangleF(cx + 2, y + 3, rong[i] - 4, h - 4), fmt);
+                cx += rong[i];
+            }
+        }
+
+        private static string GiaTriIn(object value)
+        {
+            if (value is decimal) return ((decimal)value).ToString("#,##0", CultureInfo.InvariantCulture);
+            return GiaTriCsv(value);
+        }
+
+        // Bản CSV cũ, không còn được gọi (giữ lại để đối chiếu)
+        private void XuatCsvCu(object sender, EventArgs e)
         {
             if (this.dgvThongKeUuDai.Rows.Count == 0) return;
             using (SaveFileDialog dialog = new SaveFileDialog())

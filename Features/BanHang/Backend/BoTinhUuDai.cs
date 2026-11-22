@@ -48,6 +48,7 @@ namespace CuahangNongduoc.BusinessObject
         public int SoLuongToiThieu;
         public int MuaSl;
         public int TangSl;
+        public String MaSanPham = ""; // Trống = áp cho mọi mặt hàng (KHUYEN_MAI)
 
         public static UuDaiQuyDinh TuDataRow(DataRow row)
         {
@@ -55,6 +56,7 @@ namespace CuahangNongduoc.BusinessObject
             ud.Loai = DocChuoiCot(row, "LOAI").Trim().ToUpperInvariant();
             ud.PhamVi = DocChuoiCot(row, "PHAM_VI").Trim().ToUpperInvariant();
             ud.GiaTri = DocSoCot(row, "GIA_TRI");
+            ud.MaSanPham = DocChuoiCot(row, "MA_SAN_PHAM").Trim();
 
             Dictionary<String, String> dieuKien = PhanTichDieuKien(DocChuoiCot(row, "DIEU_KIEN"));
             ud.TienToiThieu = LaySo(dieuKien, "TOI_THIEU_TIEN");
@@ -103,6 +105,33 @@ namespace CuahangNongduoc.BusinessObject
                 decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out v))
                 return v;
             return 0m;
+        }
+    }
+
+    // Mua tặng (KHUYEN_MAI): mua MUA_SL tặng TANG_SL cùng mặt hàng.
+    public static class ChonKhuyenMai
+    {
+        // Quy tắc đầu tiên áp được cho mặt hàng ma. Null nếu không có.
+        public static UuDaiQuyDinh TimQuyTac(IEnumerable<UuDaiQuyDinh> dsUuDai, String ma)
+        {
+            if (dsUuDai == null)
+                return null;
+            foreach (UuDaiQuyDinh ud in dsUuDai)
+            {
+                if (ud.Loai != UuDaiQuyDinh.LoaiKhuyenMai || ud.MuaSl <= 0 || ud.TangSl <= 0)
+                    continue;
+                if (ud.MaSanPham.Length > 0 && !String.Equals(ud.MaSanPham, ma, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                return ud;
+            }
+            return null;
+        }
+
+        // Số hàng tặng còn thiếu so với số đã mua (đã tặng rồi thì không tặng thêm)
+        public static int SoHangTangCanThem(UuDaiQuyDinh quyTac, int daMua, int daTang)
+        {
+            int can = (daMua / quyTac.MuaSl) * quyTac.TangSl;
+            return can > daTang ? can - daTang : 0;
         }
     }
 

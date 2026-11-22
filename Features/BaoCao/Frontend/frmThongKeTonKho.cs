@@ -145,6 +145,7 @@ namespace CuahangNongduoc
             try
             {
                 TaiDuLieuTonKho(tuNgay, denNgay);
+                m_ChiTieu = new BaoCaoTongHopService().LayThongKe(tuNgay, denNgay);
                 TinhTongTonKho();
                 HienThiTongTonKho();
             }
@@ -304,6 +305,8 @@ namespace CuahangNongduoc
             string footer = string.Format("Tổng số dòng: {0}   |   Tổng SL tồn: {1:N0}   |   Tổng giá trị: {2:N0} đ",
                 m_Data.Rows.Count, m_TotalSoLuong, m_TotalThanhTien);
             g.DrawString(footer, fontFooter, Brushes.Black, left, y);
+            y += 20;
+            g.DrawString(TaoChuoiChiTieu(), fontFooter, Brushes.Black, new RectangleF(left, y, pageWidth, 80f));
 
             e.HasMorePages = false;
         }
