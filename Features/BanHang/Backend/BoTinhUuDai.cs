@@ -85,7 +85,7 @@ namespace CuahangNongduoc.BusinessObject
         private static Dictionary<String, String> PhanTichDieuKien(String dieuKien)
         {
             Dictionary<String, String> d = new Dictionary<String, String>(StringComparer.OrdinalIgnoreCase);
-            if (String.IsNullOrWhiteSpace(dieuKien))
+            if (dieuKien == null || dieuKien.Trim().Length == 0)
                 return d;
             foreach (String cap in dieuKien.Split(';'))
             {

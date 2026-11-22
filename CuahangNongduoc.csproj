@@ -107,6 +107,9 @@
     <Compile Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.Designer.cs">
+      <DependentUpon>frmTonKhoTaiNgay.cs</DependentUpon>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
@@ -401,6 +404,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Features\BanHang\Frontend\frmQLUuDai.resx">
       <DependentUpon>frmQLUuDai.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.resx">
+      <DependentUpon>frmTonKhoTaiNgay.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Features\HeThong\Frontend\frmDangNhap.resx">
       <DependentUpon>frmDangNhap.cs</DependentUpon>

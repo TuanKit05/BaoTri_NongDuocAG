@@ -226,7 +226,7 @@ namespace CuahangNongduoc
         private static bool TachDieuKien(String text, Dictionary<String, decimal> ketQua, out String loi)
         {
             loi = null;
-            if (String.IsNullOrWhiteSpace(text))
+            if (text == null || text.Trim().Length == 0)
                 return true;
             foreach (String cap in text.Split(';'))
             {
