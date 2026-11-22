@@ -62,6 +62,8 @@ namespace CuahangNongduoc.Controller
             MaSanPham lo = new MaSanPham();
             lo.Id = Convert.ToString(row["ID"]);
             lo.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
+            lo.SoLuongNhap = row.Table.Columns.Contains("SO_LUONG_NHAP") && row["SO_LUONG_NHAP"] != DBNull.Value
+                ? (int?)Convert.ToInt32(row["SO_LUONG_NHAP"]) : null;
             lo.GiaNhap = Convert.ToInt64(row["DON_GIA_NHAP"]);
             lo.NgayNhap = Convert.ToDateTime(row["NGAY_NHAP"]);
             lo.NgaySanXuat = Convert.ToDateTime(row["NGAY_SAN_XUAT"]);

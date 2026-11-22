@@ -159,6 +159,17 @@ namespace CuahangNongduoc.DataLayer
                 row["PHUONG_PHAP_GIA"] = newLot ? (object)costMethod : savedMethod;
                 AddStockChange(changes, Convert.ToString(row["ID_MA_SAN_PHAM"]), -Convert.ToInt32(row["SO_LUONG"]));
             }
+            List<string> stockErrors = new List<string>();
+            foreach (KeyValuePair<string, long> change in changes)
+                if (change.Value < 0)
+                {
+                    string problem = StockProblem(conn, tr, change.Key, -change.Value);
+                    if (problem != null) stockErrors.Add(problem);
+                }
+            if (stockErrors.Count > 0)
+                throw new InvalidOperationException("Không thể lưu/thanh toán phiếu bán:\r\n" +
+                    String.Join("\r\n", stockErrors.ToArray()) + "\r\nVui lòng giảm số lượng hoặc chọn lô khác.");
+
             foreach (KeyValuePair<string, long> change in changes)
             {
                 if (change.Value == 0) continue;
@@ -174,7 +185,9 @@ namespace CuahangNongduoc.DataLayer
                         stock.Parameters.Add("expiry", OleDbType.Date).Value = DateTime.Today;
                     }
                     if (stock.ExecuteNonQuery() != 1)
-                        throw new InvalidOperationException("Lo khong ton tai, khong du ton hoac da het han: " + change.Key);
+                        throw new InvalidOperationException(change.Value < 0
+                            ? (StockProblem(conn, tr, change.Key, -change.Value) ?? "Tồn kho của lô " + change.Key + " vừa thay đổi. Vui lòng kiểm tra lại phiếu.")
+                            : "Không thể hoàn tồn cho lô: " + change.Key);
                 }
             }
             OleDbCommand select = m_Ds.Command;
@@ -200,6 +213,26 @@ namespace CuahangNongduoc.DataLayer
                 }
             }
             return true;
+        }
+
+        private static string StockProblem(OleDbConnection connection, OleDbTransaction transaction, string lot, long required)
+        {
+            using (OleDbCommand command = new OleDbCommand(
+                "SELECT SO_LUONG, NGAY_HET_HAN FROM MA_SAN_PHAM WHERE ID=?", connection, transaction))
+            {
+                command.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = lot;
+                using (OleDbDataReader reader = command.ExecuteReader())
+                {
+                    if (!reader.Read()) return "Lô " + lot + ": không còn tồn tại.";
+                    if (reader[1] == DBNull.Value || Convert.ToDateTime(reader[1]).Date < DateTime.Today)
+                        return "Lô " + lot + ": đã hết hạn hoặc chưa có hạn dùng, không thể xuất.";
+                    long available = reader[0] == DBNull.Value ? 0 : Convert.ToInt64(reader[0]);
+                    if (required > available)
+                        return "Lô " + lot + ": tồn hiện tại " + available + ", cần xuất thêm " + required +
+                            ", thiếu " + (required - available) + ".";
+                    return null;
+                }
+            }
         }
 
         private static void AddStockChange(Dictionary<string, long> changes, string lot, long quantity)

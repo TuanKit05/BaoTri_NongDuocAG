@@ -257,7 +257,7 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand command = TaoLenh(connection, transaction,
                 "INSERT INTO MA_SAN_PHAM (ID, ID_PHIEU_NHAP, ID_SAN_PHAM, DON_GIA_NHAP, SO_LUONG, " +
-                "NGAY_NHAP, NGAY_SAN_XUAT, NGAY_HET_HAN) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                "NGAY_NHAP, NGAY_SAN_XUAT, NGAY_HET_HAN, SO_LUONG_NHAP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             command.Parameters.Add("p1", OleDbType.VarChar, 50).Value = lo.MaLo;
             command.Parameters.Add("p2", OleDbType.VarChar, 50).Value = maPhieu;
@@ -267,6 +267,7 @@ namespace CuahangNongduoc.DataLayer
             command.Parameters.Add("p6", OleDbType.Date).Value = lo.NgayNhap.Date;
             command.Parameters.Add("p7", OleDbType.Date).Value = lo.NgaySanXuat.Date;
             command.Parameters.Add("p8", OleDbType.Date).Value = lo.NgayHetHan.Date;
+            command.Parameters.Add("p9", OleDbType.Integer).Value = lo.SoLuong;
 
             if (command.ExecuteNonQuery() <= 0)
                 throw new InvalidOperationException("Không thêm được lô " + lo.MaLo + ".");

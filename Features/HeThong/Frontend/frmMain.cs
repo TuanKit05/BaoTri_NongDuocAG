@@ -23,6 +23,16 @@ namespace CuahangNongduoc
             ConfigureToolbarImages();
             this.MdiChildActivate += new EventHandler(frmMain_MdiChildActivate);
             KhoiTaoMenuTaiKhoan();
+            Shown += delegate {
+                BeginInvoke(new MethodInvoker(delegate {
+                    if (IsDisposed || Disposing) return;
+                    try { ExpiryWarning.ShowIfNeeded(this); }
+                    catch (Exception error) {
+                        MessageBox.Show(this, ErrorLog.Describe(error, "Không thể kiểm tra hàng sắp hết hạn"),
+                            "Cảnh báo kho", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }));
+            };
         }
         // MDI inserts a system icon whenever the active child changes.
         // Scale that image too, even when Windows supplies a large source icon.

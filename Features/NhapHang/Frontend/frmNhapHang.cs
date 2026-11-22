@@ -32,6 +32,14 @@ namespace CuahangNongduoc
         {
             InitializeComponent();
             dataGridView.AutoGenerateColumns = false;
+            DataGridViewTextBoxColumn initialQuantity = new DataGridViewTextBoxColumn();
+            initialQuantity.Name = "colSoLuongNhap";
+            initialQuantity.DataPropertyName = "SO_LUONG_NHAP";
+            initialQuantity.HeaderText = "SL nhập ban đầu";
+            initialQuantity.ReadOnly = true;
+            initialQuantity.DefaultCellStyle.Format = "N0";
+            initialQuantity.DefaultCellStyle.NullValue = "Chưa ghi nhận";
+            dataGridView.Columns.Add(initialQuantity);
             toolHuy.Name = "toolHuy";
             bindingNavigator.Items.Insert(bindingNavigator.Items.IndexOf(toolLuuThoat) + 1, toolHuy);
             toolHuy.Click += delegate { CancelChanges(); };
@@ -271,6 +279,7 @@ namespace CuahangNongduoc
             row["ID"] = txtMaSo.Text.Trim();
             row["DON_GIA_NHAP"] = Convert.ToInt64(numGiaNhap.Value);
             row["SO_LUONG"] = Convert.ToInt32(numSoLuong.Value);
+            row["SO_LUONG_NHAP"] = Convert.ToInt32(numSoLuong.Value);
             row["NGAY_NHAP"] = dtNgayNhap.Value.Date;
             row["NGAY_SAN_XUAT"] = dtNgaySanXuat.Value.Date;
             row["NGAY_HET_HAN"] = dtNgayHetHan.Value.Date;
