@@ -91,22 +91,22 @@ namespace CuahangNongduoc.Controller
             bn.BindingSource = bs;
 
             txt.DataBindings.Clear();
-            txt.DataBindings.Add("Text", bs, "ID");
+            txt.DataBindings.Add("Text", bs, "ID", true, DataSourceUpdateMode.Never);
 
             cmb.DataBindings.Clear();
-            cmb.DataBindings.Add("SelectedValue", bs, "ID_NHA_CUNG_CAP");
+            cmb.DataBindings.Add("SelectedValue", bs, "ID_NHA_CUNG_CAP", true, DataSourceUpdateMode.Never);
 
             dt.DataBindings.Clear();
-            dt.DataBindings.Add("Value", bs, "NGAY_NHAP");
+            dt.DataBindings.Add("Value", bs, "NGAY_NHAP", true, DataSourceUpdateMode.Never);
 
             numTongTien.DataBindings.Clear();
-            numTongTien.DataBindings.Add("Value", bs, "TONG_TIEN");
+            numTongTien.DataBindings.Add("Value", bs, "TONG_TIEN", true, DataSourceUpdateMode.Never);
 
             numDaTra.DataBindings.Clear();
-            numDaTra.DataBindings.Add("Value", bs, "DA_TRA");
+            numDaTra.DataBindings.Add("Value", bs, "DA_TRA", true, DataSourceUpdateMode.Never);
 
             numConNo.DataBindings.Clear();
-            numConNo.DataBindings.Add("Value", bs, "CON_NO");
+            numConNo.DataBindings.Add("Value", bs, "CON_NO", true, DataSourceUpdateMode.Never);
         }
 
         public void TimPhieuNhap(String maNCC, DateTime dt)

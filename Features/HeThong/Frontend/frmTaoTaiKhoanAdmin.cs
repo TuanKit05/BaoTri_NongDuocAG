@@ -35,7 +35,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Không thể tạo tài khoản quản trị", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"), "Không thể tạo tài khoản quản trị", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 

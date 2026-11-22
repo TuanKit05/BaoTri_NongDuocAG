@@ -62,6 +62,8 @@ namespace CuahangNongduoc.Controller
             MaSanPham lo = new MaSanPham();
             lo.Id = Convert.ToString(row["ID"]);
             lo.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
+            lo.SoLuongNhap = row.Table.Columns.Contains("SO_LUONG_NHAP") && row["SO_LUONG_NHAP"] != DBNull.Value
+                ? (int?)Convert.ToInt32(row["SO_LUONG_NHAP"]) : null;
             lo.GiaNhap = Convert.ToInt64(row["DON_GIA_NHAP"]);
             lo.NgayNhap = Convert.ToDateTime(row["NGAY_NHAP"]);
             lo.NgaySanXuat = Convert.ToDateTime(row["NGAY_SAN_XUAT"]);
@@ -90,18 +92,26 @@ namespace CuahangNongduoc.Controller
 
         public void HienThiAutoComboBox(String sp, ComboBox cmb)
         {
-            cmb.DataSource = factory.DanhsachMaSanPham(sp);
-            cmb.DisplayMember = "ID";
+            DataTable lots = factory.DanhsachMaSanPham(sp);
+            if (!lots.Columns.Contains("HIEN_THI_LO")) lots.Columns.Add("HIEN_THI_LO", typeof(string));
+            foreach (DataRow row in lots.Rows)
+                row["HIEN_THI_LO"] = Convert.ToString(row["ID"]) + " | HSD: " +
+                    Convert.ToDateTime(row["NGAY_HET_HAN"]).ToString("dd/MM/yyyy") + " | Tồn: " + row["SO_LUONG"];
+            cmb.DataSource = lots;
+            cmb.DisplayMember = "HIEN_THI_LO";
             cmb.ValueMember = "ID";
+            cmb.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmb.DropDownWidth = Math.Max(cmb.Width, 360);
+            cmb.SelectedIndex = lots.Rows.Count == 0 ? -1 : 0;
         }
 
         public void HienThiDataGridViewComboBox(DataGridViewComboBoxColumn cmb)
         {
-            cmb.DataSource = factory.DanhsachMaSanPham();
+            cmb.DataSource = factory.TatCaLoChoPhieuBan();
             cmb.DisplayMember = "ID";
             cmb.ValueMember = "ID";
             cmb.DataPropertyName = "ID_MA_SAN_PHAM";
-            cmb.HeaderText = "Mã sản phẩm";
+            cmb.HeaderText = "Số lô";
         }
 
         public void HienThiChiTietPhieuNhap(String id, DataGridView dg)

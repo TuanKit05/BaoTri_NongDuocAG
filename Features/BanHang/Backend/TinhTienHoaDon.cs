@@ -2,6 +2,21 @@
 
 namespace CuahangNongduoc.BusinessObject
 {
+    public static class TienTe
+    {
+        // Existing price columns store whole VND. Normalize before multiplying.
+        public static decimal ThanhTien(decimal donGia, decimal soLuong)
+        {
+            if (donGia < 0 || soLuong < 0)
+                throw new ArgumentOutOfRangeException("Số lượng và đơn giá không được âm.");
+            donGia = Decimal.Round(donGia, 0, MidpointRounding.AwayFromZero);
+            decimal value = Decimal.Round(checked(donGia * soLuong), 0, MidpointRounding.AwayFromZero);
+            if (value > Int64.MaxValue)
+                throw new OverflowException("Thành tiền vượt giới hạn lưu trữ.");
+            return value;
+        }
+    }
+
     public class TinhTienHoaDon
     {
         public KetQuaUuDai Tinh(

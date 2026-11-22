@@ -11,7 +11,7 @@ namespace CuahangNongduoc
     /// </summary>
     public partial class frmKhachHang : BaseDanhMucForm
     {
-        private readonly KhachHangController _ctrl = new KhachHangController();
+        private readonly KhachHangController _ctrl;
 
         protected override BaseController Controller => _ctrl;
         protected override string TenDanhMuc => "Khách hàng";
@@ -19,6 +19,8 @@ namespace CuahangNongduoc
         public frmKhachHang()
         {
             InitializeComponent();
+            if (IsDesignMode) return;
+            _ctrl = new KhachHangController();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             base.dataGridView = this.dataGridView;
             base.bindingNavigator = this.bindingNavigator;
@@ -99,8 +101,7 @@ namespace CuahangNongduoc
                 AccessControl.DemandCurrent("BanHang");
                 AccessControl.DemandCurrent("KhachHang");
             }
-            long maso = ThamSo.KhachHang;
-            ThamSo.KhachHang = maso + 1;
+            string maso = IdGenerator.Next("KHACH_HANG");
 
             DataRowView row = (DataRowView)bindingNavigator.BindingSource.AddNew();
             row["ID"] = maso;

@@ -165,8 +165,8 @@ namespace CuahangNongduoc.BusinessObject
         {
             if (tienHang <= 0 || m_PhanTram <= 0)
                 return 0;
-            double tho = tienHang * m_PhanTram / 100.0;
-            return (long)Math.Floor((tho + 50.0) / 100.0) * 100;
+            decimal tho = (decimal)tienHang * (decimal)m_PhanTram / 100m;
+            return checked((long)(Decimal.Round(tho / 100m, 0, MidpointRounding.AwayFromZero) * 100m));
         }
     }
 

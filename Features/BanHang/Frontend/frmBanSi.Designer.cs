@@ -355,7 +355,10 @@
             this.dgvDanhsachSP.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvDanhsachSP.Location = new System.Drawing.Point(0, 0);
             this.dgvDanhsachSP.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.dgvDanhsachSP.AutoGenerateColumns = false;
             this.dgvDanhsachSP.Name = "dgvDanhsachSP";
+            this.dgvDanhsachSP.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvDanhsachSP.MultiSelect = false;
             this.dgvDanhsachSP.ReadOnly = true;
             this.dgvDanhsachSP.RowHeadersWidth = 51;
             this.dgvDanhsachSP.Size = new System.Drawing.Size(992, 155);
@@ -1047,7 +1050,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1000, 658);
+            this.WindowState = System.Windows.Forms.FormWindowState.Normal;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.ClientSize = new System.Drawing.Size(750, 535);
             this.Controls.Add(this.grpPhi);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.groupBox1);

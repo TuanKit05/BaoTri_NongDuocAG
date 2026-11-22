@@ -6,7 +6,7 @@ namespace CuahangNongduoc
 {
     public partial class frmLyDoChi : BaseDanhMucForm
     {
-        private readonly LyDoChiController _ctrl = new LyDoChiController();
+        private readonly LyDoChiController _ctrl;
 
         protected override BaseController Controller => _ctrl;
         protected override string TenDanhMuc => "Lý do chi";
@@ -14,6 +14,8 @@ namespace CuahangNongduoc
         public frmLyDoChi()
         {
             InitializeComponent();
+            if (IsDesignMode) return;
+            _ctrl = new LyDoChiController();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             base.dataGridView = this.dataGridView;
             base.bindingNavigator = this.bindingNavigator;

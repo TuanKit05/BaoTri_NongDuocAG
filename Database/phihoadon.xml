@@ -1,5 +1,15 @@
 <PhiHoaDon>
-  <Phieu Id="21">
+  <Phieu Id="22">
+    <PhiVanChuyen>0</PhiVanChuyen>
+    <PhanTramGiam>0</PhanTramGiam>
+    <TienGiam>0</TienGiam>
+  </Phieu>
+  <Phieu Id="23">
+    <PhiVanChuyen>0</PhiVanChuyen>
+    <PhanTramGiam>0</PhanTramGiam>
+    <TienGiam>0</TienGiam>
+  </Phieu>
+  <Phieu Id="24">
     <PhiVanChuyen>0</PhiVanChuyen>
     <PhanTramGiam>0</PhanTramGiam>
     <TienGiam>0</TienGiam>

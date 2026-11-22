@@ -8,7 +8,7 @@ namespace CuahangNongduoc
 {
     public partial class frmDaiLy : BaseDanhMucForm
     {
-        private readonly KhachHangController _ctrl = new KhachHangController();
+        private readonly KhachHangController _ctrl;
 
         protected override BaseController Controller => _ctrl;
         protected override string TenDanhMuc => "Đại lý";
@@ -16,6 +16,8 @@ namespace CuahangNongduoc
         public frmDaiLy()
         {
             InitializeComponent();
+            if (IsDesignMode) return;
+            _ctrl = new KhachHangController();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             base.dataGridView = this.dataGridView;
             base.bindingNavigator = this.bindingNavigator;
@@ -54,11 +56,11 @@ namespace CuahangNongduoc
 
         private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
         {
-            long maso = ThamSo.KhachHang;
-            ThamSo.KhachHang = maso + 1;
+            string maso = IdGenerator.Next("KHACH_HANG");
 
             DataRowView row = (DataRowView)bindingNavigator.BindingSource.AddNew();
             row["ID"] = maso;
+            row["LOAI_KH"] = true;
         }
 
         private void toolTimHoTen_Click(object sender, EventArgs e)

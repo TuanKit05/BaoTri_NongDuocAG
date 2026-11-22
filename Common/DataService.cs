@@ -53,8 +53,6 @@ namespace CuahangNongduoc
         // The command to execute query or non-query command on a database of this data service.
         private OleDbCommand		m_Command;
       
-		// The data adapter to execute query on a database of this data service.
-		private OleDbDataAdapter	m_DataAdapter;
 
         public DataService(){}
 
@@ -66,174 +64,156 @@ namespace CuahangNongduoc
         }
 
 
+        private static void EnsureConnection()
+        {
+            if (m_Connection == null) m_Connection = new OleDbConnection(m_ConnectString);
+            if (m_Connection.State == ConnectionState.Broken) m_Connection.Close();
+            if (m_Connection.State != ConnectionState.Open) m_Connection.Open();
+        }
+
         public void Load(OleDbCommand command)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
+            if (command == null) throw new ArgumentNullException("command");
             AccessControl.PrepareRead(command);
             try
             {
-                if (m_Connection == null)
-                    m_Connection = new OleDbConnection(m_ConnectString);
-
-                if (m_Connection.State != ConnectionState.Open)
-                    m_Connection.Open();
-
+                EnsureConnection();
+                command.Connection = m_Connection;
+                command.Transaction = null;
+                using (OleDbDataAdapter adapter = new OleDbDataAdapter(command))
+                using (DataTable loaded = new DataTable())
+                {
+                    adapter.Fill(loaded);
+                    Clear();
+                    Merge(loaded, false, MissingSchemaAction.Add);
+                    AcceptChanges();
+                }
                 m_Command = command;
-                m_Command.Connection = m_Connection;
-
-                m_DataAdapter = new OleDbDataAdapter();
-                m_DataAdapter.SelectCommand = m_Command;
-
-                this.Clear();
-                m_DataAdapter.Fill(this);
+                if (UsesNativeIdentity(command.CommandText) && Columns.Contains("ID"))
+                {
+                    Columns["ID"].AutoIncrement = true;
+                    Columns["ID"].AutoIncrementSeed = -1;
+                    Columns["ID"].AutoIncrementStep = -1;
+                    Columns["ID"].ReadOnly = true;
+                }
                 AccessControl.HideCosts(this);
             }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Không thể tải dữ liệu từ Access.\n" +
-                    "Chuỗi kết nối: " + m_ConnectString +
-                    "\nChi tiết: " + ex.Message, ex);
-            }
+            catch (Exception error) { throw ErrorLog.Wrap(error, "Không thể tải dữ liệu từ Access"); }
         }
-
-
 
         public static bool OpenConnection()
         {
-            try
-            {
-                if (m_Connection == null)
-                    //m_Connection = new OleDbConnection("Data Source=LAPTOP07\\OleDbEXPRESS;Initial Catalog=VCB;Integrated Security=True;");
-                    //m_Connection = new OleDbConnection("Data Source=localhost;Initial Catalog=phongkham;User ID=sa; Password=tvteo;");
-                    m_Connection = new OleDbConnection(m_ConnectString);
-                    
-                    
-                if (m_Connection.State == ConnectionState.Closed)
-                    m_Connection.Open();
-                return true;
-            }
-            catch (Exception e)
-            {
-                if (m_Connection != null) m_Connection.Close();
-                return false;
-            }
-            
+            try { EnsureConnection(); return true; }
+            catch (Exception error) { throw ErrorLog.Wrap(error, "Không thể kết nối cơ sở dữ liệu Access"); }
         }
-		/// <summary>
-		/// Closes the connection of this data service.
-		/// </summary>
-		public void CloseConnection()
-		{
-			m_Connection.Close();
-		}
 
-        /// <summary>
-        /// Update DataTable
-        /// </summary>
-        /// <returns></returns>
+        public void CloseConnection()
+        {
+            if (m_Connection == null) return;
+            try { m_Connection.Close(); }
+            catch (Exception error) { throw ErrorLog.Wrap(error, "Không thể đóng kết nối Access"); }
+        }
+
+        private static bool UsesNativeIdentity(string sql)
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(sql,
+                @"\bFROM\s+\[?(DON_VI_TINH|LY_DO_CHI)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
         public int ExecuteNoneQuery()
-		{
+        {
+            if (m_Command == null) throw new InvalidOperationException("Chưa tải bảng dữ liệu cần lưu.");
             AccessControl.ValidateRows(this, m_Command.CommandText);
             string auditChanges = AccessControl.DescribeChanges(this);
-            int result = 0;
-            OleDbTransaction tr = null;
-			try
-			{
-                tr =  m_Connection.BeginTransaction();
-
-                m_Command.Connection = m_Connection;
-                m_Command.Transaction = tr;
-
-                m_DataAdapter = new OleDbDataAdapter();
-                m_DataAdapter.SelectCommand = m_Command;
-
-                OleDbCommandBuilder builder = new OleDbCommandBuilder(m_DataAdapter);                
-
-                result = m_DataAdapter.Update(this);
-                if (result > 0) AccountRepository.Audit(m_Connection, tr, "LUU_DU_LIEU", "DataService", m_Command.CommandText + "\n" + auditChanges);
-               
-
-                tr.Commit();
-                
-			}
-			catch ( Exception e)
-            {
-                if (tr != null) tr.Rollback();
-                throw;
-            }
-            return result;
-		}
-        /// <summary>
-        /// Thuc thi mot command
-        /// </summary>
-        /// <param name="command">OleDb hay Store Procedure</param>
-        /// <returns></returns>
-        public int ExecuteNoneQuery(OleDbCommand cmd)
-        {
-            AccessControl.DemandWrite(cmd.CommandText);
-
-            int result = 0;
-            OleDbTransaction tr = null;
-
+            OleDbTransaction transaction = null;
             try
             {
-                tr = m_Connection.BeginTransaction();
-
-                cmd.Connection = m_Connection;
-
-                cmd.Transaction = tr;
-
-                result = cmd.ExecuteNonQuery();
-                AccountRepository.Audit(m_Connection, tr, "CAP_NHAT_DU_LIEU", "DataService", cmd.CommandText);
-
-                this.AcceptChanges();
-
-                tr.Commit();
-
+                EnsureConnection();
+                transaction = m_Connection.BeginTransaction();
+                using (OleDbCommand select = (OleDbCommand)m_Command.Clone())
+                using (OleDbDataAdapter adapter = new OleDbDataAdapter(select))
+                using (OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter))
+                {
+                    select.Connection = m_Connection;
+                    select.Transaction = transaction;
+                    adapter.AcceptChangesDuringUpdate = false;
+                    adapter.RowUpdating += delegate(object sender, OleDbRowUpdatingEventArgs e) {
+                        if (e.Command == null) return;
+                        e.Command.Connection = m_Connection;
+                        e.Command.Transaction = transaction;
+                    };
+                    adapter.RowUpdated += delegate(object sender, OleDbRowUpdatedEventArgs e) {
+                        if (e.StatementType != StatementType.Insert || e.Errors != null || !UsesNativeIdentity(select.CommandText)) return;
+                        using (OleDbCommand identity = new OleDbCommand("SELECT @@IDENTITY", m_Connection, transaction))
+                        {
+                            DataColumn idColumn = e.Row.Table.Columns["ID"];
+                            bool readOnly = idColumn.ReadOnly;
+                            idColumn.ReadOnly = false;
+                            try { e.Row["ID"] = Convert.ToInt32(identity.ExecuteScalar()); }
+                            finally { idColumn.ReadOnly = readOnly; }
+                        }
+                    };
+                    int result = adapter.Update(this);
+                    if (result > 0) AccountRepository.Audit(m_Connection, transaction,
+                        "LUU_DU_LIEU", "DataService", m_Command.CommandText + "\n" + auditChanges);
+                    transaction.Commit();
+                    AcceptChanges();
+                    return result;
+                }
             }
-            catch(Exception e)
+            catch (Exception error)
             {
-                if (tr != null) tr.Rollback();
-                throw;
+                ErrorLog.Rollback(transaction, "Lưu bảng Access");
+                throw ErrorLog.Wrap(error, "Không thể lưu dữ liệu vào Access");
             }
-            return result;
-            
+            finally
+            {
+                m_Command.Transaction = null;
+                if (transaction != null) transaction.Dispose();
+            }
+        }
+
+        public int ExecuteNoneQuery(OleDbCommand cmd)
+        {
+            if (cmd == null) throw new ArgumentNullException("cmd");
+            AccessControl.DemandWrite(cmd.CommandText);
+            OleDbTransaction transaction = null;
+            try
+            {
+                EnsureConnection();
+                transaction = m_Connection.BeginTransaction();
+                cmd.Connection = m_Connection;
+                cmd.Transaction = transaction;
+                int result = cmd.ExecuteNonQuery();
+                AccountRepository.Audit(m_Connection, transaction, "CAP_NHAT_DU_LIEU", "DataService", cmd.CommandText);
+                transaction.Commit();
+                return result;
+            }
+            catch (Exception error)
+            {
+                ErrorLog.Rollback(transaction, "Cập nhật Access");
+                throw ErrorLog.Wrap(error, "Không thể cập nhật dữ liệu Access");
+            }
+            finally
+            {
+                cmd.Transaction = null;
+                if (transaction != null) transaction.Dispose();
+            }
         }
 
         public object ExecuteScalar(OleDbCommand cmd)
         {
+            if (cmd == null) throw new ArgumentNullException("cmd");
             AccessControl.PrepareRead(cmd);
-            object result = null;
-            OleDbTransaction tr = null;
-            
             try
             {
-                tr = m_Connection.BeginTransaction();
-
+                EnsureConnection();
                 cmd.Connection = m_Connection;
-
-                cmd.Transaction = tr;
-
-                result = cmd.ExecuteScalar();
-
-                this.AcceptChanges();
-
-                tr.Commit();
-
-                if (result == DBNull.Value)
-                {
-                    result = null;
-                }
+                cmd.Transaction = null;
+                object result = cmd.ExecuteScalar();
+                return result == DBNull.Value ? null : result;
             }
-            catch
-            {
-                if (tr != null) tr.Rollback();
-                throw;
-            }
-            return result;
+            catch (Exception error) { throw ErrorLog.Wrap(error, "Không thể đọc giá trị từ Access"); }
         }
-	}
+    }
 }

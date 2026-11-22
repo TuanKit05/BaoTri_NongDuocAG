@@ -17,6 +17,7 @@ namespace CuahangNongduoc.DataLayer
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieuBan;
             m_Ds.Load(cmd);
+            if (m_Ds.Columns.Contains("LA_HANG_TANG")) m_Ds.Columns["LA_HANG_TANG"].DefaultValue = false;
             return m_Ds;
         }
 
@@ -26,6 +27,7 @@ namespace CuahangNongduoc.DataLayer
                     " WHERE PB.NGAY_BAN = @ngayban");
             cmd.Parameters.Add("ngayban", OleDbType.Date).Value = dtNgayBan;
             m_Ds.Load(cmd);
+            if (m_Ds.Columns.Contains("LA_HANG_TANG")) m_Ds.Columns["LA_HANG_TANG"].DefaultValue = false;
             return m_Ds;
         }
 
@@ -36,6 +38,7 @@ namespace CuahangNongduoc.DataLayer
             cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
             cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
             m_Ds.Load(cmd);
+            if (m_Ds.Columns.Contains("LA_HANG_TANG")) m_Ds.Columns["LA_HANG_TANG"].DefaultValue = false;
             return m_Ds;
         }
 
@@ -193,7 +196,7 @@ namespace CuahangNongduoc.DataLayer
         public bool Save()
         {
             AccessControl.DemandCurrent("BanHang");
-            if (!CoThayDoi())
+            if (m_Ds.GetChanges() == null)
                 return true;
 
             using (OleDbConnection conn = new OleDbConnection(DataService.m_ConnectString))
@@ -210,7 +213,7 @@ namespace CuahangNongduoc.DataLayer
                     }
                     catch
                     {
-                        tr.Rollback();
+                        ErrorLog.Rollback(tr, "Rollback Access");
                         throw;
                     }
                 }
@@ -227,69 +230,158 @@ namespace CuahangNongduoc.DataLayer
             AccessControl.DemandCurrent("BanHang");
             if (!AccessControl.Can("SuaPhieuBan") && AccessControl.SaleTransaction != tr)
                 throw new UnauthorizedAccessException("Chi tiết phiếu mới phải được lưu cùng đầu phiếu.");
-            if (!CoThayDoi())
+            if (m_Ds.GetChanges() == null)
                 return true;
 
-            // 1. Đồng bộ tồn kho theo từng dòng, trong cùng giao dịch với việc ghi chi tiết
+            Dictionary<string, long> changes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            string costMethod = WarehouseSettings.ReadCostMethod(conn, tr);
             foreach (DataRow row in m_Ds.Rows)
             {
-                if (row.RowState == DataRowState.Added)
+                if (row.RowState == DataRowState.Unchanged || row.RowState == DataRowState.Detached) continue;
+                KiemTraQuyenDongPhieu(conn, tr, row, row.RowState == DataRowState.Deleted ? DataRowVersion.Original : DataRowVersion.Current);
+                object savedCost = DBNull.Value;
+                object savedMethod = DBNull.Value;
+                if (row.RowState != DataRowState.Added)
                 {
-                    // Dòng mới: trừ tồn theo số lượng bán
-                    int quantity = Convert.ToInt32(row["SO_LUONG"]);
-                    if (quantity <= 0) throw new InvalidOperationException("Số lượng bán phải lớn hơn không.");
-                    KiemTraQuyenDongPhieu(conn, tr, row, DataRowVersion.Current);
-                    GanGiaVon(conn, tr, row, Convert.ToString(row["ID_MA_SAN_PHAM"]), quantity);
-                    TruTonTrongGiaoDich(conn, tr, Convert.ToString(row["ID_MA_SAN_PHAM"]), quantity, Convert.ToString(row["ID_PHIEU_BAN"]));
+                    AccessControl.DemandCurrent("SuaPhieuBan");
+                    string oldInvoice = Convert.ToString(row["ID_PHIEU_BAN", DataRowVersion.Original]);
+                    string oldLot = Convert.ToString(row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
+                    int oldQuantity = Convert.ToInt32(row["SO_LUONG", DataRowVersion.Original]);
+                    using (OleDbCommand original = new OleDbCommand(
+                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN,GIA_VON,PHUONG_PHAP_GIA FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=? AND LA_HANG_TANG=?", conn, tr))
+                    {
+                        original.Parameters.Add("invoice", OleDbType.VarWChar, 50).Value = oldInvoice;
+                        original.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = oldLot;
+                        original.Parameters.Add("gift", OleDbType.Boolean).Value = row["LA_HANG_TANG", DataRowVersion.Original] != DBNull.Value && Convert.ToBoolean(row["LA_HANG_TANG", DataRowVersion.Original]);
+                        using (OleDbDataReader reader = original.ExecuteReader())
+                        {
+                            if (!reader.Read() || Convert.ToInt32(reader[0]) != oldQuantity ||
+                                Convert.ToDecimal(reader[1]) != Convert.ToDecimal(row["DON_GIA", DataRowVersion.Original]) ||
+                                Convert.ToDecimal(reader[2]) != Convert.ToDecimal(row["THANH_TIEN", DataRowVersion.Original]))
+                                throw new DBConcurrencyException("Dong phieu da duoc thay doi. Hay tai lai phieu.");
+                            savedCost = reader[3];
+                            savedMethod = reader[4];
+                        }
+                    }
+                    AddStockChange(changes, oldLot, oldQuantity);
                 }
-                else if (row.RowState == DataRowState.Modified)
+                if (row.RowState == DataRowState.Deleted) continue;
+                if (row.RowState == DataRowState.Modified && !Object.Equals(row["ID_PHIEU_BAN"], row["ID_PHIEU_BAN", DataRowVersion.Original]))
+                    throw new InvalidOperationException("Khong duoc chuyen dong hang sang phieu khac.");
+                if (row["SO_LUONG"] == DBNull.Value || Convert.ToDecimal(row["SO_LUONG"]) <= 0 ||
+                    Convert.ToDecimal(row["SO_LUONG"]) != Decimal.Truncate(Convert.ToDecimal(row["SO_LUONG"])) ||
+                    String.IsNullOrEmpty(Convert.ToString(row["ID_MA_SAN_PHAM"]).Trim()))
+                    throw new InvalidOperationException("Ma lo va so luong nguyen duong la bat buoc.");
+                string invoice = Convert.ToString(row["ID_PHIEU_BAN"]);
+                if (Convert.ToInt32(AccountRepository.Scalar(conn, tr,
+                    "SELECT COUNT(*) FROM PHIEU_BAN PB INNER JOIN KHACH_HANG KH ON PB.ID_KHACH_HANG=KH.ID WHERE PB.ID=?", invoice)) != 1)
+                    throw new InvalidOperationException("Phieu ban phai co khach hang hop le.");
+                if (!AccessControl.Can("XemTatCaPhieuBan"))
                 {
-                    // Dòng đã lưu bị sửa số lượng: trừ hoặc cộng phần chênh lệch
-                    String lotCu = Convert.ToString(row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
-                    String lotMoi = Convert.ToString(row["ID_MA_SAN_PHAM"]);
-                    if (!String.Equals(lotCu, lotMoi, StringComparison.Ordinal))
-                        throw new InvalidOperationException("Không đổi lô của dòng đã lưu. Hãy xóa dòng rồi thêm lại.");
-                    int soCu = Convert.ToInt32(row["SO_LUONG", DataRowVersion.Original]);
-                    int soMoi = Convert.ToInt32(row["SO_LUONG"]);
-                    if (soMoi <= 0) throw new InvalidOperationException("Số lượng bán phải lớn hơn không.");
-                    KiemTraQuyenDongPhieu(conn, tr, row, DataRowVersion.Current);
-                    // Giữ giá vốn đơn vị đã ghi lúc bán; chỉ tính lại thành tiền giá vốn theo số lượng mới
-                    if (row["GIA_VON_DON_VI"] == DBNull.Value)
-                        GanGiaVon(conn, tr, row, lotMoi, soMoi);
-                    else
-                        row["THANH_TIEN_GIA_VON"] = Convert.ToDecimal(row["GIA_VON_DON_VI"]) * soMoi;
-                    int chenhLech = soMoi - soCu;
-                    if (chenhLech > 0)
-                        TruTonTrongGiaoDich(conn, tr, lotMoi, chenhLech, Convert.ToString(row["ID_PHIEU_BAN"]));
-                    else if (chenhLech < 0)
-                        CongTonTrongGiaoDich(conn, tr, lotMoi, -chenhLech, Convert.ToString(row["ID_PHIEU_BAN"]));
+                    object owner = AccountRepository.Scalar(conn, tr, "SELECT ID_NHAN_VIEN FROM PHIEU_BAN WHERE ID=?", invoice);
+                    if (!String.Equals(Convert.ToString(owner), AppSession.CurrentUser.Id, StringComparison.Ordinal))
+                        throw new UnauthorizedAccessException("Khong duoc sua phieu cua nguoi khac.");
                 }
-                else if (row.RowState == DataRowState.Deleted)
+                if (row["LA_HANG_TANG"] != DBNull.Value && Convert.ToBoolean(row["LA_HANG_TANG"])) row["DON_GIA"] = 0m;
+                row["THANH_TIEN"] = CuahangNongduoc.BusinessObject.TienTe.ThanhTien(
+                    Convert.ToDecimal(row["DON_GIA"]), Convert.ToDecimal(row["SO_LUONG"]));
+                bool newLot = row.RowState == DataRowState.Added ||
+                    !Object.Equals(row["ID_MA_SAN_PHAM"], row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
+                row["GIA_VON"] = newLot ? (object)WarehouseCost.UnitCost(conn, tr, Convert.ToString(row["ID_MA_SAN_PHAM"]), costMethod) : savedCost;
+                row["PHUONG_PHAP_GIA"] = newLot ? (object)costMethod : savedMethod;
+                row["GIA_VON_DON_VI"] = row["GIA_VON"];
+                row["THANH_TIEN_GIA_VON"] = row["GIA_VON"] == DBNull.Value ? (object)DBNull.Value : Convert.ToDecimal(row["GIA_VON"]) * Convert.ToInt32(row["SO_LUONG"]);
+                AddStockChange(changes, Convert.ToString(row["ID_MA_SAN_PHAM"]), -Convert.ToInt32(row["SO_LUONG"]));
+            }
+            List<string> stockErrors = new List<string>();
+            foreach (KeyValuePair<string, long> change in changes)
+                if (change.Value < 0)
                 {
-                    // Dòng bị gỡ khỏi phiếu: hoàn lại số lượng đã trừ lúc lưu
-                    String lot = Convert.ToString(row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
-                    int soCu = Convert.ToInt32(row["SO_LUONG", DataRowVersion.Original]);
-                    KiemTraQuyenDongPhieu(conn, tr, row, DataRowVersion.Original);
-                    CongTonTrongGiaoDich(conn, tr, lot, soCu, Convert.ToString(row["ID_PHIEU_BAN", DataRowVersion.Original]));
+                    string problem = StockProblem(conn, tr, change.Key, -change.Value);
+                    if (problem != null) stockErrors.Add(problem);
+                }
+            if (stockErrors.Count > 0)
+                throw new InvalidOperationException("Không thể lưu/thanh toán phiếu bán:\r\n" +
+                    String.Join("\r\n", stockErrors.ToArray()) + "\r\nVui lòng giảm số lượng hoặc chọn lô khác.");
+
+            foreach (DataRow ledgerRow in m_Ds.Rows)
+            {
+                if (ledgerRow.RowState == DataRowState.Unchanged || ledgerRow.RowState == DataRowState.Detached) continue;
+                if (ledgerRow.HasVersion(DataRowVersion.Original))
+                    GhiBienDong(conn, tr, Convert.ToString(ledgerRow["ID_MA_SAN_PHAM", DataRowVersion.Original]), "HOAN", Convert.ToInt32(ledgerRow["SO_LUONG", DataRowVersion.Original]), Convert.ToString(ledgerRow["ID_PHIEU_BAN", DataRowVersion.Original]));
+                if (ledgerRow.RowState != DataRowState.Deleted)
+                    GhiBienDong(conn, tr, Convert.ToString(ledgerRow["ID_MA_SAN_PHAM"]), "BAN", -Convert.ToInt32(ledgerRow["SO_LUONG"]), Convert.ToString(ledgerRow["ID_PHIEU_BAN"]));
+            }
+            foreach (KeyValuePair<string, long> change in changes)
+            {
+                if (change.Value == 0) continue;
+                string sql = "UPDATE MA_SAN_PHAM SET SO_LUONG=SO_LUONG+? WHERE ID=?";
+                if (change.Value < 0) sql += " AND SO_LUONG>=? AND NGAY_HET_HAN>=?";
+                using (OleDbCommand stock = new OleDbCommand(sql, conn, tr))
+                {
+                    stock.Parameters.Add("delta", OleDbType.Integer).Value = checked((int)change.Value);
+                    stock.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = change.Key;
+                    if (change.Value < 0)
+                    {
+                        stock.Parameters.Add("minimum", OleDbType.Integer).Value = checked((int)-change.Value);
+                        stock.Parameters.Add("expiry", OleDbType.Date).Value = DateTime.Today;
+                    }
+                    if (stock.ExecuteNonQuery() != 1)
+                        throw new InvalidOperationException(change.Value < 0
+                            ? (StockProblem(conn, tr, change.Key, -change.Value) ?? "Tồn kho của lô " + change.Key + " vừa thay đổi. Vui lòng kiểm tra lại phiếu.")
+                            : "Không thể hoàn tồn cho lô: " + change.Key);
                 }
             }
-
-            // 2. Ghi các dòng chi tiết mới
-            OleDbCommand cmdSelect = m_Ds.Command;
-            cmdSelect.Connection = conn;
-            cmdSelect.Transaction = tr;
-
-            OleDbDataAdapter adapter = new OleDbDataAdapter();
-            adapter.SelectCommand = cmdSelect;
-            OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter);
-            adapter.RowUpdating += delegate (object sender, OleDbRowUpdatingEventArgs e)
+            OleDbCommand select = m_Ds.Command;
+            select.Connection = conn;
+            select.Transaction = tr;
+            using (OleDbDataAdapter adapter = new OleDbDataAdapter(select))
+            using (OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter))
             {
-                e.Command.Connection = conn;
-                e.Command.Transaction = tr;
-            };
+                // The explicit original-row check above handles concurrency. Masked cost fields
+                // in a seller's table must not become predicates against real persisted costs.
+                builder.ConflictOption = ConflictOption.OverwriteChanges;
+                adapter.AcceptChangesDuringUpdate = false;
+                adapter.RowUpdating += delegate(object sender, OleDbRowUpdatingEventArgs e) {
+                    if (e.Command == null) return;
+                    e.Command.Connection = conn;
+                    e.Command.Transaction = tr;
+                };
+                foreach (DataRowState state in new DataRowState[] { DataRowState.Deleted, DataRowState.Modified, DataRowState.Added })
+                {
+                    List<DataRow> rows = new List<DataRow>();
+                    foreach (DataRow row in m_Ds.Rows) if (row.RowState == state) rows.Add(row);
+                    if (rows.Count > 0) adapter.Update(rows.ToArray());
+                }
+            }
+            return true;
+        }
 
-            int soDong = adapter.Update(m_Ds);
-            return soDong > 0;
+        private static string StockProblem(OleDbConnection connection, OleDbTransaction transaction, string lot, long required)
+        {
+            using (OleDbCommand command = new OleDbCommand(
+                "SELECT SO_LUONG, NGAY_HET_HAN FROM MA_SAN_PHAM WHERE ID=?", connection, transaction))
+            {
+                command.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = lot;
+                using (OleDbDataReader reader = command.ExecuteReader())
+                {
+                    if (!reader.Read()) return "Lô " + lot + ": không còn tồn tại.";
+                    if (reader[1] == DBNull.Value || Convert.ToDateTime(reader[1]).Date < DateTime.Today)
+                        return "Lô " + lot + ": đã hết hạn hoặc chưa có hạn dùng, không thể xuất.";
+                    long available = reader[0] == DBNull.Value ? 0 : Convert.ToInt64(reader[0]);
+                    if (required > available)
+                        return "Lô " + lot + ": tồn hiện tại " + available + ", cần xuất thêm " + required +
+                            ", thiếu " + (required - available) + ".";
+                    return null;
+                }
+            }
+        }
+
+        private static void AddStockChange(Dictionary<string, long> changes, string lot, long quantity)
+        {
+            long previous;
+            changes.TryGetValue(lot, out previous);
+            changes[lot] = checked(previous + quantity);
         }
 
         /// <summary>
@@ -312,7 +404,12 @@ namespace CuahangNongduoc.DataLayer
             // Hoàn tồn: ngược với lúc bán (bán thì trừ)
             foreach (KeyValuePair<String, int> ct in dong)
             {
-                CongTonTrongGiaoDich(conn, tr, ct.Key, ct.Value, idPhieuBan);
+                OleDbCommand cmdTon = new OleDbCommand("UPDATE MA_SAN_PHAM SET SO_LUONG = SO_LUONG + @so WHERE ID = @id", conn, tr);
+                cmdTon.Parameters.Add("so", OleDbType.Integer).Value = ct.Value;
+                cmdTon.Parameters.Add("id", OleDbType.VarChar, 50).Value = ct.Key;
+                if (cmdTon.ExecuteNonQuery() != 1)
+                    throw new InvalidOperationException("Không thể hoàn tồn cho lô: " + ct.Key);
+                GhiBienDong(conn, tr, ct.Key, "HOAN", ct.Value, idPhieuBan);
             }
 
             OleDbCommand cmdXoa = new OleDbCommand("DELETE FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id", conn, tr);
@@ -323,6 +420,7 @@ namespace CuahangNongduoc.DataLayer
         public void ChapNhanThayDoi()
         {
             m_Ds.AcceptChanges();
+            AccessControl.HideCosts(m_Ds);
         }
     }
 }

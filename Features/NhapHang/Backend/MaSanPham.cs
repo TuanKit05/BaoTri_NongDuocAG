@@ -6,6 +6,7 @@ namespace CuahangNongduoc.BusinessObject
 {
     public class MaSanPham
     {
+        public int? SoLuongNhap { get; set; }
         public MaSanPham() { }
         public MaSanPham(String id, int so_luong) 
         {

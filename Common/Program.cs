@@ -8,6 +8,15 @@ namespace CuahangNongduoc
         [STAThread]
         static void Main()
         {
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += delegate(object sender, System.Threading.ThreadExceptionEventArgs e) {
+                MessageBox.Show(ErrorLog.Describe(e.Exception, "Không thể hoàn tất thao tác"),
+                    "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            };
+            AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs e) {
+                Exception error = e.ExceptionObject as Exception;
+                if (error != null) ErrorLog.Record(error, "Lỗi ngoài luồng giao diện");
+            };
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -38,7 +47,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể khởi động hệ thống. Hãy kiểm tra cơ sở dữ liệu Access trong thư mục Database.\r\n" + ex.Message,
+                MessageBox.Show(ErrorLog.Describe(ex, "Không thể khởi động hệ thống: " + ex.Message),
                     "Lỗi khởi động", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally

@@ -21,6 +21,11 @@ namespace CuahangNongduoc.Controller
             bs.DataSource = factory.LayPhieuBan("-1");
         }
 
+        public void TaiPhieuBan(string id)
+        {
+            bs.DataSource = factory.LayPhieuBan(id);
+        }
+
         public DataRow NewRow()
         {
             return factory.NewRow();
@@ -29,6 +34,13 @@ namespace CuahangNongduoc.Controller
         public void Add(DataRow row)
         {
             factory.Add(row);
+        }
+
+        public void HuyThayDoi()
+        {
+            bs.CancelEdit();
+            factory.HuyThayDoi();
+            bs.ResetBindings(false);
         }
 
         public void Update()
@@ -41,9 +53,18 @@ namespace CuahangNongduoc.Controller
         /// Lưu phiếu bán và chi tiết (kèm trừ tồn) trong CÙNG một transaction.
         /// Được gọi bởi các thao tác trong khung ThaoTacPhieuBan.
         /// </summary>
+        public void LuuPhieuVaChiTiet(ChiTietPhieuBanController ctrlChiTiet)
+        {
+            LuuPhieuVaChiTiet(ctrlChiTiet, null);
+        }
+
         public void LuuPhieuVaChiTiet(ChiTietPhieuBanController ctrlChiTiet, PhieuBan phi)
         {
+            if (ctrlChiTiet == null || (factory.CoPhieuMoi() && !ctrlChiTiet.CoDongMoi()))
+                throw new InvalidOperationException("Phieu ban phai co it nhat mot dong hang.");
+
             AccessControl.DemandCurrent("BanHang");
+            bs.EndEdit();
             using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
             {
                 conn.Open();
@@ -53,7 +74,7 @@ namespace CuahangNongduoc.Controller
                     {
                         AccessControl.SaleTransaction = tr;
                         factory.SaveTrongGiaoDich(conn, tr);
-                        factory.LuuDichVuTrongGiaoDich(conn, tr, phi.Id, phi.DichVu);
+                        if (phi != null) factory.LuuDichVuTrongGiaoDich(conn, tr, phi.Id, phi.DichVu);
                         ctrlChiTiet.SaveTrongGiaoDich(conn, tr);
                         tr.Commit();
                         AccessControl.SaleTransaction = null;
@@ -61,7 +82,7 @@ namespace CuahangNongduoc.Controller
                     catch
                     {
                         AccessControl.SaleTransaction = null;
-                        tr.Rollback();
+                        ErrorLog.Rollback(tr, "Rollback Access");
                         throw;
                     }
                 }
@@ -199,7 +220,7 @@ namespace CuahangNongduoc.Controller
                     }
                     catch
                     {
-                        tr.Rollback();
+                        ErrorLog.Rollback(tr, "Rollback Access");
                         throw;
                     }
                 }
@@ -414,27 +435,33 @@ namespace CuahangNongduoc.Controller
             dg.DataSource = bs;
         }
 
-        public void HienthiPhieuBan(BindingNavigator bn, ComboBox cmb, TextBox txt, DateTimePicker dt, NumericUpDown numTongTien, NumericUpDown numDatra, NumericUpDown numConNo)
+        public void HienthiPhieuBan(BindingNavigator bn, ComboBox cmb, TextBox txt, DateTimePicker dt,
+            NumericUpDown numTongTien, NumericUpDown numDatra, NumericUpDown numConNo)
         {
             bn.BindingSource = bs;
+            // Header fields are copied explicitly: an empty list must not push DBNull into Value bindings.
+            foreach (Control control in new Control[] { cmb, txt, dt, numTongTien, numDatra, numConNo })
+                control.DataBindings.Clear();
+            HienThiThongTinPhieu(cmb, txt, dt, numTongTien, numDatra, numConNo);
+        }
 
-            txt.DataBindings.Clear();
-            txt.DataBindings.Add("Text", bs, "ID");
+        public void HienThiThongTinPhieu(ComboBox cmb, TextBox txt, DateTimePicker dt,
+            NumericUpDown numTongTien, NumericUpDown numDatra, NumericUpDown numConNo)
+        {
+            DataRowView current = bs.Current as DataRowView;
+            txt.Text = current == null ? String.Empty : Convert.ToString(current["ID"]);
+            cmb.SelectedIndex = -1;
+            if (current != null) cmb.SelectedValue = current["ID_KHACH_HANG"];
+            dt.Value = current == null || current["NGAY_BAN"] == DBNull.Value ? DateTime.Today : Convert.ToDateTime(current["NGAY_BAN"]);
+            DisplayAmount(numTongTien, current, "TONG_TIEN");
+            DisplayAmount(numDatra, current, "DA_TRA");
+            DisplayAmount(numConNo, current, "CON_NO");
+        }
 
-            cmb.DataBindings.Clear();
-            cmb.DataBindings.Add("SelectedValue", bs, "ID_KHACH_HANG");
-
-            dt.DataBindings.Clear();
-            dt.DataBindings.Add("Value", bs, "NGAY_BAN");
-
-            numTongTien.DataBindings.Clear();
-            numTongTien.DataBindings.Add("Value", bs, "TONG_TIEN");
-
-            numDatra.DataBindings.Clear();
-            numDatra.DataBindings.Add("Value", bs, "DA_TRA");
-
-            numConNo.DataBindings.Clear();
-            numConNo.DataBindings.Add("Value", bs, "CON_NO");
+        private static void DisplayAmount(NumericUpDown input, DataRowView row, string column)
+        {
+            decimal value = row == null || row[column] == DBNull.Value ? 0 : Convert.ToDecimal(row[column]);
+            input.Value = Math.Max(input.Minimum, Math.Min(input.Maximum, value));
         }
 
         public PhieuBan LayPhieuBan(String id)

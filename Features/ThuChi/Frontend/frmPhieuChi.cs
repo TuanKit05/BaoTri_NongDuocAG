@@ -16,6 +16,8 @@ namespace CuahangNongduoc
         public frmPhieuChi()
         {
             InitializeComponent();
+            txtMaPhieu.ReadOnly = true;
+            dataGridView.AllowUserToAddRows = false;
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             this.Load += delegate { SecuredUi.ApplyForm(this); };
         }
@@ -34,8 +36,7 @@ namespace CuahangNongduoc
                 MessageBox.Show("Vui lòng chọn lý do chi trước khi tạo phiếu.");
                 return;
             }
-            long maphieu = ThamSo.PhieuChi;
-            ThamSo.PhieuChi = maphieu + 1;
+            string maphieu = IdGenerator.Next("PHIEU_CHI");
 
             DataRow row = ctrl.NewRow();
             row["ID"] = maphieu;
@@ -83,7 +84,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể lưu phiếu chi: " + ex.Message,
+                MessageBox.Show("Không thể lưu phiếu chi: " + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
                     "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

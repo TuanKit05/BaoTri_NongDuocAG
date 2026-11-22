@@ -12,6 +12,9 @@ namespace CuahangNongduoc
 {
     public partial class frmBanLe : Form
     {
+        private const string TieuDeThongBao = "Phiếu bán lẻ";
+        internal string MaPhieuHienTai { get { return txtMaPhieu.Text; } }
+
         SanPhamController ctrlSanPham = new SanPhamController();
         KhachHangController ctrlKhachHang = new KhachHangController();
         MaSanPhamController ctrlMaSanPham = new MaSanPhamController();
@@ -25,10 +28,45 @@ namespace CuahangNongduoc
         bool dangNapPhi = false;
         private bool dangNapDuLieu = true;
         private BindingSource nguonPhieu;
+        private PhieuBanController controllerTruocKhiThem;
+        private readonly ToolStripButton toolHuy = new ToolStripButton("Hủy");
 
         public frmBanLe()
         {
             InitializeComponent();
+            SaleLotDisplay.Attach(dgvDanhsachSP, colMaSanPham);
+            toolHuy.Name = "toolHuy";
+            bindingNavigator.Items.Insert(bindingNavigator.Items.IndexOf(toolLuu) + 1, toolHuy);
+            toolHuy.Click += delegate { HuyThayDoi(); };
+            Shown += delegate { Allow(status != Controll.Normal); };
+            FormClosing += delegate(object sender, FormClosingEventArgs e) {
+                if (status == Controll.Normal) return;
+                DialogResult answer = MessageBox.Show("Bạn có muốn lưu thay đổi trước khi đóng?", TieuDeThongBao,
+                    MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                if (answer == DialogResult.Cancel) e.Cancel = true;
+                else if (answer == DialogResult.Yes) {
+                    if (!Luu()) e.Cancel = true;
+                    else status = Controll.Normal;
+                }
+                else HuyThayDoi();
+            };
+            numThanhTien.ReadOnly = true;
+            numThanhTien.DecimalPlaces = 0;
+            numThanhTien.Maximum = Int64.MaxValue;
+            numConNo.ReadOnly = true;
+            dgvDanhsachSP.CellEndEdit += delegate(object sender, DataGridViewCellEventArgs e) {
+                if (dangNapDuLieu || status == Controll.Normal || e.RowIndex < 0) return;
+                DataRowView row = dgvDanhsachSP.Rows[e.RowIndex].DataBoundItem as DataRowView;
+                if (row == null) return;
+                try
+                {
+                    row["THANH_TIEN"] = TienTe.ThanhTien(Convert.ToDecimal(row["DON_GIA"]), Convert.ToDecimal(row["SO_LUONG"]));
+                    row.EndEdit();
+                    DongBoTienHang();
+                }
+                catch (Exception ex) { MessageBox.Show(ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            };
+
             this.FormClosed += delegate { NgatTheoDoiPhieu(); };
             this.Disposed += delegate { NgatTheoDoiPhieu(); };
             CuahangNongduoc.ResponsiveLayout.Attach(this);
@@ -97,11 +135,11 @@ namespace CuahangNongduoc
             if (ketQua.TongThanhToan > numTongTien.Maximum)
             {
                 MessageBox.Show(
-                    "Tổng thanh toán vượt giới hạn cho phép.");
+                    "Tổng thanh toán vượt giới hạn cho phép.", TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            numTongTien.Value = ketQua.TongThanhToan;
+            numTongTien.Value = Math.Max(0m, hoaDon.TongTien - tienChietKhau - tienGiamGia);
             CapNhatCongNo();
 
         }
@@ -159,9 +197,10 @@ namespace CuahangNongduoc
                 if (nguonPhieu != null) nguonPhieu.CurrentChanged += BindingSource_CurrentChanged;
                 if (status == Controll.AddNew)
                 {
-                    txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
+                    txtMaPhieu.Text = IdGenerator.Next("PHIEU_BAN");
                     // A new invoice must not load the detail rows of an existing ID.
                     ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, "-1");
+                    cmbKhachHang.SelectedIndex = -1;
                 }
                 else this.Allow(false);
             }
@@ -172,6 +211,36 @@ namespace CuahangNongduoc
                 DongBoTienHang();
             }
             else BindingSource_CurrentChanged(nguonPhieu, EventArgs.Empty);
+        }
+
+        private void GanNguonPhieu()
+        {
+            NgatTheoDoiPhieu();
+            ctrlPhieuBan.HienthiPhieuBan(bindingNavigator, cmbKhachHang, txtMaPhieu,
+                dtNgayLapPhieu, numTongTien, numDaTra, numConNo);
+            nguonPhieu = bindingNavigator.BindingSource;
+            nguonPhieu.CurrentChanged += BindingSource_CurrentChanged;
+        }
+
+        private void HuyThayDoi()
+        {
+            dangNapDuLieu = true;
+            try
+            {
+                dgvDanhsachSP.CancelEdit();
+                if (nguonPhieu != null) nguonPhieu.CancelEdit();
+                if (controllerTruocKhiThem != null)
+                {
+                    ctrlPhieuBan = controllerTruocKhiThem;
+                    controllerTruocKhiThem = null;
+                }
+                ctrlPhieuBan.HuyThayDoi();
+                status = Controll.Normal;
+                GanNguonPhieu();
+            }
+            finally { dangNapDuLieu = false; }
+            BindingSource_CurrentChanged(this, EventArgs.Empty);
+            Allow(false);
         }
 
         private void NgatTheoDoiPhieu()
@@ -188,10 +257,13 @@ namespace CuahangNongduoc
             dangNapDuLieu = true;
             try
             {
+                ctrlPhieuBan.HienThiThongTinPhieu(cmbKhachHang, txtMaPhieu, dtNgayLapPhieu,
+                    numTongTien, numDaTra, numConNo);
                 ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, id);
                 HienThiPhi(id);
             }
             finally { dangNapDuLieu = false; }
+            Allow(false);
         }
 
         void cmbSanPham_SelectedIndexChanged(object sender, EventArgs e)
@@ -222,18 +294,51 @@ namespace CuahangNongduoc
             txtGiaNhap.Text = masp.GiaNhap.ToString("#,###0");
             txtGiaBanSi.Text = masp.SanPham.GiaBanSi.ToString("#,###0");
             txtGiaBanLe.Text = masp.SanPham.GiaBanLe.ToString("#,###0");
-            txtGiaBQGQ.Text = masp.SanPham.DonGiaNhap.ToString("#,###0");
+            txtGiaBQGQ.Text = AccessControl.Can("XemGiaVon") ? WarehouseCost.Preview(masp.Id).ToString("#,###0") : "";
+            label15.Text = "Giá vốn xuất:";
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
+            if (status == Controll.Normal || dangNapDuLieu) return;
+            try
+            {
+                numDonGia.Value = Decimal.Round(numDonGia.Value, 0, MidpointRounding.AwayFromZero);
+                numThanhTien.Value = TienTe.ThanhTien(numDonGia.Value, numSoLuong.Value);
+                if (ctrlChiTiet.ThemTuDong(SaleInputValidation.Selection(cmbKhachHang),
+                    SaleInputValidation.Selection(cmbSanPham), txtMaPhieu.Text, numSoLuong.Value, numDonGia.Value, chkHangTang.Checked))
+                {
+                    DongBoTienHang();
+                    if (!chkHangTang.Checked)
+                    {
+                        BindingSource allocated = dgvDanhsachSP.DataSource as BindingSource;
+                        List<string> lotIds = new List<string>();
+                        if (allocated != null) foreach (DataRowView line in allocated)
+                            if (!LaHangTang(line) && !lotIds.Contains(Convert.ToString(line["ID_MA_SAN_PHAM"]))) lotIds.Add(Convert.ToString(line["ID_MA_SAN_PHAM"]));
+                        foreach (string lotId in lotIds) ThemHangTangKhuyenMai(lotId);
+                    }
+                    return;
+                }
+                string error = SaleInputValidation.CheckLine(cmbKhachHang, cmbSanPham, cmbMaSanPham, numSoLuong.Value, dgvDanhsachSP);
+                if (error.Length > 0)
+                {
+                    MessageBox.Show(error, TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (cmbMaSanPham.SelectedValue == null)
             {
-                MessageBox.Show("Vui lòng chọn Mã sản phẩm !", "Phiếu bán", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Vui lòng chọn Mã sản phẩm !", TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if (numSoLuong.Value <= 0)
             {
-                MessageBox.Show("Vui lòng nhập Số lượng !", "Phiếu bán", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Vui lòng nhập Số lượng !", TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -255,7 +360,7 @@ namespace CuahangNongduoc
                 }
 
                 ctrlChiTiet.Add(row);
-                TinhLaiHoaDon();
+                DongBoTienHang();
                 ThemHangTangKhuyenMai(cmbMaSanPham.SelectedValue);
             }
         }
@@ -263,7 +368,16 @@ namespace CuahangNongduoc
         private void numDonGia_ValueChanged(object sender, EventArgs e)
         {
             if (dangNapDuLieu) return;
-            numThanhTien.Value = numDonGia.Value * numSoLuong.Value;
+            try
+            {
+                numDonGia.Value = Decimal.Round(numDonGia.Value, 0, MidpointRounding.AwayFromZero);
+                numThanhTien.Value = TienTe.ThanhTien(numDonGia.Value, numSoLuong.Value);
+            }
+            catch (OverflowException)
+            {
+                // Adding a line validates the amount and displays the error.
+                numThanhTien.Value = 0;
+            }
         }
 
         private void numTongTien_ValueChanged(object sender, EventArgs e)
@@ -324,7 +438,7 @@ namespace CuahangNongduoc
         // Đọc tiền hàng và số lượng mua từ lưới chi tiết vào mô hình
         void DongBoTienHang()
         {
-            long tienHang = 0;
+            decimal tienHang = 0;
             int tongSoLuong = 0;
             BindingSource bs = dgvDanhsachSP.DataSource as BindingSource;
             if (bs != null)
@@ -332,13 +446,12 @@ namespace CuahangNongduoc
                 foreach (object o in bs)
                 {
                     DataRowView rv = (DataRowView)o;
-                    tienHang += Convert.ToInt64(rv["THANH_TIEN"]);
-                    if (!LaHangTang(rv))
-                        tongSoLuong += Convert.ToInt32(rv["SO_LUONG"]);
+                    tienHang = checked(tienHang + Convert.ToDecimal(rv["THANH_TIEN"]));
+                    if (!LaHangTang(rv)) tongSoLuong = checked(tongSoLuong + Convert.ToInt32(rv["SO_LUONG"]));
                 }
             }
             hoaDon.TongSoLuong = tongSoLuong;
-            hoaDon.TienHang = tienHang;
+            hoaDon.TienHang = checked((long)Decimal.Round(tienHang, 0, MidpointRounding.AwayFromZero));
         }
 
         // Đẩy phí vận chuyển, % giảm và dịch vụ từ ô nhập vào mô hình
@@ -353,7 +466,10 @@ namespace CuahangNongduoc
         void HoaDon_DaThayDoi(object sender, EventArgs e)
         {
             if (dangNapDuLieu || status == Controll.Normal) return;
-            numTongTien.Value = hoaDon.TongTien;
+            decimal total = hoaDon.TongTien;
+            if (total < numTongTien.Minimum || total > numTongTien.Maximum)
+                throw new OverflowException("Tong thanh toan vuot gioi han.");
+            numTongTien.Value = total;
             lblTienGiam.Text = hoaDon.TienGiam.ToString("#,###0");
         }
 
@@ -380,6 +496,10 @@ namespace CuahangNongduoc
         void HienThiPhi(String idPhieu)
         {
             PhieuBan phi = PhieuBanController.DocPhi(idPhieu);
+            DataRowView header = nguonPhieu == null ? null : nguonPhieu.Current as DataRowView;
+            cmbLoaiChietKhau.SelectedIndex = cmbLoaiGiamGia.SelectedIndex = 1;
+            numGiaTriChietKhau.Value = header == null || header["TIEN_CHIET_KHAU"] == DBNull.Value ? 0 : Convert.ToDecimal(header["TIEN_CHIET_KHAU"]);
+            numGiaTriGiamGia.Value = header == null || header["TIEN_GIAM_GIA"] == DBNull.Value ? 0 : Convert.ToDecimal(header["TIEN_GIAM_GIA"]);
             dangNapPhi = true;
             numPhiVanChuyen.Value = phi.PhiVanChuyen;
             numPhanTramGiam.Value = (decimal)phi.PhanTramGiamTay;
@@ -425,58 +545,99 @@ namespace CuahangNongduoc
             bindingNavigatorPositionItem.Focus();
             if (this.Luu())
             {
+                controllerTruocKhiThem = null;
                 status = Controll.Normal;
+                dangNapDuLieu = true;
+                try { string savedId = txtMaPhieu.Text; GanNguonPhieu(); int position = nguonPhieu.Find("ID", savedId); if (position >= 0) nguonPhieu.Position = position; }
+                finally { dangNapDuLieu = false; }
+                BindingSource_CurrentChanged(this, EventArgs.Empty);
                 this.Allow(false);
             }
         }
 
         // Trả về true nếu lưu thành công
-        bool Luu()
+        private bool KiemTraThanhToan()
         {
-            // Kiểm tra khách hàng, dòng hàng và số tiền đã trả trước khi ghi
-            DongBoPhi();
-            DongBoTienHang();
-            int soDongHang = (dgvDanhsachSP.DataSource is BindingSource) ? ((BindingSource)dgvDanhsachSP.DataSource).Count : 0;
-            String loi = PhieuBanController.KiemTraTruocKhiLuu(cmbKhachHang.SelectedValue, soDongHang, numTongTien.Value, numDaTra.Value);
-            if (loi != null)
+            string error = SaleInputValidation.CheckPayment(numTongTien.Value, numDaTra.Value);
+            if (error.Length > 0)
             {
-                MessageBox.Show(loi, "Phieu Ban Le", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(error, TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                numDaTra.Focus();
+                numDaTra.Select(0, numDaTra.Text.Length);
                 return false;
             }
-            // Cảnh báo tồn kho (YC-KHO-07): không lưu khi lô không đủ hoặc đã hết hạn
-            String canhBaoTon = ctrlChiTiet.KiemTraTonTruocKhiLuu();
-            if (canhBaoTon != null)
+            numConNo.Value = numTongTien.Value - numDaTra.Value;
+            return true;
+        }
+
+        bool Luu()
+        {
+            if (status == Controll.Normal) return true;
+            try { return LuuThayDoi(); }
+            catch (Exception ex) { System.Diagnostics.Trace.TraceError(ex.ToString()); MessageBox.Show(ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning); return false; }
+        }
+
+        bool LuuThayDoi()
+        {
+            dgvDanhsachSP.EndEdit();
+            string error = SaleInputValidation.CheckHeader(cmbKhachHang, dgvDanhsachSP);
+            if (error.Length > 0)
             {
-                MessageBox.Show("Cảnh báo: số lượng bán vượt tồn hoặc lô đã hết hạn. Phiếu chưa được lưu.\n" + canhBaoTon,
-                    "Phiếu bán", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(error, TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
+            if (status != Controll.Normal)
+            {
+                BindingSource details = dgvDanhsachSP.DataSource as BindingSource;
+                if (details != null) details.EndEdit();
+                foreach (DataGridViewRow view in dgvDanhsachSP.Rows)
+                {
+                    DataRowView item = view.DataBoundItem as DataRowView;
+                    if (item != null && item.Row.RowState != DataRowState.Unchanged)
+                        item["THANH_TIEN"] = TienTe.ThanhTien(Convert.ToDecimal(item["DON_GIA"]), Convert.ToDecimal(item["SO_LUONG"]));
+                }
+                DongBoPhi();
+                DongBoTienHang();
+            }
             if (status == Controll.AddNew)
             {
                 return ThemMoi();
             }
             if (!AccessControl.Can("SuaPhieuBan"))
-            { MessageBox.Show("Bạn chỉ được xem phiếu đã lập. Chỉ quản lý được sửa phiếu.", "Phân quyền"); return false; }
+            { MessageBox.Show("Bạn chỉ được xem phiếu đã lập. Chỉ quản lý được sửa phiếu.", TieuDeThongBao); return false; }
+            if (!KiemTraThanhToan()) return false;
             try
             {
                 CapNhat();
+                return true;
             }
             catch (Exception ex)
             {
-                // Transaction đã rollback; giữ nguyên dữ liệu đang sửa để người dùng lưu lại
-                MessageBox.Show("Cập nhật phiếu bán thất bại. Chi tiết: " + ex.Message, "Phieu Ban Le", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
-            return true;
         }
 
         // Sửa phiếu đã lưu: phiếu, chi tiết, tồn kho và phí cùng một giao dịch
         void CapNhat()
         {
             AccessControl.DemandCurrent("SuaPhieuBan");
+            dgvDanhsachSP.EndEdit();
+            BindingSource details = dgvDanhsachSP.DataSource as BindingSource;
+            if (details != null) details.EndEdit();
             DongBoPhi();
             DongBoTienHang();
+            DataRowView header = bindingNavigator.BindingSource.Current as DataRowView;
+            if (header == null) throw new InvalidOperationException("Khong tim thay phieu ban.");
+            header["ID_KHACH_HANG"] = cmbKhachHang.SelectedValue;
+            header["NGAY_BAN"] = dtNgayLapPhieu.Value.Date;
+            header["TONG_TIEN"] = numTongTien.Value;
+            header["TIEN_CHIET_KHAU"] = tienChietKhau;
+            header["TIEN_GIAM_GIA"] = tienGiamGia;
+            header["DA_TRA"] = numDaTra.Value;
+            header["CON_NO"] = numTongTien.Value - numDaTra.Value;
+            header.EndEdit();
             ctrlPhieuBan.CapNhatPhieuVaChiTiet(ctrlChiTiet, hoaDon.ToPhieuBan(txtMaPhieu.Text));
         }
 
@@ -487,6 +648,7 @@ namespace CuahangNongduoc
                 throw new UnauthorizedAccessException("Chỉ quản lý được thiết lập mức ưu đãi.");
             DongBoPhi();
             DongBoTienHang();
+            if (!KiemTraThanhToan()) return false;
 
             DataRow row = ctrlPhieuBan.NewRow();
             row["ID"] = txtMaPhieu.Text;
@@ -507,8 +669,9 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Trace.TraceError(ex.ToString());
                 // Transaction đã rollback; giữ nguyên dữ liệu đang nhập để người dùng lưu lại
-                MessageBox.Show("Lưu phiếu bán thất bại. Chi tiết: " + ex.Message, "Phieu Ban Le", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lưu phiếu bán thất bại. Chi tiết: " + ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 daLuu = false;
             }
 
@@ -521,50 +684,46 @@ namespace CuahangNongduoc
                 return false;
             }
 
-            if (ThamSo.LaSoNguyen(txtMaPhieu.Text))
-            {
-                long so = Convert.ToInt64(txtMaPhieu.Text);
-                if (so >= ThamSo.LayMaPhieuBan())
-                {
-                    ThamSo.GanMaPhieuBan(so + 1);
-                }
-            }
             return true;
         }
 
         private void toolLuu_Them_Click(object sender, EventArgs e)
         {
+            if (status != Controll.Normal) return;
+            controllerTruocKhiThem = ctrlPhieuBan;
             ctrlPhieuBan = new PhieuBanController();
             hoaDon.NapUuDai(PhieuBanController.DanhSachUuDaiHieuLuc());
+            dangNapDuLieu = true;
             status = Controll.AddNew;
-            txtMaPhieu.Text = ThamSo.LayMaPhieuBan().ToString();
-
-            tienHangGoc = 0m;
-
-            numGiaTriChietKhau.Value = 0;
-            numGiaTriGiamGia.Value = 0;
-
-            cmbLoaiChietKhau.SelectedIndex = 0;
-            cmbLoaiGiamGia.SelectedIndex = 0;
-
-            numDaTra.Value = 0;
-            
-            ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, txtMaPhieu.Text);
-            TinhLaiHoaDon();
-
-            this.Allow(true);
+            try {
+                GanNguonPhieu();
+                txtMaPhieu.Text = IdGenerator.Next("PHIEU_BAN");
+                ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, "-1");
+                cmbKhachHang.SelectedIndex = -1;
+                dtNgayLapPhieu.Value = DateTime.Today;
+                numDaTra.Value = numConNo.Value = numTongTien.Value = 0;
+                dangNapPhi = true;
+                numPhiVanChuyen.Value = numPhanTramGiam.Value = 0;
+                dgvDichVu.Rows.Clear();
+                numGiaTriChietKhau.Value = numGiaTriGiamGia.Value = 0;
+                cmbLoaiChietKhau.SelectedIndex = cmbLoaiGiamGia.SelectedIndex = 0;
+            }
+            finally { dangNapPhi = false; dangNapDuLieu = false; }
+            DongBoPhi();
+            DongBoTienHang();
+            Allow(true);
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
+            if (status == Controll.Normal || dgvDanhsachSP.CurrentRow == null || dgvDanhsachSP.CurrentRow.IsNewRow) return;
             BindingSource bs = dgvDanhsachSP.DataSource as BindingSource;
 
             if (bs == null || bs.Current == null)
                 return;
 
             if (MessageBox.Show(
-                "Bạn có chắc chắn xóa không?",
-                "Phieu Ban Le",
+                "Bạn có chắc chắn xóa không?", TieuDeThongBao,
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
@@ -574,18 +733,17 @@ namespace CuahangNongduoc
             if (row == null)
                 return;
 
-            // Hoàn tồn cho dòng bị gỡ được xử lý khi lưu, trong cùng giao dịch
             bs.RemoveCurrent();
 
-            TinhLaiHoaDon();
+            DongBoTienHang();
         }
 
 
         private void dgvDanhsachSP_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
+            if (status == Controll.Normal) { e.Cancel = true; return; }
             if (MessageBox.Show(
-                "Bạn có chắc chắn xóa không?",
-                "Phieu Ban Le",
+                "Bạn có chắc chắn xóa không?", TieuDeThongBao,
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question) == DialogResult.No)
             {
@@ -593,19 +751,23 @@ namespace CuahangNongduoc
                 return;
             }
 
-            // Hoàn tồn cho dòng bị gỡ được xử lý khi lưu, trong cùng giao dịch
+            DataRowView row = e.Row.DataBoundItem as DataRowView;
+
+            if (row != null)
+            {
+            }
         }
 
         private void dgvDanhsachSP_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
         {
-            TinhLaiHoaDon();
+            DongBoTienHang();
         }
 
         private void toolLuuIn_Click(object sender, EventArgs e)
         {
             if (status != Controll.Normal)
             {
-                MessageBox.Show("Vui lòng lưu lại Phiếu bán hiện tại!", "Phieu Ban Le", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Vui lòng lưu lại Phiếu bán hiện tại!", TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
@@ -628,15 +790,17 @@ namespace CuahangNongduoc
 
         private void toolChinhSua_Click(object sender, EventArgs e)
         {
+            if (status != Controll.Normal || nguonPhieu == null || nguonPhieu.Current == null) return;
             if (!AccessControl.Can("SuaPhieuBan"))
-            { MessageBox.Show("Chỉ quản lý được sửa phiếu đã lập.", "Phân quyền"); return; }
+            { MessageBox.Show("Chỉ quản lý được sửa phiếu đã lập.", TieuDeThongBao); return; }
             status = Controll.Edit;
             this.Allow(true);
         }
 
         void Allow(bool val)
         {
-            txtMaPhieu.Enabled = val;
+            txtMaPhieu.ReadOnly = true;
+            txtMaPhieu.Enabled = false;
             dtNgayLapPhieu.Enabled = val;
             // Ô tổng tiền tính tự động, không sửa tay
             numTongTien.Enabled = false;
@@ -644,7 +808,30 @@ namespace CuahangNongduoc
             btnRemove.Enabled = val;
             dgvDanhsachSP.Enabled = true;
             dgvDanhsachSP.ReadOnly = !val;
-            toolLuu.Enabled = val || AccessControl.Can("SuaPhieuBan");
+            colSoLuong.ReadOnly = !val;
+            colDonGia.ReadOnly = !val || !AccessControl.Can("SuaGiaBan");
+            colMaSanPham.ReadOnly = !val;
+            colMaPhieuBan.ReadOnly = true;
+            colThanhTien.ReadOnly = true;
+            toolLuu.Enabled = val;
+            toolHuy.Enabled = val;
+            bool hasInvoice = nguonPhieu != null && nguonPhieu.Current != null;
+            toolThem.Enabled = !val && AccessControl.Can("BanHang");
+            toolChinhSua.Enabled = !val && hasInvoice && AccessControl.Can("SuaPhieuBan");
+            toolXoa.Enabled = !val && hasInvoice && AccessControl.Can("XoaPhieu");
+            toolIn.Enabled = !val && hasInvoice;
+            dgvDanhsachSP.AllowUserToDeleteRows = val;
+            cmbSanPham.Enabled = numSoLuong.Enabled = val;
+            bool automaticLots = WarehouseSettings.Load() == WarehouseSettings.FirstInFirstOut;
+            cmbMaSanPham.Enabled = val && !automaticLots;
+            colMaSanPham.ReadOnly = !val || automaticLots;
+            numDonGia.Enabled = val && AccessControl.Can("SuaGiaBan");
+            foreach (ToolStripItem item in new ToolStripItem[] { bindingNavigatorMoveFirstItem,
+                bindingNavigatorMovePreviousItem, bindingNavigatorMoveNextItem, bindingNavigatorMoveLastItem,
+                bindingNavigatorPositionItem }) item.Enabled = !val;
+            numPhiVanChuyen.Enabled = val && status == Controll.AddNew;
+            numPhanTramGiam.Enabled = val && status == Controll.AddNew && AccessControl.Can("ThietLapUuDai");
+            dgvDichVu.Enabled = val && status == Controll.AddNew;
             cmbKhachHang.Enabled = val;
             numDaTra.Enabled = val;
             cmbLoaiChietKhau.Enabled = val && AccessControl.Can("ThietLapUuDai");
@@ -656,25 +843,17 @@ namespace CuahangNongduoc
 
         private void toolThoat_Click(object sender, EventArgs e)
         {
-            if (status != Controll.Normal)
-            {
-                if (MessageBox.Show("Bạn có muốn lưu lại Phiếu bán này không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    // Lưu thất bại hoặc đạt giới hạn: không đóng form để không mất dữ liệu đang nhập
-                    if (!this.Luu())
-                        return;
-                }
-            }
-            this.Close();
+            Close();
         }
 
         // TEMPLATE METHOD: xóa hóa đơn qua XoaHoaDon (không áp giới hạn bản dùng thử)
         private void toolXoa_Click(object sender, EventArgs e)
         {
+            if (status != Controll.Normal || !AccessControl.Can("XoaPhieu") || nguonPhieu == null) return;
             DataRowView view = (DataRowView)bindingNavigator.BindingSource.Current;
             if (view == null)
                 return;
-            if (MessageBox.Show("Bạn có chắc chắn xóa không?", "Phieu Ban Le", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            if (MessageBox.Show("Bạn có chắc chắn xóa không?", TieuDeThongBao, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
 
             String maPhieu = view["ID"].ToString();
@@ -686,7 +865,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Xóa phiếu bán thất bại. Chi tiết: " + ex.Message, "Phieu Ban Le", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Xóa phiếu bán thất bại. Chi tiết: " + ErrorLog.UserMessage(ex, "Kh\u00f4ng th\u1ec3 ho\u00e0n t\u1ea5t thao t\u00e1c"), TieuDeThongBao, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             bindingNavigator.BindingSource.RemoveCurrent();
