@@ -36,8 +36,9 @@ namespace CuahangNongduoc.DataLayer
 
         public DataTable DanhsachMaSanPham(String sp)
         {
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE ID_SAN_PHAM=@id AND SO_LUONG > 0");
+            OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE ID_SAN_PHAM=@id AND SO_LUONG > 0 AND NGAY_HET_HAN>=@today ORDER BY NGAY_HET_HAN, NGAY_NHAP, ID");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = sp;
+            cmd.Parameters.Add("today", OleDbType.Date).Value = DateTime.Today;
             LoadFresh(cmd);
 
             return m_Ds;
@@ -82,6 +83,12 @@ namespace CuahangNongduoc.DataLayer
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM MA_SAN_PHAM WHERE SO_LUONG > 0");
             LoadFresh(cmd);
 
+            return m_Ds;
+        }
+
+        public DataTable TatCaLoChoPhieuBan()
+        {
+            LoadFresh(new OleDbCommand("SELECT * FROM MA_SAN_PHAM ORDER BY NGAY_HET_HAN, NGAY_NHAP, ID"));
             return m_Ds;
         }
 

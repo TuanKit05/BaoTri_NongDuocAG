@@ -8,6 +8,7 @@ namespace CuahangNongduoc
     {
         public const string FirstInFirstOut = "FIFO";
         public const string SpecificLot = "CHI_DINH_LO";
+        public const string WeightedAverage = "BQGQ";
 
         internal static void EnsureSchema(OleDbConnection connection)
         {
@@ -18,6 +19,39 @@ namespace CuahangNongduoc
                 AccountRepository.Execute(connection, null, "CREATE TABLE CAU_HINH_KHO ([ID] COUNTER PRIMARY KEY, [PHAM_VI] TEXT(20) NOT NULL, [PHUONG_PHAP_XUAT] TEXT(20) NOT NULL, [NGAY_HIEU_LUC] DATETIME, [NGUOI_DOI] TEXT(50), CONSTRAINT UQ_CAU_HINH_KHO UNIQUE ([PHAM_VI]))");
             if (Convert.ToInt32(AccountRepository.Scalar(connection, null, "SELECT COUNT(*) FROM CAU_HINH_KHO WHERE PHAM_VI='CUA_HANG'")) == 0)
                 AccountRepository.Execute(connection, null, "INSERT INTO CAU_HINH_KHO (PHAM_VI, PHUONG_PHAP_XUAT, NGAY_HIEU_LUC, NGUOI_DOI) VALUES ('CUA_HANG', ?, ?, ?)", SpecificLot, DateTime.Now, "SYSTEM");
+            AddColumn(connection, "CAU_HINH_KHO", "PHUONG_PHAP_GIA", "TEXT(20)");
+            AccountRepository.Execute(connection, null, "UPDATE CAU_HINH_KHO SET PHUONG_PHAP_GIA='BQGQ' WHERE PHUONG_PHAP_GIA IS NULL");
+            AddColumn(connection, "CHI_TIET_PHIEU_BAN", "GIA_VON", "CURRENCY");
+            AddColumn(connection, "CHI_TIET_PHIEU_BAN", "PHUONG_PHAP_GIA", "TEXT(20)");
+        }
+
+        private static void AddColumn(OleDbConnection connection, string table, string column, string type)
+        {
+            DataTable columns = connection.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] { null, null, table, column });
+            if (columns.Rows.Count == 0) AccountRepository.Execute(connection, null, "ALTER TABLE [" + table + "] ADD COLUMN [" + column + "] " + type);
+        }
+
+        public static string LoadCostMethod()
+        {
+            AccessControl.DemandCurrent(ReadPermission());
+            using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
+            {
+                connection.Open();
+                return ReadCostMethod(connection, null);
+            }
+        }
+
+        internal static string ReadCostMethod(OleDbConnection connection, OleDbTransaction transaction)
+        {
+            string method = Convert.ToString(AccountRepository.Scalar(connection, transaction,
+                "SELECT PHUONG_PHAP_GIA FROM CAU_HINH_KHO WHERE PHAM_VI='CUA_HANG'"));
+            ValidateCost(method);
+            return method;
+        }
+
+        private static void ValidateCost(string method)
+        {
+            if (method != WeightedAverage && method != FirstInFirstOut) throw new ArgumentException("Phương pháp giá xuất không hợp lệ.");
         }
 
         public static string Load()
@@ -48,8 +82,14 @@ namespace CuahangNongduoc
 
         public static void Save(string method)
         {
+            Save(method, LoadCostMethod());
+        }
+
+        public static void Save(string method, string costMethod)
+        {
             AccessControl.DemandCurrent("QuanTri");
             Validate(method);
+            ValidateCost(costMethod);
             using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
             {
                 connection.Open();
@@ -60,13 +100,14 @@ namespace CuahangNongduoc
                         string previous = Convert.ToString(AccountRepository.Scalar(connection, transaction,
                             "SELECT PHUONG_PHAP_XUAT FROM CAU_HINH_KHO WHERE PHAM_VI='CUA_HANG'"));
                         Validate(previous);
-                        if (previous != method)
+                        string previousCost = ReadCostMethod(connection, transaction);
+                        if (previous != method || previousCost != costMethod)
                         {
                             int changed = AccountRepository.Execute(connection, transaction,
-                                "UPDATE CAU_HINH_KHO SET PHUONG_PHAP_XUAT=?, NGAY_HIEU_LUC=?, NGUOI_DOI=? WHERE PHAM_VI='CUA_HANG' AND PHUONG_PHAP_XUAT=?",
-                                method, DateTime.Now, AppSession.CurrentUser.Id, previous);
+                                "UPDATE CAU_HINH_KHO SET PHUONG_PHAP_XUAT=?, PHUONG_PHAP_GIA=?, NGAY_HIEU_LUC=?, NGUOI_DOI=? WHERE PHAM_VI='CUA_HANG' AND PHUONG_PHAP_XUAT=? AND PHUONG_PHAP_GIA=?",
+                                method, costMethod, DateTime.Now, AppSession.CurrentUser.Id, previous, previousCost);
                             if (changed != 1) throw new InvalidOperationException("Cấu hình đã thay đổi. Vui lòng mở lại để kiểm tra.");
-                            AccountRepository.Audit(connection, transaction, "DOI_CAU_HINH_KHO", "CUA_HANG", previous + " -> " + method);
+                            AccountRepository.Audit(connection, transaction, "DOI_CAU_HINH_KHO", "CUA_HANG", previous + "/" + previousCost + " -> " + method + "/" + costMethod);
                         }
                         transaction.Commit();
                     }

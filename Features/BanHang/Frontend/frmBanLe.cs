@@ -34,6 +34,7 @@ namespace CuahangNongduoc
         public frmBanLe()
         {
             InitializeComponent();
+            SaleLotDisplay.Attach(dgvDanhsachSP, colMaSanPham);
             toolHuy.Name = "toolHuy";
             bindingNavigator.Items.Insert(bindingNavigator.Items.IndexOf(toolLuu) + 1, toolHuy);
             toolHuy.Click += delegate { HuyThayDoi(); };
@@ -287,7 +288,8 @@ namespace CuahangNongduoc
             txtGiaNhap.Text = masp.GiaNhap.ToString("#,###0");
             txtGiaBanSi.Text = masp.SanPham.GiaBanSi.ToString("#,###0");
             txtGiaBanLe.Text = masp.SanPham.GiaBanLe.ToString("#,###0");
-            txtGiaBQGQ.Text = masp.SanPham.DonGiaNhap.ToString("#,###0");
+            txtGiaBQGQ.Text = AccessControl.Can("XemGiaVon") ? WarehouseCost.Preview(masp.Id).ToString("#,###0") : "";
+            label15.Text = "Giá vốn xuất:";
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -297,6 +299,12 @@ namespace CuahangNongduoc
             {
                 numDonGia.Value = Decimal.Round(numDonGia.Value, 0, MidpointRounding.AwayFromZero);
                 numThanhTien.Value = TienTe.ThanhTien(numDonGia.Value, numSoLuong.Value);
+                if (ctrlChiTiet.ThemTuDong(SaleInputValidation.Selection(cmbKhachHang),
+                    SaleInputValidation.Selection(cmbSanPham), txtMaPhieu.Text, numSoLuong.Value, numDonGia.Value))
+                {
+                    DongBoTienHang();
+                    return;
+                }
                 string error = SaleInputValidation.CheckLine(cmbKhachHang, cmbSanPham, cmbMaSanPham, numSoLuong.Value, dgvDanhsachSP);
                 if (error.Length > 0)
                 {
@@ -742,7 +750,10 @@ namespace CuahangNongduoc
             toolXoa.Enabled = !val && hasInvoice && AccessControl.Can("XoaPhieu");
             toolIn.Enabled = !val && hasInvoice;
             dgvDanhsachSP.AllowUserToDeleteRows = val;
-            cmbSanPham.Enabled = cmbMaSanPham.Enabled = numSoLuong.Enabled = val;
+            cmbSanPham.Enabled = numSoLuong.Enabled = val;
+            bool automaticLots = WarehouseSettings.Load() == WarehouseSettings.FirstInFirstOut;
+            cmbMaSanPham.Enabled = val && !automaticLots;
+            colMaSanPham.ReadOnly = !val || automaticLots;
             numDonGia.Enabled = val && AccessControl.Can("SuaGiaBan");
             foreach (ToolStripItem item in new ToolStripItem[] { bindingNavigatorMoveFirstItem,
                 bindingNavigatorMovePreviousItem, bindingNavigatorMoveNextItem, bindingNavigatorMoveLastItem,

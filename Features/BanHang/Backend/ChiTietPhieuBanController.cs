@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using CuahangNongduoc.DataLayer;
@@ -94,6 +94,24 @@ namespace CuahangNongduoc.Controller
     {
         ChiTietPhieuBanFactory factory = new ChiTietPhieuBanFactory();
 
+        public bool ThemTuDong(string customer, string product, string invoice, decimal quantity, decimal price)
+        {
+            if (WarehouseSettings.Load() != WarehouseSettings.FirstInFirstOut) return false;
+            if (String.IsNullOrEmpty(customer)) throw new InvalidOperationException("Vui lòng chọn khách hàng / đại lý.");
+            if (String.IsNullOrEmpty(product)) throw new InvalidOperationException("Vui lòng chọn sản phẩm.");
+            AccessControl.DemandCurrent("BanHang");
+            DataTable lots;
+            using (System.Data.OleDb.OleDbConnection connection = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
+            {
+                connection.Open();
+                lots = AccountRepository.ReadTable(connection, null,
+                    "SELECT ID, SO_LUONG, NGAY_HET_HAN, NGAY_NHAP FROM MA_SAN_PHAM WHERE ID_SAN_PHAM=? AND NGAY_HET_HAN>=? ORDER BY NGAY_HET_HAN, NGAY_NHAP, ID",
+                    product, DateTime.Today);
+            }
+            LotAllocation.Add(lots, factory.NewRow().Table, invoice, quantity, price);
+            return true;
+        }
+
 
 
         public void HienThiChiTiet(DataGridView dgv, String idPhieuBan)
@@ -136,6 +154,14 @@ namespace CuahangNongduoc.Controller
         }
 
 
+        private static void GanGiaVonDaLuu(ChiTietPhieuBan detail, DataRow row)
+        {
+            detail.GiaVon = AccessControl.Can("XemGiaVon") && AccessControl.Can("XemGiaNhap") &&
+                row.Table.Columns.Contains("GIA_VON") && row["GIA_VON"] != DBNull.Value
+                ? (decimal?)Convert.ToDecimal(row["GIA_VON"]) : null;
+            detail.PhuongPhapGia = row.Table.Columns.Contains("PHUONG_PHAP_GIA") ? Convert.ToString(row["PHUONG_PHAP_GIA"]) : "";
+        }
+
         public IList<ChiTietPhieuBan> ChiTietPhieuBan(String idPhieuBan)
         {
             IList<ChiTietPhieuBan> ds = new List<ChiTietPhieuBan>();
@@ -148,6 +174,7 @@ namespace CuahangNongduoc.Controller
                 ct.DonGia = Convert.ToInt64(row["DON_GIA"]);
                 ct.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
                 ct.ThanhTien = Convert.ToInt64(row["THANH_TIEN"]);
+                GanGiaVonDaLuu(ct, row);
                 ct.MaSanPham = ctrl.LayMaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]));
 
                 ds.Add(ct);
@@ -167,6 +194,7 @@ namespace CuahangNongduoc.Controller
                 ct.DonGia = Convert.ToInt64(row["DON_GIA"]);
                 ct.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
                 ct.ThanhTien = Convert.ToInt64(row["THANH_TIEN"]);
+                GanGiaVonDaLuu(ct, row);
                 ct.MaSanPham = ctrl.LayMaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]));
 
                 ds.Add(ct);
@@ -185,6 +213,7 @@ namespace CuahangNongduoc.Controller
                 ct.DonGia = Convert.ToInt64(row["DON_GIA"]);
                 ct.SoLuong = Convert.ToInt32(row["SO_LUONG"]);
                 ct.ThanhTien = Convert.ToInt64(row["THANH_TIEN"]);
+                GanGiaVonDaLuu(ct, row);
                 ct.MaSanPham = ctrl.LayMaSanPham(Convert.ToString(row["ID_MA_SAN_PHAM"]));
 
                 ds.Add(ct);

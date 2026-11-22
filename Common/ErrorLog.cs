@@ -60,7 +60,7 @@ namespace CuahangNongduoc
             string id = Record(error, operation);
             Exception recorded = Recorded(error);
             string path = Convert.ToString(recorded.Data["ErrorLogPath"]);
-            return operation + ". Vui lòng kiểm tra kết nối và thử lại.\r\nMã lỗi: " + id +
+            return operation + ".\r\nMã lỗi: " + id +
                 (path.Length > 0 ? "\r\nNhật ký: " + path : "\r\nKhông ghi được tệp nhật ký. Hãy kiểm tra quyền ghi thư mục Logs.");
         }
 

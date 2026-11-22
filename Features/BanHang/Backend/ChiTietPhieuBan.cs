@@ -6,6 +6,13 @@ namespace CuahangNongduoc.BusinessObject
 {
     public class ChiTietPhieuBan
     {
+        // Null means the historical invoice has no recorded cost; never infer it from today's prices.
+        public decimal? GiaVon { get; set; }
+        public string PhuongPhapGia { get; set; }
+        public decimal? ThanhTienGiaVon
+        {
+            get { return GiaVon.HasValue ? (decimal?)(GiaVon.Value * SoLuong) : null; }
+        }
         private PhieuBan m_PhieuBan;
 
         public PhieuBan PhieuBan

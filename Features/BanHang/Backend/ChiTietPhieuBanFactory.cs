@@ -105,9 +105,12 @@ namespace CuahangNongduoc.DataLayer
                 return true;
 
             Dictionary<string, long> changes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            string costMethod = WarehouseSettings.ReadCostMethod(conn, tr);
             foreach (DataRow row in m_Ds.Rows)
             {
                 if (row.RowState == DataRowState.Unchanged || row.RowState == DataRowState.Detached) continue;
+                object savedCost = DBNull.Value;
+                object savedMethod = DBNull.Value;
                 if (row.RowState != DataRowState.Added)
                 {
                     AccessControl.DemandCurrent("SuaPhieuBan");
@@ -115,7 +118,7 @@ namespace CuahangNongduoc.DataLayer
                     string oldLot = Convert.ToString(row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
                     int oldQuantity = Convert.ToInt32(row["SO_LUONG", DataRowVersion.Original]);
                     using (OleDbCommand original = new OleDbCommand(
-                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=?", conn, tr))
+                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN,GIA_VON,PHUONG_PHAP_GIA FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=?", conn, tr))
                     {
                         original.Parameters.Add("invoice", OleDbType.VarWChar, 50).Value = oldInvoice;
                         original.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = oldLot;
@@ -125,6 +128,8 @@ namespace CuahangNongduoc.DataLayer
                                 Convert.ToDecimal(reader[1]) != Convert.ToDecimal(row["DON_GIA", DataRowVersion.Original]) ||
                                 Convert.ToDecimal(reader[2]) != Convert.ToDecimal(row["THANH_TIEN", DataRowVersion.Original]))
                                 throw new DBConcurrencyException("Dong phieu da duoc thay doi. Hay tai lai phieu.");
+                            savedCost = reader[3];
+                            savedMethod = reader[4];
                         }
                     }
                     AddStockChange(changes, oldLot, oldQuantity);
@@ -148,6 +153,10 @@ namespace CuahangNongduoc.DataLayer
                 }
                 row["THANH_TIEN"] = CuahangNongduoc.BusinessObject.TienTe.ThanhTien(
                     Convert.ToDecimal(row["DON_GIA"]), Convert.ToDecimal(row["SO_LUONG"]));
+                bool newLot = row.RowState == DataRowState.Added ||
+                    !Object.Equals(row["ID_MA_SAN_PHAM"], row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
+                row["GIA_VON"] = newLot ? (object)WarehouseCost.UnitCost(conn, tr, Convert.ToString(row["ID_MA_SAN_PHAM"]), costMethod) : savedCost;
+                row["PHUONG_PHAP_GIA"] = newLot ? (object)costMethod : savedMethod;
                 AddStockChange(changes, Convert.ToString(row["ID_MA_SAN_PHAM"]), -Convert.ToInt32(row["SO_LUONG"]));
             }
             foreach (KeyValuePair<string, long> change in changes)
@@ -174,6 +183,9 @@ namespace CuahangNongduoc.DataLayer
             using (OleDbDataAdapter adapter = new OleDbDataAdapter(select))
             using (OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter))
             {
+                // The explicit original-row check above handles concurrency. Masked cost fields
+                // in a seller's table must not become predicates against real persisted costs.
+                builder.ConflictOption = ConflictOption.OverwriteChanges;
                 adapter.AcceptChangesDuringUpdate = false;
                 adapter.RowUpdating += delegate(object sender, OleDbRowUpdatingEventArgs e) {
                     if (e.Command == null) return;
@@ -232,6 +244,7 @@ namespace CuahangNongduoc.DataLayer
         public void ChapNhanThayDoi()
         {
             m_Ds.AcceptChanges();
+            AccessControl.HideCosts(m_Ds);
         }
     }
 }

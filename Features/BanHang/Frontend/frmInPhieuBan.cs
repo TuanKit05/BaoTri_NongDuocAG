@@ -80,6 +80,8 @@ namespace CuahangNongduoc
         {
             DataTable table = new DataTable();
             table.Columns.Add("TenSanPham", typeof(string));
+            table.Columns.Add("MaLo", typeof(string));
+            table.Columns.Add("HanDung", typeof(string));
             table.Columns.Add("DonGia", typeof(long));
             table.Columns.Add("SoLuong", typeof(int));
             table.Columns.Add("ThanhTien", typeof(long));
@@ -87,7 +89,9 @@ namespace CuahangNongduoc
             foreach (CuahangNongduoc.BusinessObject.ChiTietPhieuBan line in invoice.ChiTiet)
             {
                 string name = line.MaSanPham == null || line.MaSanPham.SanPham == null ? "" : line.MaSanPham.SanPham.TenSanPham;
-                table.Rows.Add(name, line.DonGia, line.SoLuong, line.ThanhTien);
+                string lot = line.MaSanPham == null ? "" : line.MaSanPham.Id;
+                string expiry = line.MaSanPham == null || line.MaSanPham.NgayHetHan == DateTime.MinValue ? "" : line.MaSanPham.NgayHetHan.ToString("dd/MM/yyyy");
+                table.Rows.Add(name, lot, expiry, line.DonGia, line.SoLuong, line.ThanhTien);
             }
             return table;
         }

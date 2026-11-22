@@ -47,7 +47,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ErrorLog.Describe(ex, "Không thể khởi động hệ thống. Hãy kiểm tra cơ sở dữ liệu Access"),
+                MessageBox.Show(ErrorLog.Describe(ex, "Không thể khởi động hệ thống: " + ex.Message),
                     "Lỗi khởi động", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
