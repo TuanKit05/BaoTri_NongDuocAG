@@ -120,6 +120,19 @@ namespace CuahangNongduoc
             }
             table.AcceptChanges();
         }
+        public static bool CanCreateProduct()
+        {
+            return Can("SanPham") && AppSession.CurrentUser != null &&
+                (AccountRoles.IsAdmin(AppSession.CurrentUser.Role) ||
+                (AccountRoles.Contains(AppSession.CurrentUser.Role, AccountRoles.Warehouse) && Can("NhapHang")));
+        }
+
+        public static void DemandCreateProduct()
+        {
+            DemandCurrent("SanPham");
+            if (!CanCreateProduct()) throw new UnauthorizedAccessException("Chi admin hoac thu kho duoc them san pham.");
+        }
+
         public static bool CanAddCustomer()
         {
             return Can("BanHang") && Can("KhachHang");
@@ -155,6 +168,8 @@ namespace CuahangNongduoc
                 if(row.RowState==DataRowState.Unchanged || row.RowState==DataRowState.Detached) continue;
                 if(row.RowState==DataRowState.Deleted)
                 { DemandCurrent("XoaPhieu"); continue; }
+                if ((Uses(sql, "PHIEU_BAN") && !Uses(sql, "CHI_TIET_PHIEU_BAN")) || Uses(sql, "PHIEU_NHAP"))
+                    CuahangNongduoc.Controller.SaleInputValidation.ValidatePaymentRow(row);
                 if(Uses(sql,"PHIEU_BAN") && !Uses(sql,"CHI_TIET_PHIEU_BAN"))
                 {
                     if(row.RowState==DataRowState.Added)
@@ -165,6 +180,10 @@ namespace CuahangNongduoc
                                 throw new UnauthorizedAccessException("Nhân viên không được tự thay đổi mức ưu đãi.");
                     }
                     else DemandCurrent("SuaPhieuBan");
+                }
+                else if (Uses(sql, "SAN_PHAM") && !Uses(sql, "MA_SAN_PHAM") && row.RowState == DataRowState.Added)
+                {
+                    DemandCreateProduct();
                 }
                 else if (Uses(sql, "KHACH_HANG") && row.RowState == DataRowState.Added && !Can("SuaDanhMuc"))
                 {
@@ -240,6 +259,8 @@ namespace CuahangNongduoc
             }
             bool catalog=name=="frmSanPham" || name=="frmNhaCungCap" || name=="frmDonViTinh" || name=="frmKhachHang" || name=="frmDaiLy" || name=="frmLyDoChi";
             ConfigureControls(form,catalog && !AccessControl.Can("SuaDanhMuc"),name=="frmBanLe" || name=="frmBanSi");
+            frmSanPham products = form as frmSanPham;
+            if (products != null) products.ApplyProductPermissions();
             frmKhachHang customers = form as frmKhachHang;
             if (customers != null) customers.ConfigureCustomerCreation();
         }

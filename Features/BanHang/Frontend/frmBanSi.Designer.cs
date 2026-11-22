@@ -349,7 +349,10 @@
             this.colThanhTien});
             this.dgvDanhsachSP.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvDanhsachSP.Location = new System.Drawing.Point(0, 0);
+            this.dgvDanhsachSP.AutoGenerateColumns = false;
             this.dgvDanhsachSP.Name = "dgvDanhsachSP";
+            this.dgvDanhsachSP.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvDanhsachSP.MultiSelect = false;
             this.dgvDanhsachSP.ReadOnly = true;
             this.dgvDanhsachSP.Size = new System.Drawing.Size(744, 126);
             this.dgvDanhsachSP.TabIndex = 6;
@@ -966,6 +969,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.WindowState = System.Windows.Forms.FormWindowState.Normal;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.ClientSize = new System.Drawing.Size(750, 535);
             this.Controls.Add(this.grpPhi);
             this.Controls.Add(this.panel1);

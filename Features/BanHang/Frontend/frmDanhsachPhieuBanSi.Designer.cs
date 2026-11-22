@@ -220,7 +220,10 @@
             this.colConNo});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 46);
+            this.dataGridView.AutoGenerateColumns = false;
             this.dataGridView.Name = "dataGridView";
+            this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridView.MultiSelect = false;
             this.dataGridView.ReadOnly = true;
             this.dataGridView.Size = new System.Drawing.Size(636, 373);
             this.dataGridView.TabIndex = 1;
@@ -284,6 +287,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.ClientSize = new System.Drawing.Size(636, 419);
             this.Controls.Add(this.dataGridView);
             this.Controls.Add(this.bindingNavigator);

@@ -99,20 +99,37 @@ namespace CuahangNongduoc.DataLayer
         /// Ghi phiếu bán trong transaction do người gọi quản lý.
         /// Gọi ChapNhanThayDoi() sau khi người gọi commit thành công.
         /// </summary>
+        public bool CoPhieuMoi()
+        {
+            return m_Ds.GetChanges(DataRowState.Added) != null;
+        }
+
         public bool SaveTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr)
         {
             if (!AccessControl.Can("SuaPhieuBan") && m_Ds.GetChanges(DataRowState.Added) == null)
                 throw new UnauthorizedAccessException("Chỉ quản lý được sửa phiếu đã lập.");
             AccessControl.ValidateRows(m_Ds, m_Ds.Command.CommandText);
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState != DataRowState.Added && row.RowState != DataRowState.Modified) continue;
+                string customerId = Convert.ToString(row["ID_KHACH_HANG"]).Trim();
+                if (customerId.Length == 0 || Convert.ToInt32(AccountRepository.Scalar(conn, tr,
+                    "SELECT COUNT(*) FROM KHACH_HANG WHERE ID=?", customerId)) != 1)
+                    throw new InvalidOperationException("Vui long chon khach hang hoac dai ly hop le.");
+            }
+
             OleDbCommand cmdSelect = m_Ds.Command;
             cmdSelect.Connection = conn;
             cmdSelect.Transaction = tr;
 
             OleDbDataAdapter adapter = new OleDbDataAdapter();
             adapter.SelectCommand = cmdSelect;
+            adapter.AcceptChangesDuringUpdate = false;
             OleDbCommandBuilder builder = new OleDbCommandBuilder(adapter);
             adapter.RowUpdating += delegate (object sender, OleDbRowUpdatingEventArgs e)
             {
+                // CommandBuilder skips rows whose values match their original values.
+                if (e.Command == null) return;
                 e.Command.Connection = conn;
                 e.Command.Transaction = tr;
             };
@@ -135,6 +152,8 @@ namespace CuahangNongduoc.DataLayer
             if (cmd.ExecuteNonQuery() != 1)
                 throw new InvalidOperationException("Không xóa được phiếu bán " + idPhieu);
         }
+
+        public void HuyThayDoi() { m_Ds.RejectChanges(); }
 
         public void ChapNhanThayDoi()
         {

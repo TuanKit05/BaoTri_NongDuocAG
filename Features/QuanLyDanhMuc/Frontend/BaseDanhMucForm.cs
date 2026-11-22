@@ -5,18 +5,30 @@ using CuahangNongduoc.Controller;
 
 namespace CuahangNongduoc
 {
-    public abstract class BaseDanhMucForm : Form
+    public class BaseDanhMucForm : Form
     {
         protected DataGridView dataGridView;
         protected BindingNavigator bindingNavigator;
         protected ToolStripTextBox bindingNavigatorPositionItem;
 
-        protected abstract BaseController Controller { get; }
-        protected abstract string TenDanhMuc { get; }
+        protected virtual BaseController Controller { get { return null; } }
+        protected virtual string TenDanhMuc { get { return String.Empty; } }
+
+        protected bool IsDesignMode
+        {
+            get
+            {
+                return System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime
+                    || DesignMode || (Site != null && Site.DesignMode);
+            }
+        }
 
         protected virtual void Base_Load(object sender, EventArgs e)
         {
+            if (IsDesignMode) return;
             LoadData();
+            if ((this is frmKhachHang || this is frmDaiLy || this is frmNhaCungCap) && dataGridView != null)
+                dataGridView.AllowUserToAddRows = false;
             SecuredUi.ApplyForm(this);
         }
 
@@ -58,7 +70,7 @@ namespace CuahangNongduoc
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi lưu: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Lỗi khi lưu: {ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác - BaseDanhMucForm")}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
