@@ -27,7 +27,7 @@ namespace CuahangNongduoc
         public DatabaseRolePolicy(UserAccount account){user=account;}
         public bool CanAccess(string feature)
         {
-            return user != null && user.IsActive && !user.IsDeleted && !String.IsNullOrEmpty(feature) &&
+            return user != null && user.IsActive && !user.IsDeleted && AccountRoles.IsValid(user.Role) && !String.IsNullOrEmpty(feature) &&
                 (AccountRoles.IsAdmin(user.Role) || user.Permissions.Contains(feature));
         }
     }

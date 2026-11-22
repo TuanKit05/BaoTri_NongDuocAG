@@ -50,6 +50,8 @@ namespace CuahangNongduoc
             AccountRepository.Execute(connection, null, "UPDATE CAU_HINH_KHO SET PHUONG_PHAP_GIA='BQGQ' WHERE PHUONG_PHAP_GIA IS NULL");
             AddColumn(connection, "CHI_TIET_PHIEU_BAN", "GIA_VON", "CURRENCY");
             AddColumn(connection, "CHI_TIET_PHIEU_BAN", "PHUONG_PHAP_GIA", "TEXT(20)");
+            AddColumn(connection, "CHI_TIET_PHIEU_BAN", "LA_HANG_TANG", "YESNO");
+            AccountRepository.Execute(connection, null, "UPDATE CHI_TIET_PHIEU_BAN SET LA_HANG_TANG=False WHERE LA_HANG_TANG IS NULL");
             // Historical lots remain NULL when their initial receipt quantity was not recorded.
             AddColumn(connection, "MA_SAN_PHAM", "SO_LUONG_NHAP", "LONG");
             AddColumn(connection, "CAU_HINH_KHO", "NGUONG_HET_HAN", "LONG");

@@ -104,6 +104,11 @@ Denied { $payment.Save() } 'Accountant can delete receipt'
 [CuahangNongduoc.AppSession]::CurrentUser=$admin
 Denied { $repo.UpdateRole($sales.Id,'KHO,KETOAN') } 'Multiple roles accepted on update'
 Denied { $repo.CreateAccount('pq_multi','Test','TestPassword123','KHO,KETOAN') } 'Multiple roles accepted on create'
+Denied { Exec ("INSERT INTO TAI_KHOAN_VAI_TRO (ID_TAI_KHOAN,MaVaiTro) VALUES ('"+$sales.Id+"','KHO')") } 'Database accepted a second role'
+foreach($invalidRole in @('ADMIN,KHO','ADMIN;BANHANG','ADMIN,ADMIN','')) {
+ Assert (![CuahangNongduoc.AccountRoles]::IsValid($invalidRole)) ('Invalid role accepted: '+$invalidRole)
+ Assert (![CuahangNongduoc.AccountRoles]::IsAdmin($invalidRole)) ('Invalid role granted admin: '+$invalidRole)
+}
 $repo.UpdateRole($sales.Id,'KETOAN')
 Assert ($repo.GetById($sales.Id).Permissions.Contains('ThuChi')) 'Role update not reflected in grants'
 $repo.SetActive($sales.Id,$false)

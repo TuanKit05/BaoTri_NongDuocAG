@@ -54,8 +54,8 @@ namespace CuahangNongduoc
         }
         public static bool Contains(string roles,string code)
         { foreach(string role in Split(roles)) if(role==code) return true; return false; }
-        public static bool IsAdmin(string roles) { return Contains(roles,Admin); }
+        public static bool IsAdmin(string roles) { return IsValid(roles) && Normalize(roles)==Admin; }
         public static bool IsValid(string roles)
-        { string[] codes=Split(roles); foreach(string code in codes) if(code!=Admin && code!=Warehouse && code!=Sales && code!=Accountant) return false; return codes.Length>0; }
+        { string code=Normalize(roles); return code==Admin || code==Warehouse || code==Sales || code==Accountant; }
     }
 }

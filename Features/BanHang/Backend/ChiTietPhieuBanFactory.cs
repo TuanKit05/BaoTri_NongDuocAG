@@ -17,6 +17,7 @@ namespace CuahangNongduoc.DataLayer
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN = @id");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = idPhieuBan;
             m_Ds.Load(cmd);
+            if (m_Ds.Columns.Contains("LA_HANG_TANG")) m_Ds.Columns["LA_HANG_TANG"].DefaultValue = false;
             return m_Ds;
         }
 
@@ -26,6 +27,7 @@ namespace CuahangNongduoc.DataLayer
                     " WHERE PB.NGAY_BAN = @ngayban");
             cmd.Parameters.Add("ngayban", OleDbType.Date).Value = dtNgayBan;
             m_Ds.Load(cmd);
+            if (m_Ds.Columns.Contains("LA_HANG_TANG")) m_Ds.Columns["LA_HANG_TANG"].DefaultValue = false;
             return m_Ds;
         }
 
@@ -36,6 +38,7 @@ namespace CuahangNongduoc.DataLayer
             cmd.Parameters.Add("thang", OleDbType.Integer).Value = thang;
             cmd.Parameters.Add("nam", OleDbType.Integer).Value = nam;
             m_Ds.Load(cmd);
+            if (m_Ds.Columns.Contains("LA_HANG_TANG")) m_Ds.Columns["LA_HANG_TANG"].DefaultValue = false;
             return m_Ds;
         }
 
@@ -118,10 +121,11 @@ namespace CuahangNongduoc.DataLayer
                     string oldLot = Convert.ToString(row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
                     int oldQuantity = Convert.ToInt32(row["SO_LUONG", DataRowVersion.Original]);
                     using (OleDbCommand original = new OleDbCommand(
-                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN,GIA_VON,PHUONG_PHAP_GIA FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=?", conn, tr))
+                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN,GIA_VON,PHUONG_PHAP_GIA FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=? AND LA_HANG_TANG=?", conn, tr))
                     {
                         original.Parameters.Add("invoice", OleDbType.VarWChar, 50).Value = oldInvoice;
                         original.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = oldLot;
+                        original.Parameters.Add("gift", OleDbType.Boolean).Value = row["LA_HANG_TANG", DataRowVersion.Original] != DBNull.Value && Convert.ToBoolean(row["LA_HANG_TANG", DataRowVersion.Original]);
                         using (OleDbDataReader reader = original.ExecuteReader())
                         {
                             if (!reader.Read() || Convert.ToInt32(reader[0]) != oldQuantity ||

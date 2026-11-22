@@ -623,9 +623,6 @@
     <None Include="Resources\Thoat.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="cuahang.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="CuahangNongduoc.ico" />
     <Content Include="Database\cuahang.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

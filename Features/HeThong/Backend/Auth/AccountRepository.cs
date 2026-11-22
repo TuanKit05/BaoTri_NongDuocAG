@@ -55,6 +55,7 @@ namespace CuahangNongduoc
                             string id = Convert.ToString(row["ID"]);
                             if (Convert.ToInt32(Scalar(c, tr, "SELECT COUNT(*) FROM TAI_KHOAN_VAI_TRO WHERE ID_TAI_KHOAN=?", id)) == 0)
                             {
+                                ValidateRoles(c, tr, Convert.ToString(row["VAI_TRO"]));
                                 foreach (string role in AccountRoles.Split(Convert.ToString(row["VAI_TRO"])))
                                     if (Convert.ToInt32(Scalar(c, tr, "SELECT COUNT(*) FROM VAI_TRO WHERE MaVaiTro=?", role)) > 0)
                                         Execute(c, tr, "INSERT INTO TAI_KHOAN_VAI_TRO (ID_TAI_KHOAN, MaVaiTro) VALUES (?, ?)", id, role);
@@ -70,6 +71,13 @@ namespace CuahangNongduoc
                     }
                     catch { ErrorLog.Rollback(tr, "Rollback Access"); throw; }
                 }
+                DataTable duplicates = ReadTable(c, null, "SELECT ID_TAI_KHOAN FROM TAI_KHOAN_VAI_TRO GROUP BY ID_TAI_KHOAN HAVING COUNT(*) > 1");
+                if (duplicates.Rows.Count > 0)
+                    throw new InvalidOperationException("Tai khoan co nhieu vai tro; can chon lai mot vai tro: " + Convert.ToString(duplicates.Rows[0][0]));
+                bool singleRoleIndex = false;
+                foreach (DataRow index in c.GetOleDbSchemaTable(OleDbSchemaGuid.Indexes, new object[] { null, null, null, null, "TAI_KHOAN_VAI_TRO" }).Rows)
+                    if (Convert.ToString(index["INDEX_NAME"]) == "UX_TAI_KHOAN_MOT_VAI_TRO") singleRoleIndex = true;
+                if (!singleRoleIndex) Execute(c, null, "CREATE UNIQUE INDEX UX_TAI_KHOAN_MOT_VAI_TRO ON TAI_KHOAN_VAI_TRO (ID_TAI_KHOAN)");
                 IdGenerator.EnsureSchema(c);
                 WarehouseSettings.EnsureSchema(c);
             }
@@ -147,6 +155,8 @@ namespace CuahangNongduoc
                 foreach (DataRow role in ReadTable(c, null, "SELECT MaVaiTro FROM TAI_KHOAN_VAI_TRO WHERE ID_TAI_KHOAN=? ORDER BY MaVaiTro", account.Id).Rows)
                     roles.Add(Convert.ToString(role[0]));
                 account.Role = String.Join(",", roles.ToArray());
+                if (!AccountRoles.IsValid(account.Role))
+                    throw new InvalidOperationException("Tai khoan phai co dung mot vai tro hop le: " + account.Username);
                 foreach (DataRow permission in ReadTable(c, null, "SELECT DISTINCT V.MaQuyen FROM VAI_TRO_QUYEN V INNER JOIN TAI_KHOAN_VAI_TRO T ON V.MaVaiTro=T.MaVaiTro WHERE T.ID_TAI_KHOAN=?", account.Id).Rows)
                     account.Permissions.Add(Convert.ToString(permission[0]));
                 return account;
@@ -198,6 +208,7 @@ namespace CuahangNongduoc
         }
         private static void ValidateRoles(OleDbConnection c, OleDbTransaction tr, string roles)
         {
+            if (!AccountRoles.IsValid(roles)) throw new ArgumentException("Moi tai khoan chi duoc chon mot vai tro hop le.");
             string[] codes = AccountRoles.Split(roles);
             if (codes.Length != 1) throw new ArgumentException("Mỗi tài khoản chỉ được chọn một vai trò.");
             foreach (string code in codes)
