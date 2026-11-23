@@ -109,8 +109,12 @@
     <Compile Include="Features\BaoCao\Frontend\frmTonKhoTaiNgay.Designer.cs">
       <DependentUpon>frmTonKhoTaiNgay.cs</DependentUpon>
     </Compile>
-    <Compile Include="Features\QuanLyDanhMuc\Backend\DichVuFactory.cs" />
-    <Compile Include="Features\QuanLyDanhMuc\Frontend\frmDichVu.cs" />
+    <Compile Include="Features\QuanLyDanhMuc\Backend\DichVuFactory.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Features\QuanLyDanhMuc\Frontend\frmDichVu.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinh.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhController.cs" />
     <Compile Include="Features\QuanLyDanhMuc\Backend\DonViTinhFactory.cs">
