@@ -52,13 +52,17 @@
           <DataField>Id</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="KhachHang">
-          <DataField>KhachHang</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.KhachHang</rd:TypeName>
+        <Field Name="TenKhachHang">
+          <DataField>TenKhachHang</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="NgayNhap">
-          <DataField>NgayNhap</DataField>
-          <rd:TypeName>System.DateTime</rd:TypeName>
+        <Field Name="DiaChiKhachHang">
+          <DataField>DiaChiKhachHang</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="DienThoaiKhachHang">
+          <DataField>DienThoaiKhachHang</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="TongTien">
           <DataField>TongTien</DataField>
@@ -114,7 +118,7 @@
         <CanGrow>true</CanGrow>
         <Left>3.5cm</Left>
         <Height>0.63492cm</Height>
-        <Value>=Fields!KhachHang.Value.DienThoai</Value>
+        <Value>=Fields!DienThoaiKhachHang.Value</Value>
       </Textbox>
       <Textbox Name="textbox18">
         <Top>5.12963cm</Top>
@@ -147,7 +151,7 @@
         <CanGrow>true</CanGrow>
         <Left>3.5cm</Left>
         <Height>0.63492cm</Height>
-        <Value>=Fields!KhachHang.Value.DiaChi</Value>
+        <Value>=Fields!DiaChiKhachHang.Value</Value>
       </Textbox>
       <Textbox Name="textbox10">
         <Top>4.48545cm</Top>
@@ -314,7 +318,7 @@
         <CanGrow>true</CanGrow>
         <Left>3.5cm</Left>
         <Height>0.63492cm</Height>
-        <Value>=Fields!KhachHang.Value.HoTen</Value>
+        <Value>=Fields!TenKhachHang.Value</Value>
       </Textbox>
       <Textbox Name="textbox5">
         <Top>3.25cm</Top>

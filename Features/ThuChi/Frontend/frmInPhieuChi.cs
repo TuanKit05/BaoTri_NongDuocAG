@@ -22,7 +22,15 @@ namespace CuahangNongduoc
         {
             this.reportViewer.LocalReport.SetParameters(
                 ThuChiReportParameters.Tao(m_PhieuChi));
-            this.PhieuChiBindingSource.DataSource = m_PhieuChi;
+            DataTable table = new DataTable();
+            table.Columns.Add("Id", typeof(string));
+            table.Columns.Add("NgayChi", typeof(DateTime));
+            table.Columns.Add("TongTien", typeof(decimal));
+            table.Columns.Add("GhiChu", typeof(string));
+            table.Columns.Add("TenLyDoChi", typeof(string));
+            table.Rows.Add(m_PhieuChi.Id, m_PhieuChi.NgayChi, m_PhieuChi.TongTien,
+                m_PhieuChi.GhiChu, m_PhieuChi.LyDoChi == null ? "" : m_PhieuChi.LyDoChi.TenLyDo);
+            this.PhieuChiBindingSource.DataSource = table;
             this.reportViewer.RefreshReport();
         }
     }

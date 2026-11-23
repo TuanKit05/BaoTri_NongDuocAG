@@ -41,8 +41,9 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM PHIEU_BAN WHERE ID = @id");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = id;
-            m_Ds.Load(cmd);
-            return m_Ds;
+            DataService receipt = new DataService();
+            receipt.Load(cmd);
+            return receipt;
         }
 
 

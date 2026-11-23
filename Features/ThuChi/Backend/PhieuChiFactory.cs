@@ -30,8 +30,9 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM [PHIEU_CHI] WHERE [ID]=?");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = id;
-            m_Ds.Load(cmd);
-            return m_Ds;
+            DataService receipt = new DataService();
+            receipt.Load(cmd);
+            return receipt;
         }
 
         public static long LayTongTien(String lyDo, int thang, int nam)
@@ -48,8 +49,33 @@ namespace CuahangNongduoc.DataLayer
             return ThuChiScalarQuery.LaySoTien(cmd);
         }
 
-        public DataRow NewRow() { return m_Ds.NewRow(); }
+        public DataRow NewRow()
+        {
+            DataRow row = m_Ds.NewRow();
+            row["ID"] = IdGenerator.Next("PHIEU_CHI");
+            row["NGAY_CHI"] = DateTime.Today;
+            row["TONG_TIEN"] = 0m;
+            row["GHI_CHU"] = String.Empty;
+            return row;
+        }
         public void Add(DataRow row) { m_Ds.Rows.Add(row); }
-        public bool Save() { return m_Ds.ExecuteNoneQuery() > 0; }
+        public bool Save()
+        {
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState != DataRowState.Added && row.RowState != DataRowState.Modified) continue;
+                string id = Convert.ToString(row["ID"]).Trim();
+                if (row.RowState == DataRowState.Modified && !Object.Equals(row["ID", DataRowVersion.Original], row["ID"]))
+                    throw new InvalidOperationException("Không được thay đổi mã phiếu chi.");
+                if (id.Length == 0) throw new InvalidOperationException("Mã phiếu chi không được để trống.");
+                if (row["NGAY_CHI"] == DBNull.Value)
+                    throw new InvalidOperationException("Phiếu " + id + ": vui lòng nhập ngày chi.");
+                if (row["ID_LY_DO_CHI"] == DBNull.Value || Convert.ToString(row["ID_LY_DO_CHI"]).Trim().Length == 0)
+                    throw new InvalidOperationException("Phiếu " + id + ": vui lòng chọn lý do chi.");
+                if (row["TONG_TIEN"] == DBNull.Value || Convert.ToDecimal(row["TONG_TIEN"]) <= 0m)
+                    throw new InvalidOperationException("Phiếu " + id + ": tổng tiền phải lớn hơn 0.");
+            }
+            return m_Ds.ExecuteNoneQuery() > 0;
+        }
     }
 }

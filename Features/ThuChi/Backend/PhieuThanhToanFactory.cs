@@ -30,8 +30,9 @@ namespace CuahangNongduoc.DataLayer
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM [PHIEU_THANH_TOAN] WHERE [ID]=?");
             cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = id;
-            m_Ds.Load(cmd);
-            return m_Ds;
+            DataService receipt = new DataService();
+            receipt.Load(cmd);
+            return receipt;
         }
 
         public static long LayTongTien(String kh, int thang, int nam)
@@ -47,8 +48,30 @@ namespace CuahangNongduoc.DataLayer
             return ThuChiScalarQuery.LaySoTien(cmd);
         }
 
-        public DataRow NewRow() { return m_Ds.NewRow(); }
+        public DataRow NewRow()
+        {
+            DataRow row = m_Ds.NewRow();
+            row["ID"] = IdGenerator.Next("PHIEU_THANH_TOAN");
+            row["NGAY_THANH_TOAN"] = DateTime.Today;
+            row["TONG_TIEN"] = 0m;
+            row["GHI_CHU"] = String.Empty;
+            return row;
+        }
         public void Add(DataRow row) { m_Ds.Rows.Add(row); }
-        public bool Save() { return m_Ds.ExecuteNoneQuery() > 0; }
+        public bool Save()
+        {
+            foreach (DataRow row in m_Ds.Rows)
+            {
+                if (row.RowState != DataRowState.Added && row.RowState != DataRowState.Modified) continue;
+                if (Convert.ToString(row["ID"]).Trim().Length == 0 || row["NGAY_THANH_TOAN"] == DBNull.Value ||
+                    row["ID_KHACH_HANG"] == DBNull.Value || Convert.ToString(row["ID_KHACH_HANG"]).Trim().Length == 0)
+                    throw new InvalidOperationException("Vui lòng nhập đầy đủ mã phiếu, ngày thu và khách hàng.");
+                if (row["TONG_TIEN"] == DBNull.Value || Convert.ToDecimal(row["TONG_TIEN"]) <= 0)
+                    throw new InvalidOperationException("Tổng tiền thu phải lớn hơn 0.");
+                if (row.RowState == DataRowState.Modified && !Object.Equals(row["ID", DataRowVersion.Original], row["ID"]))
+                    throw new InvalidOperationException("Không được thay đổi mã phiếu thu.");
+            }
+            return m_Ds.ExecuteNoneQuery() > 0;
+        }
     }
 }

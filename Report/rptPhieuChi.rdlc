@@ -52,9 +52,9 @@
           <DataField>Id</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="LyDoChi">
-          <DataField>LyDoChi</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.LyDoChi</rd:TypeName>
+        <Field Name="TenLyDoChi">
+          <DataField>TenLyDoChi</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="NgayChi">
           <DataField>NgayChi</DataField>
@@ -177,7 +177,7 @@
         <CanGrow>true</CanGrow>
         <Left>4cm</Left>
         <Height>0.63492cm</Height>
-        <Value>=Fields!LyDoChi.Value.LyDo</Value>
+        <Value>=Fields!TenLyDoChi.Value</Value>
       </Textbox>
       <Textbox Name="textbox6">
         <Top>3.5cm</Top>

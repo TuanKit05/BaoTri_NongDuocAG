@@ -13,6 +13,7 @@ namespace CuahangNongduoc
     {
         KhachHangController ctrlKH = new KhachHangController();
         PhieuThanhToanController ctrl = new PhieuThanhToanController();
+        private ThuChiEditor editor;
         public frmThanhToan()
         {
             InitializeComponent();
@@ -28,6 +29,11 @@ namespace CuahangNongduoc
             ctrlKH.HienthiKhachHangChungDataGridviewComboBox(colKhachHang);
             ctrl.HienthiPhieuThanhToan(bindingNavigator, dataGridView, cmbKhachHang, txtMaPhieu, dtNgayThanhToan, numTongTien, txtGhiChu);
             bindingNavigator.BindingSource.AddingNew += new AddingNewEventHandler(BindingSource_AddingNew);
+            editor = new ThuChiEditor(new ThuChiControls(bindingNavigator, dataGridView,
+                cmbKhachHang, txtMaPhieu, dtNgayThanhToan, numTongTien, txtGhiChu),
+                "ID_KHACH_HANG", "NGAY_THANH_TOAN", toolAdd, toolSave, toolDelete, toolIn, toolTimKiem,
+                delegate { return ctrl.NewRow(); }, delegate(DataRow row) { ctrl.Add(row); },
+                delegate { ctrl.Save(); });
         }
 
         void BindingSource_AddingNew(object sender, AddingNewEventArgs e)
@@ -37,22 +43,7 @@ namespace CuahangNongduoc
 
         private void toolAdd_Click(object sender, EventArgs e)
         {
-            if (cmbKhachHang.SelectedValue == null || cmbKhachHang.SelectedValue == DBNull.Value)
-            {
-                MessageBox.Show("Vui lòng chọn khách hàng trước khi tạo phiếu.");
-                return;
-            }
-            string maphieu = IdGenerator.Next("PHIEU_THANH_TOAN");
-
-            DataRow row = ctrl.NewRow();
-            row["ID"] = maphieu;
-            row["NGAY_THANH_TOAN"] = DateTime.Today;
-            row["TONG_TIEN"] = 0m;
-            row["GHI_CHU"] = String.Empty;
-            if (cmbKhachHang.SelectedValue != null && cmbKhachHang.SelectedValue != DBNull.Value)
-                row["ID_KHACH_HANG"] = cmbKhachHang.SelectedValue;
-            ctrl.Add(row);
-            bindingNavigator.BindingSource.MoveLast();
+            if (editor != null) editor.BeginAdd();
         }
 
         private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
@@ -82,16 +73,12 @@ namespace CuahangNongduoc
         {
             try
             {
-                if (!this.ValidateChildren()) return;
-                dataGridView.EndEdit();
-                if (bindingNavigator.BindingSource != null)
-                    bindingNavigator.BindingSource.EndEdit();
-                ctrl.Save();
+                if (editor != null) editor.Save();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể lưu phiếu thanh toán: " + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
-                    "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ErrorLog.UserMessage(ex, "Không thể lưu phiếu thu"),
+                    "Lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -139,6 +126,7 @@ namespace CuahangNongduoc
                     txtMaPhieu, dtNgayThanhToan, numTongTien, txtGhiChu,
                     maKhachHang, ngayThu);
             }
+            if (editor != null) editor.RefreshSource();
         }
 
     }

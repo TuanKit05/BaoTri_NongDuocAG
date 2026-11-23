@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
   <DataSources>
     <DataSource Name="DummyDataSource">
@@ -36,8 +36,8 @@
   <InteractiveWidth>21cm</InteractiveWidth>
   <rd:GridSpacing>0.25cm</rd:GridSpacing>
   <rd:SnapToGrid>true</rd:SnapToGrid>
-  <RightMargin>2.5cm</RightMargin>
-  <LeftMargin>2.5cm</LeftMargin>
+  <RightMargin>1.5cm</RightMargin>
+  <LeftMargin>1.5cm</LeftMargin>
   <BottomMargin>2.5cm</BottomMargin>
   <rd:ReportID>f391ca85-94dd-4292-9788-087cc469caee</rd:ReportID>
   <PageWidth>21cm</PageWidth>
@@ -56,21 +56,17 @@
           <DataField>TongTien</DataField>
           <rd:TypeName>System.Int64</rd:TypeName>
         </Field>
-        <Field Name="ConNo">
-          <DataField>ConNo</DataField>
-          <rd:TypeName>System.Int64</rd:TypeName>
-        </Field>
-        <Field Name="ChiTiet">
-          <DataField>ChiTiet</DataField>
-          <rd:TypeName>System.Collections.Generic.IList`1[[CuahangNongduoc.BusinessObject.MaSanPham, CuahangNongduoc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]</rd:TypeName>
-        </Field>
         <Field Name="DaTra">
           <DataField>DaTra</DataField>
           <rd:TypeName>System.Int64</rd:TypeName>
         </Field>
-        <Field Name="NhaCungCap">
-          <DataField>NhaCungCap</DataField>
-          <rd:TypeName>CuahangNongduoc.BusinessObject.NhaCungCap</rd:TypeName>
+        <Field Name="ConNo">
+          <DataField>ConNo</DataField>
+          <rd:TypeName>System.Int64</rd:TypeName>
+        </Field>
+        <Field Name="TenNhaCungCap">
+          <DataField>TenNhaCungCap</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
         </Field>
       </Fields>
       <Query>
@@ -85,7 +81,7 @@
       </rd:DataSetInfo>
     </DataSet>
   </DataSets>
-  <Width>16.25cm</Width>
+  <Width>17.1cm</Width>
   <Body>
     <ColumnSpacing>1cm</ColumnSpacing>
     <ReportItems>
@@ -121,7 +117,7 @@
         <CanGrow>true</CanGrow>
         <Left>3.5cm</Left>
         <Height>0.63492cm</Height>
-        <Value>=Fields!NhaCungCap.Value.HoTen</Value>
+        <Value>=Fields!TenNhaCungCap.Value</Value>
       </Textbox>
       <Textbox Name="textbox8">
         <Top>6.25cm</Top>
@@ -208,8 +204,9 @@
         <Top>4.5cm</Top>
         <ReportName>rptChiTietPhieuNhap</ReportName>
         <ZIndex>6</ZIndex>
-        <Left>1cm</Left>
+        <Left>0cm</Left>
         <Height>1.50794cm</Height>
+        <Width>17.1cm</Width>
       </Subreport>
       <Textbox Name="textbox3">
         <Top>3.59127cm</Top>

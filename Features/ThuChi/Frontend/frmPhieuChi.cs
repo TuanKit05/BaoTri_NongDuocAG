@@ -13,10 +13,14 @@ namespace CuahangNongduoc
     {
         LyDoChiController ctrlLyDo = new LyDoChiController();
         PhieuChiController ctrl = new PhieuChiController();
+        private ThuChiEditor editor;
         public frmPhieuChi()
         {
             InitializeComponent();
             txtMaPhieu.ReadOnly = true;
+            colMaPhieu.ReadOnly = true;
+            cmbLyDoChi.AutoCompleteSource = AutoCompleteSource.ListItems;
+            cmbLyDoChi.DropDownStyle = ComboBoxStyle.DropDownList;
             dataGridView.AllowUserToAddRows = false;
             CuahangNongduoc.ResponsiveLayout.Attach(this);
             this.Load += delegate { SecuredUi.ApplyForm(this); };
@@ -27,26 +31,16 @@ namespace CuahangNongduoc
             ctrlLyDo.HienthiAutoComboBox(cmbLyDoChi);
             ctrlLyDo.HienthiDataGridviewComboBox(colLyDoChi);
             ctrl.HienthiPhieuChi(bindingNavigator, dataGridView, cmbLyDoChi, txtMaPhieu, dtNgayChi, numTongTien, txtGhiChu);
+            editor = new ThuChiEditor(new ThuChiControls(bindingNavigator, dataGridView,
+                cmbLyDoChi, txtMaPhieu, dtNgayChi, numTongTien, txtGhiChu),
+                "ID_LY_DO_CHI", "NGAY_CHI", toolAdd, toolSave, toolDelete, toolIn, toolTimKiem,
+                delegate { return ctrl.NewRow(); }, delegate(DataRow row) { ctrl.Add(row); },
+                delegate { ctrl.Save(); });
         }
 
         private void toolAdd_Click(object sender, EventArgs e)
         {
-            if (cmbLyDoChi.SelectedValue == null || cmbLyDoChi.SelectedValue == DBNull.Value)
-            {
-                MessageBox.Show("Vui lòng chọn lý do chi trước khi tạo phiếu.");
-                return;
-            }
-            string maphieu = IdGenerator.Next("PHIEU_CHI");
-
-            DataRow row = ctrl.NewRow();
-            row["ID"] = maphieu;
-            row["NGAY_CHI"] = DateTime.Today;
-            row["TONG_TIEN"] = 0m;
-            row["GHI_CHU"] = String.Empty;
-            if (cmbLyDoChi.SelectedValue != null && cmbLyDoChi.SelectedValue != DBNull.Value)
-                row["ID_LY_DO_CHI"] = cmbLyDoChi.SelectedValue;
-            ctrl.Add(row);
-            bindingNavigator.BindingSource.MoveLast();
+            if (editor != null) editor.BeginAdd();
         }
 
         private void dataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
@@ -76,16 +70,12 @@ namespace CuahangNongduoc
         {
             try
             {
-                if (!this.ValidateChildren()) return;
-                dataGridView.EndEdit();
-                if (bindingNavigator.BindingSource != null)
-                    bindingNavigator.BindingSource.EndEdit();
-                ctrl.Save();
+                if (editor != null) editor.Save();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể lưu phiếu chi: " + ErrorLog.UserMessage(ex, "Không thể hoàn tất thao tác"),
-                    "Lỗi lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ErrorLog.UserMessage(ex, "Không thể lưu phiếu chi"),
+                    "Lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -140,6 +130,7 @@ namespace CuahangNongduoc
                     dtNgayChi, numTongTien, txtGhiChu, maLyDo, ngayTim);
 
             }
+            if (editor != null) editor.RefreshSource();
         }
     }
 }
