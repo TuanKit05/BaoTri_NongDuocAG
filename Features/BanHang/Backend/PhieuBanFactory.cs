@@ -113,6 +113,52 @@ namespace CuahangNongduoc.DataLayer
             return m_Ds.GetChanges(DataRowState.Added) != null;
         }
 
+        // YC-BH-04/05: hàng tặng chỉ được lưu khi khớp chương trình KHUYEN_MAI hiện hành
+        // và không vượt số lượng được hưởng theo số lượng mua cùng phiếu.
+        internal void KiemTraHangTang(DataTable details)
+        {
+            if (details == null) return;
+            Dictionary<string, int> soMua = new Dictionary<string, int>(StringComparer.Ordinal);
+            Dictionary<string, int> soTang = new Dictionary<string, int>(StringComparer.Ordinal);
+            Dictionary<string, string> loCuaKhoa = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (DataRow line in details.Rows)
+            {
+                if (line.RowState == DataRowState.Deleted) continue;
+                string phieu = Convert.ToString(line["ID_PHIEU_BAN"]);
+                string lo = Convert.ToString(line["ID_MA_SAN_PHAM"]);
+                if (String.IsNullOrEmpty(phieu) || String.IsNullOrEmpty(lo)) continue;
+                string khoa = phieu + "\u0001" + lo;
+                int sl = line["SO_LUONG"] == DBNull.Value ? 0 : Convert.ToInt32(line["SO_LUONG"]);
+                bool tang = line["LA_HANG_TANG"] != DBNull.Value && Convert.ToBoolean(line["LA_HANG_TANG"]);
+                Dictionary<string, int> dich = tang ? soTang : soMua;
+                int cu;
+                dich.TryGetValue(khoa, out cu);
+                dich[khoa] = cu + sl;
+                loCuaKhoa[khoa] = lo;
+            }
+            if (soTang.Count == 0) return;
+
+            IList<CuahangNongduoc.BusinessObject.UuDaiQuyDinh> rules =
+                CuahangNongduoc.Controller.PhieuBanController.DanhSachUuDaiHieuLuc();
+            foreach (KeyValuePair<string, int> cap in soTang)
+            {
+                if (cap.Value <= 0) continue;
+                string lo = loCuaKhoa[cap.Key];
+                int mua;
+                soMua.TryGetValue(cap.Key, out mua);
+                CuahangNongduoc.BusinessObject.UuDaiQuyDinh quyTac =
+                    CuahangNongduoc.BusinessObject.ChonKhuyenMai.TimQuyTac(rules, lo);
+                if (quyTac == null)
+                    throw new InvalidOperationException(
+                        "Hàng tặng (mã lô " + lo + ") không thuộc chương trình khuyến mãi đang hiệu lực.");
+                int duocHuong = CuahangNongduoc.BusinessObject.ChonKhuyenMai.SoHangTangCanThem(quyTac, mua, 0);
+                if (cap.Value > duocHuong)
+                    throw new InvalidOperationException(
+                        "Hàng tặng (mã lô " + lo + ") vượt số lượng được hưởng: tặng " + cap.Value
+                        + ", tối đa " + duocHuong + " theo số lượng mua.");
+            }
+        }
+
         internal Dictionary<string, long> KiemTraUuDaiTuDong(DataTable details,
             CuahangNongduoc.BusinessObject.PhieuBan snapshot)
         {

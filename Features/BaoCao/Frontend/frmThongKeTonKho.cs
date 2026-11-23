@@ -278,9 +278,9 @@ namespace CuahangNongduoc
                     string.Format("{0:N0}", row["SO_LUONG"]),
                     string.Format("{0:N0}", row["DON_GIA_NHAP"]),
                     string.Format("{0:N0}", row["THANH_TIEN"]),
-                    Convert.ToDateTime(row["NGAY_NHAP"]).ToString("dd/MM/yyyy"),
-                    Convert.ToDateTime(row["NGAY_SAN_XUAT"]).ToString("dd/MM/yyyy"),
-                    Convert.ToDateTime(row["NGAY_HET_HAN"]).ToString("dd/MM/yyyy")
+                    NgayIn(row["NGAY_NHAP"]),
+                    NgayIn(row["NGAY_SAN_XUAT"]),
+                    NgayIn(row["NGAY_HET_HAN"])
                 };
 
                 x = left;
@@ -309,6 +309,13 @@ namespace CuahangNongduoc
             g.DrawString(TaoChuoiChiTieu(), fontFooter, Brushes.Black, new RectangleF(left, y, pageWidth, 80f));
 
             e.HasMorePages = false;
+        }
+
+        private static string NgayIn(object value)
+        {
+            if (value == null || value == DBNull.Value) return "";
+            DateTime d = Convert.ToDateTime(value);
+            return d == DateTime.MinValue ? "" : d.ToString("dd/MM/yyyy");
         }
 
         private string TaoChuoiChiTieu()
