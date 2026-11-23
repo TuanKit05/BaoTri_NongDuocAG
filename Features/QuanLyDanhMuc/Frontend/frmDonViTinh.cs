@@ -45,6 +45,12 @@ namespace CuahangNongduoc
             dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView.MultiSelect = false;
             colId.ReadOnly = true;
+            dataGridView.CellBeginEdit += delegate(object sender, DataGridViewCellCancelEventArgs e) {
+                if (mode == UnitMode.View || Source == null || e.RowIndex < 0 || e.RowIndex >= Source.Count)
+                { e.Cancel = true; return; }
+                DataRowView item = Source[e.RowIndex] as DataRowView;
+                e.Cancel = item == null || item.Row != editingRow || e.ColumnIndex == colId.Index;
+            };
             colTenDV.HeaderText = "Tên đơn vị tính";
             base.dataGridView = dataGridView;
             base.bindingNavigator = bindingNavigator;
@@ -89,11 +95,8 @@ namespace CuahangNongduoc
             toolChinhSua.Enabled = !editing && selected && allowed;
             toolLuu.Enabled = toolHuy.Enabled = editing && allowed;
             dataGridView.ReadOnly = !editing;
-            foreach (DataGridViewRow row in dataGridView.Rows)
-            {
-                DataRowView item = row.DataBoundItem as DataRowView;
-                row.ReadOnly = !editing || item == null || item.Row != editingRow;
-            }
+            // CurrencyManager may still be rebuilding grid rows during CurrentChanged.
+            // Restrict edits in CellBeginEdit instead of reading DataBoundItem here.
             foreach (ToolStripItem item in new ToolStripItem[] { bindingNavigatorMoveFirstItem,
                 bindingNavigatorMovePreviousItem, bindingNavigatorMoveNextItem, bindingNavigatorMoveLastItem,
                 bindingNavigatorPositionItem }) item.Enabled = !editing;
@@ -163,6 +166,14 @@ namespace CuahangNongduoc
             AccessControl.DemandCurrent("XoaPhieu");
             if (MessageBox.Show("Bạn có chắc muốn xóa đơn vị tính đang chọn?", Text,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            XoaDonViTinhDaChon();
+        }
+
+        internal void XoaDonViTinhDaChon()
+        {
+            if (mode != UnitMode.View || Source.Current == null) return;
+            AccessControl.DemandCurrent("SuaDanhMuc");
+            AccessControl.DemandCurrent("XoaPhieu");
             try
             {
                 ((DataRowView)Source.Current).Row.Delete();

@@ -16,8 +16,6 @@ namespace CuahangNongduoc
             m_PhieuNhap = ph;
             InitializeComponent();
             Text = "In phiếu nhập hàng";
-            Rectangle area = Screen.FromControl(this).WorkingArea;
-            Size = new Size(Math.Min(1050, area.Width - 32), Math.Min(800, area.Height - 32));
             StartPosition = FormStartPosition.CenterScreen;
             reportViewer.ZoomMode = Microsoft.Reporting.WinForms.ZoomMode.PageWidth;
             CuahangNongduoc.ResponsiveLayout.Attach(this);

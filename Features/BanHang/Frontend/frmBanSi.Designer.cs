@@ -543,7 +543,7 @@
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(68, 16);
             this.label14.TabIndex = 55;
-            this.label14.Text = "Giá bán lẽ";
+            this.label14.Text = "Giá bán lẻ";
             // 
             // label13
             // 
@@ -744,7 +744,7 @@
             this.grpPhieuBanLe.Size = new System.Drawing.Size(323, 231);
             this.grpPhieuBanLe.TabIndex = 60;
             this.grpPhieuBanLe.TabStop = false;
-            this.grpPhieuBanLe.Text = "Phiếu bán lẽ";
+            this.grpPhieuBanLe.Text = "Phiếu bán sỉ";
             // 
             // btnThemDaiLy
             // 
