@@ -88,6 +88,7 @@ namespace CuahangNongduoc
         private readonly Button btnSua = new Button();
         private readonly Button btnHuy = new Button();
         private readonly TextBox txtMa = new TextBox();
+        private readonly ComboBox cmbSanPhamTang = new ComboBox();
         private TableLayoutPanel fields;
         private static NumericUpDown Number(decimal max) { return new NumericUpDown { Maximum = max, ThousandsSeparator = true }; }
         public frmQLUuDai()
@@ -129,11 +130,12 @@ namespace CuahangNongduoc
                 new KeyValuePair<string,string>(UuDaiQuyDinh.LoaiChietKhau,"Chiết khấu (%)"),
                 new KeyValuePair<string,string>(UuDaiQuyDinh.LoaiKhuyenMai,"Mua hàng tặng hàng") };
             numGiaTri.Maximum=100; numGiaTri.DecimalPlaces=2;
+            cmbSanPhamTang.DropDownStyle = ComboBoxStyle.DropDownList; cmbSanPhamTang.DisplayMember = "Text"; cmbSanPhamTang.ValueMember = "Value";
             AddField("Mã ưu đãi",txtMa,0,0); AddField("Loại ưu đãi",cmbLoai,2,0);
             AddField("Tỷ lệ (%)",numGiaTri,0,1); AddField("Từ ngày",dtTuNgay,2,1);
             AddField("Tiền hàng tối thiểu",numToiThieuTien,0,2); AddField("Đến ngày",dtDenNgay,2,2);
             AddField("Số lượng tối thiểu",numToiThieuSL,0,3); AddField("",chkKhongHetHan,2,3); chkKhongHetHan.Text="Không hết hạn";
-            AddField("Số lượng mua",numMua,0,4); AddField("Số lượng tặng",numTang,2,4); AddField("Mã lô hàng tặng",txtMaSanPham,0,5);
+            AddField("Số lượng mua",numMua,0,4); AddField("Số lượng tặng",numTang,2,4); AddField("Sản phẩm tặng",cmbSanPhamTang,0,5);
             Label scope = new Label { Text="Áp dụng cho phiếu bán sỉ và bán lẻ mới. Để trống mã lô: mọi lô.", Dock=DockStyle.Fill, AutoSize=false };
             fields.Controls.Add(scope,2,5); fields.SetColumnSpan(scope,2);
             Label hint = new Label { Text="Giảm giá và chiết khấu tính trên tiền hàng; mỗi loại lấy mức cao nhất đủ điều kiện. Tổng tỷ lệ tối đa 100%.", Dock=DockStyle.Fill, AutoSize=false };
@@ -170,7 +172,29 @@ namespace CuahangNongduoc
         {
             bool promotion=Convert.ToString(cmbLoai.SelectedValue)==UuDaiQuyDinh.LoaiKhuyenMai;
             numGiaTri.Enabled=numToiThieuTien.Enabled=numToiThieuSL.Enabled=!promotion;
-            numMua.Enabled=numTang.Enabled=txtMaSanPham.Enabled=promotion; dtDenNgay.Enabled=!chkKhongHetHan.Checked;
+            numMua.Enabled=numTang.Enabled=cmbSanPhamTang.Enabled=promotion; dtDenNgay.Enabled=!chkKhongHetHan.Checked;
+            if(promotion && cmbSanPhamTang.Items.Count==0) LoadGiftProducts();
+        }
+        private void LoadGiftProducts()
+        {
+            cmbSanPhamTang.Items.Clear();
+            cmbSanPhamTang.Items.Add(new { Text = "(Không chọn)", Value = "" });
+            try {
+                using (OleDbConnection c = new OleDbConnection(DataService.m_ConnectString)) {
+                    c.Open();
+                    using (OleDbCommand cmd = new OleDbCommand(
+                        "SELECT TOP 50 ID, TEN_SAN_PHAM FROM SAN_PHAM WHERE NGAY_HET_HAN IS NOT NULL ORDER BY NGAY_HET_HAN ASC, ID ASC", c)) {
+                        using (OleDbDataReader dr = cmd.ExecuteReader()) {
+                            while (dr.Read()) {
+                                string id = Convert.ToString(dr[0]);
+                                string name = Convert.ToString(dr[1]);
+                                cmbSanPhamTang.Items.Add(new { Text = name + " (" + id + ")", Value = id });
+                            }
+                        }
+                    }
+                }
+            } catch { }
+            cmbSanPhamTang.SelectedIndex=0;
         }
         private void TaiLai()
         {
@@ -182,7 +206,8 @@ namespace CuahangNongduoc
             if(row!=null) {
                 UuDaiQuyDinh rule=UuDaiQuyDinh.TuDataRow(row.Row); txtMa.Text=idDangChon; cmbLoai.SelectedValue=rule.Loai;
                 numGiaTri.Value=Math.Max(0,Math.Min(100,rule.GiaTri)); numToiThieuTien.Value=Math.Max(0,Math.Min(numToiThieuTien.Maximum,rule.TienToiThieu));
-                numToiThieuSL.Value=Math.Max(0,rule.SoLuongToiThieu); numMua.Value=Math.Max(0,rule.MuaSl); numTang.Value=Math.Max(0,rule.TangSl); txtMaSanPham.Text=rule.MaSanPham;
+                numToiThieuSL.Value=Math.Max(0,rule.SoLuongToiThieu); numMua.Value=Math.Max(0,rule.MuaSl); numTang.Value=Math.Max(0,rule.TangSl);
+                cmbSanPhamTang.SelectedValue=rule.MaSanPham; if(cmbSanPhamTang.SelectedValue==null || Convert.ToString(cmbSanPhamTang.SelectedValue)!=rule.MaSanPham) cmbSanPhamTang.SelectedIndex=0;
                 dtTuNgay.Value=row["TU_NGAY"]==DBNull.Value?DateTime.Today:Convert.ToDateTime(row["TU_NGAY"]);
                 chkKhongHetHan.Checked=row["DEN_NGAY"]==DBNull.Value; dtDenNgay.Value=chkKhongHetHan.Checked?DateTime.Today.AddMonths(1):Convert.ToDateTime(row["DEN_NGAY"]);
             } else txtMa.Clear(); SetEditing(false);
@@ -192,14 +217,14 @@ namespace CuahangNongduoc
             UuDaiSettings.DemandAdmin();
             if(adding) {
                 idDangChon=null; txtMa.Text="Tự động khi lưu"; cmbLoai.SelectedIndex=0; numGiaTri.Value=0;
-                numToiThieuTien.Value=numToiThieuSL.Value=numMua.Value=numTang.Value=0; txtMaSanPham.Clear();
+                numToiThieuTien.Value=numToiThieuSL.Value=numMua.Value=numTang.Value=0; cmbSanPhamTang.SelectedIndex=0;
                 dtTuNgay.Value=DateTime.Today; dtDenNgay.Value=DateTime.Today.AddMonths(1); chkKhongHetHan.Checked=false;
             } SetEditing(true);
         }
         internal void LuuCauHinh()
         {
             string id=UuDaiSettings.Save(idDangChon,Convert.ToString(cmbLoai.SelectedValue),numGiaTri.Value,numToiThieuTien.Value,
-                Decimal.ToInt32(numToiThieuSL.Value),txtMaSanPham.Text,Decimal.ToInt32(numMua.Value),Decimal.ToInt32(numTang.Value),
+                Decimal.ToInt32(numToiThieuSL.Value),Convert.ToString(cmbSanPhamTang.SelectedValue ?? ""),Decimal.ToInt32(numMua.Value),Decimal.ToInt32(numTang.Value),
                 dtTuNgay.Value,chkKhongHetHan.Checked?(DateTime?)null:dtDenNgay.Value);
             TaiLai(); nguon.Position=nguon.Find("ID",id); ShowCurrent();
         }
