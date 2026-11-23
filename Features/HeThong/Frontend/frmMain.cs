@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using System.IO;
 
 namespace CuahangNongduoc
 {
@@ -242,6 +243,32 @@ namespace CuahangNongduoc
         {
             this.Close();
         }
+
+        private void toolSaoLuu_Click(object sender, EventArgs e)
+        {
+            string defaultName = "cuahang_sao_luu_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".dll";
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Sao lưu dữ liệu cửa hàng";
+                dialog.Filter = "Cơ sở dữ liệu Access (*.dll)|*.dll|Tất cả các tệp (*.*)|*.*";
+                dialog.FileName = defaultName;
+                dialog.InitialDirectory = Path.Combine(Path.GetDirectoryName(DataService.DatabasePath), "Backups");
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    DatabaseBackupService.Backup(dialog.FileName);
+                    MessageBox.Show(this, "Đã sao lưu toàn bộ dữ liệu thành công đến:\n" + dialog.FileName,
+                        "Sao lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception error)
+                {
+                    MessageBox.Show(this, ErrorLog.Describe(error, "Không thể sao lưu dữ liệu"),
+                        "Sao lưu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
         frmThongtinCuahang ThongtinCuahang = null;
         private void mnuTuychinhThongtin_Click(object sender, EventArgs e)
         {
@@ -389,6 +416,8 @@ namespace CuahangNongduoc
             toolPhieuChi.Visible = CoQuyen("ThuChi");
             toolThanhtoan.Visible = CoQuyen("ThuChi");
             toolTonKho.Visible = CoQuyen("BaoCaoTonKho");
+            // Keep the backup button discoverable; permission is enforced when it is clicked.
+            toolSaoLuu.Visible = true;
 
             itemDaiLy.Visible = CoQuyen("DaiLy");
             itemKhachHang.Visible = CoQuyen("KhachHang");

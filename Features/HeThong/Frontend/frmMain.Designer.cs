@@ -78,6 +78,7 @@
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.toolPhieuChi = new System.Windows.Forms.ToolStripButton();
             this.toolThanhtoan = new System.Windows.Forms.ToolStripButton();
+            this.toolSaoLuu = new System.Windows.Forms.ToolStripButton();
             this.taskPane = new XPExplorerBar.TaskPane();
             this.expando1 = new XPExplorerBar.Expando();
             this.itemDaiLy = new XPExplorerBar.TaskItem();
@@ -501,7 +502,8 @@
             this.toolPhieuChi,
             this.toolThanhtoan,
             this.toolStripSeparator4,
-            this.toolTonKho});
+            this.toolTonKho,
+            this.toolSaoLuu});
             this.toolStrip.Location = new System.Drawing.Point(0, 28);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Size = new System.Drawing.Size(1061, 51);
@@ -550,6 +552,18 @@
             this.toolThanhtoan.Text = "Phiếu thu";
             this.toolThanhtoan.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.toolThanhtoan.Click += new System.EventHandler(this.mnuThanhtoan_Click);
+            // 
+            // toolSaoLuu
+            // 
+            this.toolSaoLuu.Image = global::CuahangNongduoc.Properties.Resources.TonKho;
+            this.toolSaoLuu.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.toolSaoLuu.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolSaoLuu.Name = "toolSaoLuu";
+            this.toolSaoLuu.Size = new System.Drawing.Size(70, 48);
+            this.toolSaoLuu.Text = "Sao lưu";
+            this.toolSaoLuu.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.toolSaoLuu.ToolTipText = "Sao lưu toàn bộ dữ liệu";
+            this.toolSaoLuu.Click += new System.EventHandler(this.toolSaoLuu_Click);
             // 
             // taskPane
             // 
@@ -941,6 +955,7 @@
         private System.Windows.Forms.ToolStripButton toolBanLe;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripButton toolTonKho;
+        private System.Windows.Forms.ToolStripButton toolSaoLuu;
         private System.Windows.Forms.ToolStrip toolStrip;
         private XPExplorerBar.TaskPane taskPane;
         private XPExplorerBar.Expando expando1;
