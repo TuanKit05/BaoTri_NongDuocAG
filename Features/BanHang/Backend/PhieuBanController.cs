@@ -65,6 +65,7 @@ namespace CuahangNongduoc.Controller
 
             AccessControl.DemandCurrent("BanHang");
             bs.EndEdit();
+            factory.KiemTraHangTang(ctrlChiTiet.NewRow().Table);
             Dictionary<string, long> configuredDiscounts = factory.KiemTraUuDaiTuDong(ctrlChiTiet.NewRow().Table, phi);
             if (phi != null) factory.DatTienGiamGia(phi.Id, phi.TienGiam);
             using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))

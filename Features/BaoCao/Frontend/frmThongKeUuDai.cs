@@ -77,6 +77,8 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             ThemCot("TongTien", "Tổng tiền", 90F, "N0");
             ThemCot("TienChietKhauGiamGia", "Chiết khấu / giảm giá", 105F, "N0");
             ThemCot("TienKhuyenMai", "Khuyến mãi", 90F, "N0");
+            ThemCot("SoLuongHangTang", "SL hàng tặng", 70F, "N0");
+            ThemCot("GiaVonHangTang", "Giá vốn hàng tặng", 95F, "N0");
             ThemCot("TongUuDai", "Tổng ưu đãi", 90F, "N0");
             ThemCot("GhiChuKhuyenMai", "Ghi chú", 130F);
         }
@@ -185,7 +187,8 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
                 "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ? " +
                 "AND (IIF(IsNull(PB.TIEN_CHIET_KHAU),0,PB.TIEN_CHIET_KHAU) <> 0 " +
                 "OR IIF(IsNull(PB.TIEN_GIAM_GIA),0,PB.TIEN_GIAM_GIA) <> 0 " +
-                "OR IIF(IsNull(PB.TIEN_KHUYEN_MAI),0,PB.TIEN_KHUYEN_MAI) <> 0) " +
+                "OR IIF(IsNull(PB.TIEN_KHUYEN_MAI),0,PB.TIEN_KHUYEN_MAI) <> 0 " +
+                "OR PB.ID IN (SELECT CT.ID_PHIEU_BAN FROM CHI_TIET_PHIEU_BAN AS CT WHERE CT.LA_HANG_TANG = True)) " +
                 employeeCondition + " ORDER BY PB.ID_NHAN_VIEN, PB.NGAY_BAN, PB.ID";
 
             using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
@@ -214,7 +217,42 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
                     }
                 }
             }
+            GanHangTangVaoHoaDon(rows, fromDate, toDate, employeeId);
             return rows;
+        }
+
+        // YC-BC-03: hàng tặng nằm ở dòng chi tiết (LA_HANG_TANG = True); gắn số lượng và giá vốn đã lưu vào từng hóa đơn
+        private static void GanHangTangVaoHoaDon(List<ThongKeUuDai> rows, DateTime fromDate, DateTime toDate, string employeeId)
+        {
+            Dictionary<string, ThongKeUuDai> theoPhieu = new Dictionary<string, ThongKeUuDai>(StringComparer.Ordinal);
+            foreach (ThongKeUuDai row in rows) theoPhieu[row.MaHoaDon] = row;
+
+            string employeeCondition = String.IsNullOrEmpty(employeeId) ? String.Empty : " AND PB.ID_NHAN_VIEN = ?";
+            string sql = "SELECT CT.ID_PHIEU_BAN, SUM(CT.SO_LUONG) AS SL_TANG, SUM(CT.THANH_TIEN_GIA_VON) AS GIA_VON_TANG " +
+                "FROM CHI_TIET_PHIEU_BAN AS CT INNER JOIN PHIEU_BAN AS PB ON CT.ID_PHIEU_BAN = PB.ID " +
+                "WHERE CT.LA_HANG_TANG = True AND PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?" +
+                employeeCondition + " GROUP BY CT.ID_PHIEU_BAN";
+
+            using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
+            using (OleDbCommand command = new OleDbCommand(sql, connection))
+            {
+                command.Parameters.Add("?", OleDbType.Date).Value = fromDate;
+                command.Parameters.Add("?", OleDbType.Date).Value = toDate.AddDays(1);
+                if (!String.IsNullOrEmpty(employeeId))
+                    command.Parameters.Add("?", OleDbType.VarWChar).Value = employeeId;
+
+                connection.Open();
+                using (OleDbDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        ThongKeUuDai row;
+                        if (!theoPhieu.TryGetValue(DocChuoi(reader["ID_PHIEU_BAN"]), out row)) continue;
+                        row.SoLuongHangTang = (int)DocTien(reader["SL_TANG"]);
+                        row.GiaVonHangTang = DocTien(reader["GIA_VON_TANG"]);
+                    }
+                }
+            }
         }
 
         private void HienThiKetQuaTheoNhanVien()
@@ -226,35 +264,42 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             decimal sumTotal = 0;
             decimal sumDiscount = 0;
             decimal sumPromotion = 0;
+            int sumGiftQty = 0;
+            decimal sumGiftCost = 0;
 
             foreach (ThongKeUuDai row in ketQua)
             {
                 if (currentEmployee != null && currentEmployee != row.MaNhanVien)
                 {
-                    ThemDongTongNhanVien(currentEmployee, currentEmployeeName, invoiceCount, sumTotal, sumDiscount, sumPromotion);
+                    ThemDongTongNhanVien(currentEmployee, currentEmployeeName, invoiceCount, sumTotal,
+                        sumDiscount, sumPromotion, sumGiftQty, sumGiftCost);
                     invoiceCount = 0; sumTotal = 0; sumDiscount = 0; sumPromotion = 0;
+                    sumGiftQty = 0; sumGiftCost = 0;
                 }
                 currentEmployee = row.MaNhanVien;
                 currentEmployeeName = row.TenNhanVien;
                 this.dgvThongKeUuDai.Rows.Add(row.MaHoaDon, row.NgayBan, row.MaNhanVien,
                     row.TenNhanVien, row.TongTien, row.TienChietKhauGiamGia, row.TienKhuyenMai,
-                    row.TongUuDai, row.GhiChuKhuyenMai);
+                    row.SoLuongHangTang, row.GiaVonHangTang, row.TongUuDai, row.GhiChuKhuyenMai);
                 invoiceCount++;
                 sumTotal += row.TongTien;
                 sumDiscount += row.TienChietKhauGiamGia;
                 sumPromotion += row.TienKhuyenMai;
+                sumGiftQty += row.SoLuongHangTang;
+                sumGiftCost += row.GiaVonHangTang;
             }
 
             if (currentEmployee != null)
-                ThemDongTongNhanVien(currentEmployee, currentEmployeeName, invoiceCount, sumTotal, sumDiscount, sumPromotion);
+                ThemDongTongNhanVien(currentEmployee, currentEmployeeName, invoiceCount, sumTotal,
+                    sumDiscount, sumPromotion, sumGiftQty, sumGiftCost);
         }
 
         private void ThemDongTongNhanVien(string employeeId, string employeeName, int count,
-            decimal total, decimal discount, decimal promotion)
+            decimal total, decimal discount, decimal promotion, int giftQty, decimal giftCost)
         {
             int index = this.dgvThongKeUuDai.Rows.Add(
                 "TỔNG " + count.ToString() + " HÓA ĐƠN", null, employeeId, employeeName,
-                total, discount, promotion, discount + promotion, String.Empty);
+                total, discount, promotion, giftQty, giftCost, discount + promotion + giftCost, String.Empty);
             DataGridViewRow row = this.dgvThongKeUuDai.Rows[index];
             row.DefaultCellStyle.Font = new Font(this.dgvThongKeUuDai.Font, FontStyle.Bold);
             row.DefaultCellStyle.BackColor = Color.AliceBlue;
@@ -394,7 +439,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             MessageBox.Show(this, "Trong hộp thoại in, chọn máy in \"Microsoft Print to PDF\" rồi chọn nơi lưu tệp.",
                 "Xuất PDF", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            float[] trongSo = { 1.0f, 1.0f, 1.0f, 1.6f, 1.3f, 1.5f, 1.3f, 1.3f, 2.0f };
+            float[] trongSo = { 1.0f, 1.0f, 1.0f, 1.6f, 1.3f, 1.5f, 1.3f, 0.9f, 1.3f, 1.3f, 2.0f };
             Font fChu = new Font("Arial", 8f);
             Font fDam = new Font("Arial", 8f, FontStyle.Bold);
             Font fTieuDe = new Font("Arial", 12f, FontStyle.Bold);
