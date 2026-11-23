@@ -294,7 +294,7 @@ namespace CuahangNongduoc.DataLayer
             cmd.Parameters.Add("ten", OleDbType.VarWChar, 255).Value = tenDichVu;
             object ma = cmd.ExecuteScalar();
             if (ma == null || ma == DBNull.Value)
-                throw new InvalidOperationException("Dịch vụ \"" + tenDichVu + "\" chưa có trong danh mục dịch vụ đang sử dụng. Hãy thêm vào danh mục trước.");
+                throw new InvalidOperationException("Dịch vụ \"" + tenDichVu + "\" chưa có trong danh mục dịch vụ đang sử dụng. Hãy chọn dịch vụ trong danh mục hoặc thêm vào Danh mục dịch vụ trước.");
             return ma;
         }
     }

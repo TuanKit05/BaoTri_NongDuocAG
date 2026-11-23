@@ -34,17 +34,19 @@ namespace CuahangNongduoc
         public frmBanLe()
         {
             InitializeComponent();
+            CauHinhCotDichVu();
             SaleLotDisplay.Attach(dgvDanhsachSP, colMaSanPham);
             toolHuy.Name = "toolHuy";
             bindingNavigator.Items.Insert(bindingNavigator.Items.IndexOf(toolLuu) + 1, toolHuy);
             toolHuy.Click += delegate { HuyThayDoi(); };
             Shown += delegate { Allow(status != Controll.Normal); };
-            FormClosing += delegate(object sender, FormClosingEventArgs e) {
+            FormClosing += delegate (object sender, FormClosingEventArgs e) {
                 if (status == Controll.Normal) return;
                 DialogResult answer = MessageBox.Show("Bạn có muốn lưu thay đổi trước khi đóng?", TieuDeThongBao,
                     MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 if (answer == DialogResult.Cancel) e.Cancel = true;
-                else if (answer == DialogResult.Yes) {
+                else if (answer == DialogResult.Yes)
+                {
                     if (!Luu()) e.Cancel = true;
                     else status = Controll.Normal;
                 }
@@ -54,7 +56,7 @@ namespace CuahangNongduoc
             numThanhTien.DecimalPlaces = 0;
             numThanhTien.Maximum = Int64.MaxValue;
             numConNo.ReadOnly = true;
-            dgvDanhsachSP.CellEndEdit += delegate(object sender, DataGridViewCellEventArgs e) {
+            dgvDanhsachSP.CellEndEdit += delegate (object sender, DataGridViewCellEventArgs e) {
                 if (dangNapDuLieu || status == Controll.Normal || e.RowIndex < 0) return;
                 DataRowView row = dgvDanhsachSP.Rows[e.RowIndex].DataBoundItem as DataRowView;
                 if (row == null) return;
@@ -314,7 +316,7 @@ namespace CuahangNongduoc
                         BindingSource allocated = dgvDanhsachSP.DataSource as BindingSource;
                         List<string> lotIds = new List<string>();
                         if (allocated != null) foreach (DataRowView line in allocated)
-                            if (!LaHangTang(line) && !lotIds.Contains(Convert.ToString(line["ID_MA_SAN_PHAM"]))) lotIds.Add(Convert.ToString(line["ID_MA_SAN_PHAM"]));
+                                if (!LaHangTang(line) && !lotIds.Contains(Convert.ToString(line["ID_MA_SAN_PHAM"]))) lotIds.Add(Convert.ToString(line["ID_MA_SAN_PHAM"]));
                         foreach (string lotId in lotIds) ThemHangTangKhuyenMai(lotId);
                     }
                     return;
@@ -528,8 +530,53 @@ namespace CuahangNongduoc
             DongBoPhi();
         }
 
+        // Cột "Tên dịch vụ" là ô chọn từ danh mục DICH_VU đang sử dụng.
+        // DocDichVu() vẫn đọc r.Cells["colDichVuTen"] nên không cần sửa.
+        private DataTable danhMucDichVu;
+
+        private void CauHinhCotDichVu()
+        {
+            danhMucDichVu = new DataLayer.DichVuFactory().DanhSachDangSuDung();
+
+            int viTri = dgvDichVu.Columns["colDichVuTen"].Index;
+            dgvDichVu.Columns.RemoveAt(viTri);
+
+            DataGridViewComboBoxColumn cot = new DataGridViewComboBoxColumn();
+            cot.Name = "colDichVuTen";
+            cot.HeaderText = "Tên dịch vụ";
+            cot.DataSource = danhMucDichVu;
+            cot.DisplayMember = "TEN_DICH_VU";
+            cot.ValueMember = "TEN_DICH_VU";
+            cot.Width = 220;
+            cot.MinimumWidth = 6;
+            dgvDichVu.Columns.Insert(viTri, cot);
+
+            dgvDichVu.DataError += dgvDichVu_DataError;
+        }
+
+        // Dịch vụ không còn trong danh mục đang sử dụng: báo người dùng thay vì để lỗi hiện thô
+        private void dgvDichVu_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            if (e.ColumnIndex != dgvDichVu.Columns["colDichVuTen"].Index) return;
+            e.ThrowException = false;
+            MessageBox.Show("Dịch vụ này không còn trong danh mục đang sử dụng. Hãy chọn dịch vụ khác từ danh sách.",
+                "Dịch vụ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        // Chọn tên dịch vụ thì tự điền số tiền theo đơn giá trong danh mục
         private void dgvDichVu_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex >= 0 && dgvDichVu.Columns[e.ColumnIndex].Name == "colDichVuTen")
+            {
+                DataGridViewRow r = dgvDichVu.Rows[e.RowIndex];
+                string ten = Convert.ToString(r.Cells["colDichVuTen"].Value);
+                if (!string.IsNullOrEmpty(ten))
+                {
+                    DataRow[] tim = danhMucDichVu.Select("TEN_DICH_VU = '" + ten.Replace("'", "''") + "'");
+                    if (tim.Length > 0 && tim[0]["DON_GIA"] != DBNull.Value)
+                        r.Cells["colDichVuTien"].Value = Convert.ToInt64(tim[0]["DON_GIA"]).ToString();
+                }
+            }
             DongBoPhi();
         }
 
@@ -695,7 +742,8 @@ namespace CuahangNongduoc
             hoaDon.NapUuDai(PhieuBanController.DanhSachUuDaiHieuLuc());
             dangNapDuLieu = true;
             status = Controll.AddNew;
-            try {
+            try
+            {
                 GanNguonPhieu();
                 txtMaPhieu.Text = IdGenerator.Next("PHIEU_BAN");
                 ctrlChiTiet.HienThiChiTiet(dgvDanhsachSP, "-1");

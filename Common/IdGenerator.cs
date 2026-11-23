@@ -11,7 +11,7 @@ namespace CuahangNongduoc
     public static class IdGenerator
     {
         private static readonly string[] Tables = { "SAN_PHAM", "KHACH_HANG", "NHA_CUNG_CAP",
-            "PHIEU_BAN", "PHIEU_NHAP", "PHIEU_CHI", "PHIEU_THANH_TOAN", "TAI_KHOAN", "UU_DAI" };
+            "PHIEU_BAN", "PHIEU_NHAP", "PHIEU_CHI", "PHIEU_THANH_TOAN", "TAI_KHOAN", "UU_DAI", "DICH_VU" };
         private static readonly object SchemaLock = new object();
 
         public static void EnsureSchema(OleDbConnection connection)
