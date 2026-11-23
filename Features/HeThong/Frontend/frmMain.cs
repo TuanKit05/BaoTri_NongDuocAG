@@ -28,7 +28,8 @@ namespace CuahangNongduoc
                 BeginInvoke(new MethodInvoker(delegate {
                     if (IsDisposed || Disposing) return;
                     try { ExpiryWarning.ShowIfNeeded(this); }
-                    catch (Exception error) {
+                    catch (Exception error)
+                    {
                         MessageBox.Show(this, ErrorLog.Describe(error, "Không thể kiểm tra hàng sắp hết hạn"),
                             "Cảnh báo kho", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
@@ -40,7 +41,7 @@ namespace CuahangNongduoc
         private void ConfigureToolbarImages()
         {
             menuStrip.ImageScalingSize = new Size(16, 16);
-            menuStrip.ItemAdded += delegate(object sender, ToolStripItemEventArgs e) {
+            menuStrip.ItemAdded += delegate (object sender, ToolStripItemEventArgs e) {
                 e.Item.ImageScaling = ToolStripItemImageScaling.SizeToFit;
             };
             foreach (ToolStripItem item in menuStrip.Items)
@@ -226,6 +227,13 @@ namespace CuahangNongduoc
             if (!KiemTraQuyen("BaoCaoTonKho")) return;
             ShowChildForm(ref ThongKeTonKho);
         }
+        CuahangNongduoc.Features.BaoCao.Frontend.frmTonKhoTaiNgay TonKhoTaiNgay = null;
+        private ToolStripMenuItem mnuTonKhoTaiNgayItem;
+        private void mnuTonKhoTaiNgay_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyen("BaoCaoTonKho")) return;
+            ShowChildForm(ref TonKhoTaiNgay);
+        }
         frmSoLuongBan SoLuongBan = null;
         private void mnuSoLuongBan_Click(object sender, EventArgs e)
         {
@@ -312,10 +320,13 @@ namespace CuahangNongduoc
             discounts.Name = "mnuCauHinhUuDai";
             discounts.Visible = AppSession.CurrentUser != null && AccountRoles.IsAdmin(AppSession.CurrentUser.Role);
             discounts.Click += delegate {
-                try {
+                try
+                {
                     UuDaiSettings.DemandAdmin();
                     using (frmQLUuDai form = new frmQLUuDai()) form.ShowDialog(this);
-                } catch (Exception error) {
+                }
+                catch (Exception error)
+                {
                     MessageBox.Show(this, error.Message, "Cấu hình ưu đãi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             };
@@ -342,6 +353,11 @@ namespace CuahangNongduoc
                 new CuahangNongduoc.Features.BaoCao.ThongKeUuDai.frmThongKeUuDai().ShowDialog(this);
             };
             mnuBaocao.DropDownItems.Add(report);
+            mnuTonKhoTaiNgayItem = new ToolStripMenuItem("Tồn kho tại ngày");
+            mnuTonKhoTaiNgayItem.Name = "mnuTonKhoTaiNgay";
+            mnuTonKhoTaiNgayItem.Visible = AccessControl.Can("BaoCaoTonKho");
+            mnuTonKhoTaiNgayItem.Click += mnuTonKhoTaiNgay_Click;
+            mnuBaocao.DropDownItems.Add(mnuTonKhoTaiNgayItem);
             ToolStripMenuItem audit = new ToolStripMenuItem("Nhật ký thao tác");
             audit.Visible = AccessControl.Can("XemNhatKy");
             audit.Click += delegate {
@@ -399,6 +415,7 @@ namespace CuahangNongduoc
 
             mnuBaocaoSoluongton.Visible = CoQuyen("BaoCaoTonKho");
             mnuThongKeTonKho.Visible = CoQuyen("BaoCaoTonKho");
+            if (mnuTonKhoTaiNgayItem != null) mnuTonKhoTaiNgayItem.Visible = CoQuyen("BaoCaoTonKho");
             mnuSanphamHethan.Visible = CoQuyen("BaoCaoTonKho");
             mnuSoLuongBan.Visible = CoQuyen("BaoCaoBanHang");
             mnuBaocao.Visible = CoQuyen("BaoCaoTonKho") || CoQuyen("BaoCaoBanHang");

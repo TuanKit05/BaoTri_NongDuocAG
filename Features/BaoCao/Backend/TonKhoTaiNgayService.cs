@@ -16,6 +16,7 @@ namespace CuahangNongduoc.Features.BaoCao.Backend
         public string TenSanPham { get; set; }
         public string TenDonVi { get; set; }
         public DateTime NgayNhap { get; set; }
+        public DateTime? NgaySanXuat { get; set; }
         public DateTime? NgayHetHan { get; set; }
         public long SoLuongHienTai { get; set; }
         public long SoLuongTaiNgay { get; set; }
@@ -61,7 +62,7 @@ namespace CuahangNongduoc.Features.BaoCao.Backend
             DataService dsLo = new DataService();
             dsLo.Load(new OleDbCommand(
                 "SELECT MSP.ID AS MA_LO, SP.ID AS MA_SP, SP.TEN_SAN_PHAM, DVT.TEN_DON_VI, " +
-                "MSP.SO_LUONG, MSP.DON_GIA_NHAP, MSP.NGAY_NHAP, MSP.NGAY_HET_HAN " +
+                "MSP.SO_LUONG, MSP.DON_GIA_NHAP, MSP.NGAY_NHAP, MSP.NGAY_SAN_XUAT, MSP.NGAY_HET_HAN " +
                 "FROM ((MA_SAN_PHAM MSP INNER JOIN SAN_PHAM SP ON MSP.ID_SAN_PHAM = SP.ID) " +
                 "INNER JOIN DON_VI_TINH DVT ON SP.ID_DON_VI_TINH = DVT.ID) " +
                 "ORDER BY SP.TEN_SAN_PHAM, MSP.NGAY_NHAP"));
@@ -93,6 +94,7 @@ namespace CuahangNongduoc.Features.BaoCao.Backend
                 lo.TenSanPham = Convert.ToString(r["TEN_SAN_PHAM"]);
                 lo.TenDonVi = Convert.ToString(r["TEN_DON_VI"]);
                 lo.NgayNhap = ngayNhap;
+                lo.NgaySanXuat = r["NGAY_SAN_XUAT"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["NGAY_SAN_XUAT"]);
                 lo.NgayHetHan = r["NGAY_HET_HAN"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["NGAY_HET_HAN"]);
                 lo.SoLuongHienTai = tonHienTai;
                 lo.SoLuongTaiNgay = tonTaiNgay;

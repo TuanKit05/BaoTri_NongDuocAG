@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Data;
 using System.Data.OleDb;
+using CuahangNongduoc.Features.BaoCao.Backend;
 
 namespace CuahangNongduoc.DataLayer
 {
@@ -102,11 +103,12 @@ namespace CuahangNongduoc.DataLayer
         {
             KiemTraKhoangNgay(tuNgay, denNgay);
 
-            OleDbCommand cmd = TaoLenhThongKeTonKho(
-                tuNgay, denNgay);
-
-            LoadFresh(cmd);
-            return m_Ds;
+            // YC-BC-01: tồn cuối kỳ (tại denNgay) của mọi lô còn hàng, kể cả lô nhập trước tuNgay.
+            // Tính theo sổ biến động kho (BIEN_DONG_KHO) thông qua TonKhoTaiNgayService.
+            KetQuaTonKho kq = new TonKhoTaiNgayService().LayTonKhoTaiNgay(denNgay.Date);
+            DataTable ketQua = TaoBangTonKho(kq);
+            AccessControl.HideCosts(ketQua);
+            return ketQua;
         }
 
         private static void KiemTraKhoangNgay(
@@ -119,38 +121,38 @@ namespace CuahangNongduoc.DataLayer
             }
         }
 
-        private static OleDbCommand TaoLenhThongKeTonKho(
-            DateTime tuNgay, DateTime denNgay)
+        // Chuyển kết quả tồn tại ngày sang dạng bảng mà frmThongKeTonKho đang hiển thị.
+        private static DataTable TaoBangTonKho(KetQuaTonKho kq)
         {
-            string sql =
-                "SELECT MSP.ID AS MA_LO, SP.ID AS MA_SP, " +
-                "SP.TEN_SAN_PHAM, DVT.TEN_DON_VI, " +
-                "MSP.SO_LUONG, MSP.DON_GIA_NHAP, " +
-                "(MSP.SO_LUONG * MSP.DON_GIA_NHAP) AS THANH_TIEN, " +
-                "MSP.NGAY_NHAP, MSP.NGAY_SAN_XUAT, " +
-                "MSP.NGAY_HET_HAN " +
-                "FROM ((MA_SAN_PHAM MSP " +
-                "INNER JOIN SAN_PHAM SP " +
-                "ON MSP.ID_SAN_PHAM = SP.ID) " +
-                "INNER JOIN DON_VI_TINH DVT " +
-                "ON SP.ID_DON_VI_TINH = DVT.ID) " +
-                "WHERE MSP.SO_LUONG > 0 " +
-                "AND MSP.NGAY_NHAP >= @tu " +
-                "AND MSP.NGAY_NHAP < @den " +
-                "ORDER BY SP.TEN_SAN_PHAM, MSP.NGAY_NHAP";
+            DataTable tbl = new DataTable();
+            tbl.Columns.Add("MA_LO", typeof(string));
+            tbl.Columns.Add("MA_SP", typeof(string));
+            tbl.Columns.Add("TEN_SAN_PHAM", typeof(string));
+            tbl.Columns.Add("TEN_DON_VI", typeof(string));
+            tbl.Columns.Add("SO_LUONG", typeof(long));
+            tbl.Columns.Add("DON_GIA_NHAP", typeof(decimal));
+            tbl.Columns.Add("THANH_TIEN", typeof(decimal));
+            tbl.Columns.Add("NGAY_NHAP", typeof(DateTime));
+            tbl.Columns.Add("NGAY_SAN_XUAT", typeof(DateTime));
+            tbl.Columns.Add("NGAY_HET_HAN", typeof(DateTime));
 
-            OleDbCommand cmd = new OleDbCommand(sql);
-
-            cmd.Parameters.Add("tu", OleDbType.Date)
-                .Value = tuNgay.Date;
-
-            cmd.Parameters.Add("den", OleDbType.Date)
-                .Value = denNgay.Date.AddDays(1);
-
-            return cmd;
+            foreach (TonKhoLo lo in kq.DanhSach)
+            {
+                DataRow r = tbl.NewRow();
+                r["MA_LO"] = lo.MaLo;
+                r["MA_SP"] = lo.MaSp;
+                r["TEN_SAN_PHAM"] = lo.TenSanPham;
+                r["TEN_DON_VI"] = lo.TenDonVi;
+                r["SO_LUONG"] = lo.SoLuongTaiNgay;
+                r["DON_GIA_NHAP"] = lo.DonGiaNhap;
+                r["THANH_TIEN"] = lo.GiaTriTaiNgay;
+                r["NGAY_NHAP"] = lo.NgayNhap;
+                if (lo.NgaySanXuat.HasValue) r["NGAY_SAN_XUAT"] = lo.NgaySanXuat.Value;
+                if (lo.NgayHetHan.HasValue) r["NGAY_HET_HAN"] = lo.NgayHetHan.Value;
+                tbl.Rows.Add(r);
+            }
+            return tbl;
         }
-
-
 
         public static void CapNhatSoLuong(String masp, int so_luong)
         {
