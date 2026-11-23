@@ -48,6 +48,7 @@ namespace CuahangNongduoc
     public static class AccessControl
     {
         [ThreadStatic] internal static OleDbTransaction SaleTransaction;
+        [ThreadStatic] internal static Dictionary<string, long> SaleAutomaticDiscounts;
         public static bool Can(string permission){return new DatabaseRolePolicy(AppSession.CurrentUser).CanAccess(permission);}
         public static void Demand(string permission)
         { if(!Can(permission)) throw new UnauthorizedAccessException("Bạn không có quyền thực hiện thao tác: "+permission); }
@@ -161,6 +162,13 @@ namespace CuahangNongduoc
             else if(Uses(sql,"THAM_SO") || Uses(sql,"CAU_HINH") || Uses(sql,"CAU_HINH_KHO")) DemandCurrent("QuanTri");
             else DemandCurrent("SuaDanhMuc");
         }
+        private static bool IsConfiguredDiscount(DataRow row, string field)
+        {
+            long expected;
+            return field == "TIEN_GIAM_GIA" && SaleTransaction != null && SaleAutomaticDiscounts != null &&
+                SaleAutomaticDiscounts.TryGetValue(Convert.ToString(row["ID"]), out expected) &&
+                Convert.ToDecimal(row[field]) == expected;
+        }
         public static void ValidateRows(DataTable table,string sql)
         {
             foreach(DataRow row in table.Rows)
@@ -176,7 +184,8 @@ namespace CuahangNongduoc
                     {
                         DemandCurrent("BanHang"); row["ID_NHAN_VIEN"]=AppSession.CurrentUser.Id;
                         if(!Can("ThietLapUuDai")) foreach(string field in new string[]{"TIEN_CHIET_KHAU","TIEN_GIAM_GIA","TIEN_KHUYEN_MAI","GIAM_GIA_GIA_TRI","GIAM_GIA_TIEN"})
-                            if(table.Columns.Contains(field) && row[field]!=DBNull.Value && Convert.ToDecimal(row[field])!=0)
+                            if(table.Columns.Contains(field) && row[field]!=DBNull.Value && Convert.ToDecimal(row[field])!=0 &&
+                                !IsConfiguredDiscount(row, field))
                                 throw new UnauthorizedAccessException("Nhân viên không được tự thay đổi mức ưu đãi.");
                     }
                     else DemandCurrent("SuaPhieuBan");

@@ -11,7 +11,7 @@ namespace CuahangNongduoc
     public static class IdGenerator
     {
         private static readonly string[] Tables = { "SAN_PHAM", "KHACH_HANG", "NHA_CUNG_CAP",
-            "PHIEU_BAN", "PHIEU_NHAP", "PHIEU_CHI", "PHIEU_THANH_TOAN", "TAI_KHOAN" };
+            "PHIEU_BAN", "PHIEU_NHAP", "PHIEU_CHI", "PHIEU_THANH_TOAN", "TAI_KHOAN", "UU_DAI" };
         private static readonly object SchemaLock = new object();
 
         public static void EnsureSchema(OleDbConnection connection)
@@ -71,6 +71,7 @@ namespace CuahangNongduoc
             else if (table == "PHIEU_NHAP") AccessControl.DemandCurrent("NhapHang");
             else if (table == "PHIEU_CHI" || table == "PHIEU_THANH_TOAN") AccessControl.DemandCurrent("ThuChi");
             else if (table == "TAI_KHOAN") AccessControl.DemandCurrent("QuanLyTaiKhoan");
+            else if (table == "UU_DAI") AccessControl.DemandCurrent("ThietLapUuDai");
             else if (table == "SAN_PHAM") AccessControl.DemandCreateProduct();
             else if (table == "KHACH_HANG" && AccessControl.CanAddCustomer())
             { AccessControl.DemandCurrent("BanHang"); AccessControl.DemandCurrent("KhachHang"); }

@@ -38,6 +38,7 @@ namespace CuahangNongduoc.BusinessObject
     public class UuDaiQuyDinh
     {
         public const String LoaiGiamPhanTram = "GIAM_PHAN_TRAM";
+        public const String LoaiChietKhau = "CHIET_KHAU";
         public const String LoaiKhuyenMai = "KHUYEN_MAI";
         public const String PhamViHoaDon = "HOA_DON";
 
@@ -144,17 +145,20 @@ namespace CuahangNongduoc.BusinessObject
             if (dsUuDai == null)
                 return 0;
             double cao = 0;
+            double chietKhau = 0;
             foreach (UuDaiQuyDinh ud in dsUuDai)
             {
-                if (ud.Loai != UuDaiQuyDinh.LoaiGiamPhanTram || ud.PhamVi != UuDaiQuyDinh.PhamViHoaDon)
+                if ((ud.Loai != UuDaiQuyDinh.LoaiGiamPhanTram && ud.Loai != UuDaiQuyDinh.LoaiChietKhau) || ud.PhamVi != UuDaiQuyDinh.PhamViHoaDon)
                     continue;
                 if (tienHang < ud.TienToiThieu || tongSoLuong < ud.SoLuongToiThieu)
                     continue;
                 double phanTram = (double)ud.GiaTri;
-                if (phanTram > cao)
+                if (ud.Loai == UuDaiQuyDinh.LoaiChietKhau)
+                    chietKhau = Math.Max(chietKhau, phanTram);
+                else if (phanTram > cao)
                     cao = phanTram;
             }
-            return cao > 100 ? 100 : cao;
+            return Math.Min(100, cao + chietKhau);
         }
     }
 }

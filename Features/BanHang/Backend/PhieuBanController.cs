@@ -18,12 +18,12 @@ namespace CuahangNongduoc.Controller
 
         public PhieuBanController()
         {
-            bs.DataSource = factory.LayPhieuBan("-1");
+            bs.DataSource = factory.NapPhieuBan("-1");
         }
 
         public void TaiPhieuBan(string id)
         {
-            bs.DataSource = factory.LayPhieuBan(id);
+            bs.DataSource = factory.NapPhieuBan(id);
         }
 
         public DataRow NewRow()
@@ -65,6 +65,8 @@ namespace CuahangNongduoc.Controller
 
             AccessControl.DemandCurrent("BanHang");
             bs.EndEdit();
+            Dictionary<string, long> configuredDiscounts = factory.KiemTraUuDaiTuDong(ctrlChiTiet.NewRow().Table, phi);
+            if (phi != null) factory.DatTienGiamGia(phi.Id, phi.TienGiam);
             using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
             {
                 conn.Open();
@@ -73,15 +75,18 @@ namespace CuahangNongduoc.Controller
                     try
                     {
                         AccessControl.SaleTransaction = tr;
+                        AccessControl.SaleAutomaticDiscounts = configuredDiscounts;
                         factory.SaveTrongGiaoDich(conn, tr);
                         if (phi != null) factory.LuuDichVuTrongGiaoDich(conn, tr, phi.Id, phi.DichVu);
                         ctrlChiTiet.SaveTrongGiaoDich(conn, tr);
                         tr.Commit();
                         AccessControl.SaleTransaction = null;
+                        AccessControl.SaleAutomaticDiscounts = null;
                     }
                     catch
                     {
                         AccessControl.SaleTransaction = null;
+                        AccessControl.SaleAutomaticDiscounts = null;
                         ErrorLog.Rollback(tr, "Rollback Access");
                         throw;
                     }

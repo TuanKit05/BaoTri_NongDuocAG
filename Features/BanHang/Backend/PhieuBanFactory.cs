@@ -37,6 +37,14 @@ namespace CuahangNongduoc.DataLayer
         }
 
 
+        internal DataTable NapPhieuBan(String id)
+        {
+            OleDbCommand cmd = new OleDbCommand("SELECT * FROM PHIEU_BAN WHERE ID=?");
+            cmd.Parameters.Add("id", OleDbType.VarChar, 50).Value = id;
+            m_Ds.Load(cmd);
+            return m_Ds;
+        }
+
         public DataTable LayPhieuBan(String id)
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM PHIEU_BAN WHERE ID = @id");
@@ -103,6 +111,38 @@ namespace CuahangNongduoc.DataLayer
         public bool CoPhieuMoi()
         {
             return m_Ds.GetChanges(DataRowState.Added) != null;
+        }
+
+        internal Dictionary<string, long> KiemTraUuDaiTuDong(DataTable details,
+            CuahangNongduoc.BusinessObject.PhieuBan snapshot)
+        {
+            Dictionary<string, long> allowed = new Dictionary<string, long>(StringComparer.Ordinal);
+            if (AccessControl.Can("ThietLapUuDai")) return allowed;
+            IList<CuahangNongduoc.BusinessObject.UuDaiQuyDinh> rules =
+                CuahangNongduoc.Controller.PhieuBanController.DanhSachUuDaiHieuLuc();
+            foreach (DataRow header in m_Ds.Rows)
+            {
+                if (header.RowState != DataRowState.Added) continue;
+                string id = Convert.ToString(header["ID"]);
+                decimal money = 0; int quantity = 0;
+                foreach (DataRow line in details.Rows)
+                {
+                    if (line.RowState == DataRowState.Deleted || Convert.ToString(line["ID_PHIEU_BAN"]) != id) continue;
+                    bool gift = line["LA_HANG_TANG"] != DBNull.Value && Convert.ToBoolean(line["LA_HANG_TANG"]);
+                    if (gift) continue;
+                    money = checked(money + CuahangNongduoc.BusinessObject.TienTe.ThanhTien(
+                        Convert.ToDecimal(line["DON_GIA"]), Convert.ToDecimal(line["SO_LUONG"])));
+                    quantity = checked(quantity + Convert.ToInt32(line["SO_LUONG"]));
+                }
+                long subtotal = checked((long)Decimal.Round(money, 0, MidpointRounding.AwayFromZero));
+                double rate = CuahangNongduoc.BusinessObject.ChonUuDai.PhanTramGiamHoaDon(subtotal, quantity, rules);
+                long discount = new CuahangNongduoc.BusinessObject.GiamGiaPhanTram(rate).TinhTienGiam(subtotal);
+                if (snapshot != null && snapshot.Id == id &&
+                    (snapshot.PhanTramGiamTay != 0 || Math.Abs(snapshot.PhanTramTuDong - rate) > 0.000001 || snapshot.TienGiam != discount))
+                    throw new UnauthorizedAccessException("Cấu hình ưu đãi đã thay đổi. Hãy lập lại phiếu để áp dụng mức hiện hành.");
+                allowed[id] = discount;
+            }
+            return allowed;
         }
 
         public bool SaveTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr)
@@ -197,12 +237,19 @@ namespace CuahangNongduoc.DataLayer
         // Ưu đãi còn hiệu lực trong ngày: TU_NGAY <= ngày và (DEN_NGAY >= ngày hoặc chưa có DEN_NGAY)
         public static DataTable LayUuDaiHieuLuc(DateTime ngay)
         {
-            DataService ds = new DataService();
-            OleDbCommand cmd = new OleDbCommand("SELECT * FROM UU_DAI WHERE TU_NGAY <= ? AND (DEN_NGAY >= ? OR DEN_NGAY IS NULL)");
-            cmd.Parameters.Add("tuNgay", OleDbType.Date).Value = ngay.Date;
-            cmd.Parameters.Add("denNgay", OleDbType.Date).Value = ngay.Date;
-            ds.Load(cmd);
-            return ds;
+            // A fresh reader sees settings saved by the admin connection immediately.
+            using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
+            using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM UU_DAI WHERE TU_NGAY <= ? AND (DEN_NGAY >= ? OR DEN_NGAY IS NULL)", connection))
+            {
+                cmd.Parameters.Add("tuNgay", OleDbType.Date).Value = ngay.Date;
+                cmd.Parameters.Add("denNgay", OleDbType.Date).Value = ngay.Date;
+                using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                {
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+                    return table;
+                }
+            }
         }
 
         // Ghi dịch vụ của phiếu vào CHI_TIET_DICH_VU trong cùng giao dịch: xóa dòng cũ rồi ghi lại.

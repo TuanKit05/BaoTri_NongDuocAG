@@ -281,6 +281,18 @@ namespace CuahangNongduoc
 
         private void KhoiTaoMenuTaiKhoan()
         {
+            ToolStripMenuItem discounts = new ToolStripMenuItem("Cấu hình giảm giá và chiết khấu");
+            discounts.Name = "mnuCauHinhUuDai";
+            discounts.Visible = AppSession.CurrentUser != null && AccountRoles.IsAdmin(AppSession.CurrentUser.Role);
+            discounts.Click += delegate {
+                try {
+                    UuDaiSettings.DemandAdmin();
+                    using (frmQLUuDai form = new frmQLUuDai()) form.ShowDialog(this);
+                } catch (Exception error) {
+                    MessageBox.Show(this, error.Message, "Cấu hình ưu đãi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            };
+            mnuTuychinh.DropDownItems.Add(discounts);
             ToolStripMenuItem warehouse = new ToolStripMenuItem("Cấu hình xuất kho");
             warehouse.Visible = AccessControl.Can("QuanTri");
             warehouse.Click += delegate {
