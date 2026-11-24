@@ -12,6 +12,26 @@ namespace CuahangNongduoc.DataLayer
     {
         protected override string TableName => "KHACH_HANG";
 
+        public static bool IsValidPhoneNumber(string phone)
+        {
+            if (phone == null) return true;
+            foreach (char digit in phone)
+                if (digit < '0' || digit > '9') return false;
+            return true;
+        }
+
+        public override bool Save()
+        {
+            // Validate the whole batch before writing any row, including pasted values.
+            foreach (DataRow row in Rows)
+            {
+                if (row.RowState != DataRowState.Added && row.RowState != DataRowState.Modified) continue;
+                if (!IsValidPhoneNumber(Convert.ToString(row["DIEN_THOAI"])))
+                    throw new ArgumentException("Số điện thoại của khách hàng/đại lý mã " +
+                        Convert.ToString(row["ID"]) + " chỉ được chứa chữ số từ 0 đến 9.");
+            }
+            return base.Save();
+        }
         public DataTable DanhsachKhachHang() => DanhSach();
 
         public DataTable DanhsachKhachHang(bool loai)

@@ -1,4 +1,4 @@
-﻿using CuahangNongduoc.Controller;
+using CuahangNongduoc.Controller;
 using System;
 using System.Data;
 using System.Drawing;
@@ -22,6 +22,7 @@ namespace CuahangNongduoc
             if (IsDesignMode) return;
             _ctrl = new KhachHangController();
             CuahangNongduoc.ResponsiveLayout.Attach(this);
+            this.dataGridView.CellValidating += ValidatePhoneNumber;
             base.dataGridView = this.dataGridView;
             base.bindingNavigator = this.bindingNavigator;
             base.bindingNavigatorPositionItem = this.bindingNavigatorPositionItem;
@@ -61,6 +62,17 @@ namespace CuahangNongduoc
             }
         }
 
+        private void ValidatePhoneNumber(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (e.RowIndex < 0 || dataGridView.Columns[e.ColumnIndex].DataPropertyName != "DIEN_THOAI") return;
+            bool valid = CuahangNongduoc.DataLayer.KhachHangFactory.IsValidPhoneNumber(Convert.ToString(e.FormattedValue));
+            e.Cancel = !valid;
+            dataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].ErrorText = valid ? String.Empty :
+                "Số điện thoại chỉ được chứa chữ số từ 0 đến 9.";
+            if (!valid)
+                MessageBox.Show("Số điện thoại chỉ được chứa chữ số từ 0 đến 9.", "Số điện thoại không hợp lệ",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
         protected override void LoadData()
         {
             // Logic load dữ liệu khách hàng (LoaiKH = false)
@@ -74,7 +86,7 @@ namespace CuahangNongduoc
 
         private void toolLuu_Click(object sender, EventArgs e)
         {
-            dataGridView.EndEdit();
+            if (!dataGridView.EndEdit()) return;
             Luu();
             UpdateCustomerRowPermissions();
         }
