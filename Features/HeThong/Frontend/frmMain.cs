@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -262,7 +262,7 @@ namespace CuahangNongduoc
                 dialog.Title = "Sao lưu dữ liệu cửa hàng";
                 dialog.Filter = "Cơ sở dữ liệu Access (*.dll)|*.dll|Tất cả các tệp (*.*)|*.*";
                 dialog.FileName = defaultName;
-                dialog.InitialDirectory = Path.Combine(Path.GetDirectoryName(DataService.DatabasePath), "Backups");
+                dialog.InitialDirectory = Path.Combine(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(DataService.DatabasePath)), "Backups"), "Database");
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
                 try

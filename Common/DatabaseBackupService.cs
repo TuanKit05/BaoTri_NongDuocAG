@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace CuahangNongduoc
@@ -18,7 +18,7 @@ namespace CuahangNongduoc
         }
         internal static bool BackupDailyIfDue()
         {
-            string folder=Path.Combine(Path.GetDirectoryName(DataService.DatabasePath),"Backups");
+            string folder=Path.Combine(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(DataService.DatabasePath)),"Backups"),"Database");
             string destination=Path.Combine(folder,"cuahang_tu_dong_"+DateTime.Today.ToString("yyyyMMdd")+".mdb");
             if(File.Exists(destination)) return false;
             CopyDatabase(destination);
@@ -47,6 +47,8 @@ namespace CuahangNongduoc
                     output.Flush();
                 }
                 string legacy=Path.Combine(Path.GetDirectoryName(source),"phihoadon.xml");
+                string relocated=Path.Combine(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(source)),"Config"),"phihoadon.xml");
+                if(File.Exists(relocated)) legacy=relocated;
                 if(File.Exists(legacy)) File.Copy(legacy,destination+".phihoadon.xml",true);
                 if(File.Exists(destination)) File.Replace(temporary,destination,null); else File.Move(temporary,destination);
             } finally {

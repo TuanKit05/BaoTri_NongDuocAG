@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.OleDb;
@@ -38,12 +38,20 @@ namespace CuahangNongduoc
             }
         }
 
-        // Đường dẫn phihoadon.xml: nằm cùng thư mục với file CSDL trong Data Source
+        // Legacy invoice fee data lives in Config beside the Database folder.
         public static string LayDuongDanPhiHoaDon()
         {
             string duongDanCSDL = new OleDbConnectionStringBuilder(DataService.m_ConnectString).DataSource;
             string thuMuc = Path.GetDirectoryName(Path.GetFullPath(duongDanCSDL));
-            return Path.Combine(thuMuc, "phihoadon.xml");
+            string config = Path.Combine(Path.GetDirectoryName(thuMuc), "Config");
+            string path = Path.Combine(config, "phihoadon.xml");
+            if (!File.Exists(path) && File.Exists(Path.Combine(thuMuc, "phihoadon.xml")))
+            {
+                Directory.CreateDirectory(config);
+                File.Copy(Path.Combine(thuMuc, "phihoadon.xml"), path);
+            }
+            Directory.CreateDirectory(config);
+            return path;
         }
 
         public static long LayMaPhieuNhap()

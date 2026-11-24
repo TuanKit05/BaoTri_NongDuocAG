@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
@@ -20,7 +20,7 @@ namespace CuahangNongduoc
             foreach(DataRow row in c.GetSchema("Tables").Rows) if(Convert.ToString(row["TABLE_NAME"])=="LOP_GIA_VON") exists=true;
             if(!exists) {
                 string source=new OleDbConnectionStringBuilder(DataService.m_ConnectString).DataSource;
-                string folder=Path.Combine(Path.GetDirectoryName(source),"Backups");Directory.CreateDirectory(folder);
+                string folder=Path.Combine(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(source)),"Backups"),"Database");Directory.CreateDirectory(folder);
                 File.Copy(source,Path.Combine(folder,"cuahang_truoc_fifo_"+DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")+".mdb"));
                 AccountRepository.Execute(c,null,"CREATE TABLE LOP_GIA_VON (MA_LO TEXT(50) PRIMARY KEY, ID_SAN_PHAM TEXT(50), NGAY_NHAP DATETIME, DON_GIA CURRENCY, SO_LUONG LONG)");
             }

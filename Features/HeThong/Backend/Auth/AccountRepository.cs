@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
@@ -20,7 +20,7 @@ namespace CuahangNongduoc
                 if (migration)
                 {
                     string source = new OleDbConnectionStringBuilder(DataService.m_ConnectString).DataSource;
-                    string folder = Path.Combine(Path.GetDirectoryName(source), "Backups");
+                    string folder = Path.Combine(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(source)), "Backups"), "Database");
                     Directory.CreateDirectory(folder);
                     File.Copy(source, Path.Combine(folder, "cuahang_truoc_phan_quyen_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") + ".mdb"));
                 }
@@ -30,7 +30,7 @@ namespace CuahangNongduoc
                 AddColumn(c, "TAI_KHOAN", "DaXoa", "YESNO");
                 if(c.GetOleDbSchemaTable(OleDbSchemaGuid.Columns,new object[] { null,null,"PHIEU_BAN","UU_DAI_PHIEN_BAN" }).Rows.Count==0) {
                     string source=new OleDbConnectionStringBuilder(DataService.m_ConnectString).DataSource;
-                    string folder=Path.Combine(Path.GetDirectoryName(source),"Backups"); Directory.CreateDirectory(folder);
+                    string folder=Path.Combine(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(source)),"Backups"),"Database"); Directory.CreateDirectory(folder);
                     File.Copy(source,Path.Combine(folder,"cuahang_truoc_uu_dai_kenh_"+DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")+".mdb"));
                 }
                 AddColumn(c,"PHIEU_BAN","TIEN_GIAM_RIENG","CURRENCY");
