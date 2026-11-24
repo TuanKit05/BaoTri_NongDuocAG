@@ -141,6 +141,11 @@ namespace CuahangNongduoc
 
         public static void DemandWrite(string sql)
         {
+            if (Uses(sql, "DICH_VU"))
+            {
+                CuahangNongduoc.DataLayer.DichVuFactory.DemandManage();
+                return;
+            }
             Match counter = Regex.Match(sql, @"^\s*UPDATE\s+THAM_SO\s+SET\s+(PHIEU_BAN|PHIEU_NHAP|PHIEU_THANH_TOAN|PHIEU_CHI)\s*=\s*\d+\s*$", RegexOptions.IgnoreCase);
             if (counter.Success)
             {

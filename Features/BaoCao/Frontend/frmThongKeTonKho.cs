@@ -166,6 +166,8 @@ namespace CuahangNongduoc
                 .LayTonKhoTheoKhoangNgay(tuNgay, denNgay);
 
             dgvTonKho.DataSource = m_Data;
+            string warning=Convert.ToString(m_Data.ExtendedProperties["CanhBao"]);
+            if(warning.Length>0) MessageBox.Show(this,warning,"Độ tin cậy số liệu",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         }
 
         private void TinhTongTonKho()
@@ -243,6 +245,11 @@ namespace CuahangNongduoc
             g.DrawString(period, fontCell, Brushes.Black, left + (pageWidth - periodSize.Width) / 2, y);
             y += periodSize.Height + 12;
 
+            string warning=m_Data==null?"":Convert.ToString(m_Data.ExtendedProperties["CanhBao"]);
+            if(warning.Length>0) {
+                SizeF size=g.MeasureString(warning,fontCell,(int)pageWidth);
+                g.DrawString(warning,fontCell,Brushes.DarkRed,new RectangleF(left,y,pageWidth,size.Height));y+=size.Height+8;
+            }
             // Column widths (landscape A4 roughly)
             float[] widths = { 70, 60, 150, 50, 70, 80, 85, 70, 70, 70 };
             string[] headers = { "Mã lô", "Mã SP", "Tên sản phẩm", "ĐVT", "SL tồn", "Đơn giá", "Thành tiền", "Ngày nhập", "Ngày SX", "Hạn dùng" };
@@ -331,6 +338,7 @@ namespace CuahangNongduoc
                 result.Append(" | ");
                 result.Append(item.Ten);
                 result.Append(": ");
+                if(!String.IsNullOrEmpty(item.CanhBao)) result.Append("["+item.CanhBao+"] ");
 
                 if (item.SoTien.HasValue)
                     result.Append(item.SoTien.Value.ToString("N0") + " đ");

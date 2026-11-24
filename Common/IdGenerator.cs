@@ -72,6 +72,7 @@ namespace CuahangNongduoc
             else if (table == "PHIEU_CHI" || table == "PHIEU_THANH_TOAN") AccessControl.DemandCurrent("ThuChi");
             else if (table == "TAI_KHOAN") AccessControl.DemandCurrent("QuanLyTaiKhoan");
             else if (table == "UU_DAI") AccessControl.DemandCurrent("ThietLapUuDai");
+            else if (table == "DICH_VU") CuahangNongduoc.DataLayer.DichVuFactory.DemandManage();
             else if (table == "SAN_PHAM") AccessControl.DemandCreateProduct();
             else if (table == "KHACH_HANG" && AccessControl.CanAddCustomer())
             { AccessControl.DemandCurrent("BanHang"); AccessControl.DemandCurrent("KhachHang"); }

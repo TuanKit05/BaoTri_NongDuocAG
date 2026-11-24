@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -11,111 +11,111 @@ namespace CuahangNongduoc
         private readonly DichVuFactory factory = new DichVuFactory();
         private readonly BindingSource source = new BindingSource();
         private readonly DataGridView grid = new DataGridView();
+        private readonly TextBox txtMa = new TextBox();
         private readonly TextBox txtTen = new TextBox();
         private readonly NumericUpDown numGia = new NumericUpDown();
         private readonly Button btnThem = new Button();
+        private readonly Button btnSua = new Button();
+        private readonly Button btnXoa = new Button();
         private readonly Button btnLuu = new Button();
+        private readonly Button btnHuy = new Button();
         private readonly Button btnDong = new Button();
+        private string selectedId;
+        private bool editing;
+        private bool loading;
 
         public frmDichVu()
         {
-            Text = "Danh mục dịch vụ";
-            ClientSize = new Size(640, 400);
-            StartPosition = FormStartPosition.CenterParent;
-
-            Label lblTen = new Label { Text = "Tên dịch vụ", Location = new Point(12, 15), AutoSize = true };
-            txtTen.Location = new Point(100, 12);
-            txtTen.Width = 270;
-
-            Label lblGia = new Label { Text = "Đơn giá", Location = new Point(385, 15), AutoSize = true };
-            numGia.Location = new Point(445, 12);
-            numGia.Width = 120;
-            numGia.Maximum = 1000000000;
-            numGia.ThousandsSeparator = true;
-
-            btnThem.Text = "Thêm";
-            btnThem.Location = new Point(575, 10);
-            btnThem.Width = 55;
-
-            grid.Location = new Point(12, 45);
-            grid.Size = new Size(616, 300);
-            grid.AutoGenerateColumns = false;
-            grid.AllowUserToAddRows = false;
-            grid.AllowUserToDeleteRows = false;
-            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "ID", HeaderText = "Mã", ReadOnly = true, Width = 90 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn { DataPropertyName = "TEN_DICH_VU", HeaderText = "Tên dịch vụ", Width = 280 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "DON_GIA",
-                HeaderText = "Đơn giá",
-                Width = 120,
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "N0" }
-            });
-            grid.Columns.Add(new DataGridViewCheckBoxColumn { DataPropertyName = "DANG_SU_DUNG", HeaderText = "Đang dùng", Width = 90 });
-
-            btnLuu.Text = "Lưu thay đổi";
-            btnLuu.Location = new Point(400, 355);
-            btnLuu.Width = 110;
-            btnDong.Text = "Đóng";
-            btnDong.Location = new Point(518, 355);
-            btnDong.Width = 110;
-
-            Controls.AddRange(new Control[] { lblTen, txtTen, lblGia, numGia, btnThem, grid, btnLuu, btnDong });
-
-            btnThem.Click += delegate { ThemDichVu(); };
-            btnLuu.Click += delegate { LuuDanhMuc(); };
+            Text = "Dịch vụ"; StartPosition = FormStartPosition.CenterScreen;
+            ClientSize = new Size(720, 440); MinimumSize = new Size(660, 400);
+            Font = new Font("Segoe UI", 9F);
+            TableLayoutPanel layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 1, RowCount = 3 };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
+            TableLayoutPanel inputs = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3 };
+            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120)); inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            Control[] fields = { txtMa, txtTen, numGia }; string[] labels = { "Mã dịch vụ", "Tên dịch vụ", "Đơn giá" };
+            for (int i = 0; i < fields.Length; i++) {
+                inputs.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / 3));
+                inputs.Controls.Add(new Label { Text = labels[i], Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, i);
+                fields[i].Dock = DockStyle.Fill; fields[i].Margin = new Padding(3, 6, 3, 3); inputs.Controls.Add(fields[i], 1, i);
+            }
+            txtMa.ReadOnly = true; txtMa.Enabled = false; txtMa.BackColor = SystemColors.Control;
+            txtTen.MaxLength = 100; numGia.Maximum = 1000000000000m; numGia.ThousandsSeparator = true;
+            grid.Dock = DockStyle.Fill; grid.AutoGenerateColumns = false; grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            grid.ReadOnly = true; grid.AllowUserToAddRows = grid.AllowUserToDeleteRows = false;
+            grid.MultiSelect = false; grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "ID", DataPropertyName = "ID", HeaderText = "Mã dịch vụ", FillWeight = 25 });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "TEN_DICH_VU", DataPropertyName = "TEN_DICH_VU", HeaderText = "Tên dịch vụ", FillWeight = 50 });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "DON_GIA", DataPropertyName = "DON_GIA", HeaderText = "Đơn giá", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Format = "N0" } });
+            grid.DataSource = source;
+            FlowLayoutPanel buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, Padding = new Padding(0, 6, 0, 0) };
+            Button[] all = { btnThem, btnSua, btnXoa, btnLuu, btnHuy, btnDong }; string[] captions = { "Thêm", "Sửa", "Xóa", "Lưu", "Hủy", "Đóng" };
+            for (int i = 0; i < all.Length; i++) { all[i].Text = captions[i]; all[i].Size = new Size(84, 30); buttons.Controls.Add(all[i]); }
+            layout.Controls.Add(inputs, 0, 0); layout.Controls.Add(grid, 0, 1); layout.Controls.Add(buttons, 0, 2); Controls.Add(layout);
+            btnThem.Click += delegate { Run(ThemDichVu); }; btnSua.Click += delegate { Run(SuaDichVu); };
+            btnLuu.Click += delegate { Run(LuuDichVu); }; btnHuy.Click += delegate { HuyThayDoi(); };
             btnDong.Click += delegate { Close(); };
-            Load += delegate
-            {
-                factory.DanhSach();
-                source.DataSource = factory;
-                grid.DataSource = source;
+            btnXoa.Click += delegate {
+                if (selectedId == null || MessageBox.Show(this, "Xóa dịch vụ đã chọn? Dữ liệu phiếu cũ vẫn được giữ.", Text,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+                Run(XoaDichVuDaChon);
             };
+            source.CurrentChanged += delegate { if (!loading && !editing) ShowCurrent(); };
+            Load += delegate { try { TaiDichVu(); } catch (Exception error) { MessageBox.Show(this, error.Message, Text); Close(); } };
+            FormClosing += delegate(object sender, FormClosingEventArgs e) {
+                if (editing && MessageBox.Show(this, "Bỏ các thay đổi chưa lưu?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) e.Cancel = true;
+            };
+            SetEditing(false);
         }
-
-        private void ThemDichVu()
+        private void Run(MethodInvoker action)
         {
-            try
-            {
-                AccessControl.DemandCurrent("SuaDanhMuc");
-                string ten = txtTen.Text.Trim();
-                if (ten.Length == 0)
-                    throw new InvalidOperationException("Vui lòng nhập tên dịch vụ.");
-                if (factory.Select("TEN_DICH_VU = '" + ten.Replace("'", "''") + "'").Length > 0)
-                    throw new InvalidOperationException("Dịch vụ \"" + ten + "\" đã có trong danh mục.");
-
-                string id = IdGenerator.Next("DICH_VU");
-                factory.ThemDichVu(id, ten, numGia.Value);
-
-                txtTen.Clear();
-                numGia.Value = 0;
-                source.Position = source.Count - 1;
-                MessageBox.Show("Đã thêm dịch vụ. Nhấn \"Lưu thay đổi\" để ghi xuống cơ sở dữ liệu.",
-                    Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception error)
-            {
-                MessageBox.Show(ErrorLog.UserMessage(error, "Không thể thêm dịch vụ"), Text,
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+            try { action(); } catch (Exception error) { MessageBox.Show(this, ErrorLog.UserMessage(error, "Không thể hoàn tất thao tác dịch vụ"), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
-
-        private void LuuDanhMuc()
+        internal void TaiDichVu()
         {
-            try
-            {
-                AccessControl.DemandCurrent("SuaDanhMuc");
-                grid.EndEdit();
-                source.EndEdit();
-                if (!factory.Save())
-                    throw new InvalidOperationException("Không lưu được danh mục dịch vụ.");
-                MessageBox.Show("Đã lưu danh mục dịch vụ.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception error)
-            {
-                MessageBox.Show(ErrorLog.UserMessage(error, "Không thể lưu danh mục dịch vụ"), Text,
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+            DichVuFactory.DemandManage(); loading = true;
+            try { source.DataSource = factory.DanhSachDangSuDung(); } finally { loading = false; }
+            editing = false; ShowCurrent();
+        }
+        private void SetEditing(bool value)
+        {
+            editing = value;
+            bool allowed = AppSession.CurrentUser != null && AccountRoles.IsAdmin(AppSession.CurrentUser.Role);
+            txtTen.Enabled = numGia.Enabled = value && allowed; grid.Enabled = !value;
+            btnThem.Enabled = !value && allowed; btnSua.Enabled = btnXoa.Enabled = !value && allowed && selectedId != null;
+            btnLuu.Enabled = btnHuy.Enabled = value && allowed;
+        }
+        private void ShowCurrent()
+        {
+            DataRowView row = source.Current as DataRowView;
+            selectedId = row == null ? null : Convert.ToString(row["ID"]);
+            txtMa.Text = selectedId ?? ""; txtTen.Text = row == null ? "" : Convert.ToString(row["TEN_DICH_VU"]);
+            numGia.Value = row == null || row["DON_GIA"] == DBNull.Value ? 0 : Math.Max(0, Math.Min(numGia.Maximum, Convert.ToDecimal(row["DON_GIA"])));
+            SetEditing(false);
+        }
+        internal void ThemDichVu()
+        {
+            DichVuFactory.DemandManage(); selectedId = null; txtMa.Text = "Tự động khi lưu"; txtTen.Clear(); numGia.Value = 0; SetEditing(true); txtTen.Focus();
+        }
+        internal void SuaDichVu()
+        {
+            DichVuFactory.DemandManage(); if (selectedId == null) throw new InvalidOperationException("Chọn dịch vụ cần sửa."); SetEditing(true); txtTen.Focus();
+        }
+        internal void LuuDichVu()
+        {
+            if (!editing) return;
+            string id = factory.LuuDichVu(selectedId, txtTen.Text, numGia.Value);
+            TaiDichVu(); source.Position = source.Find("ID", id); ShowCurrent();
+        }
+        internal void HuyThayDoi() { ShowCurrent(); }
+        internal void XoaDichVuDaChon() { factory.XoaDichVu(selectedId); TaiDichVu(); }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) { source.Dispose(); factory.Dispose(); }
+            base.Dispose(disposing);
         }
     }
 }

@@ -143,6 +143,11 @@ namespace CuahangNongduoc.DataLayer
                 transaction = connection.BeginTransaction();
 
                 KiemTraCoTheXoaPhieu(connection, transaction, maPhieu);
+                using(OleDbCommand cmd=new OleDbCommand("SELECT ID FROM MA_SAN_PHAM WHERE ID_PHIEU_NHAP=?",connection,transaction)) {
+                    cmd.Parameters.Add("?",OleDbType.VarWChar,50).Value=maPhieu;
+                    List<string> lots=new List<string>();using(OleDbDataReader reader=cmd.ExecuteReader()) while(reader.Read()) lots.Add(Convert.ToString(reader[0]));
+                    foreach(string lot in lots) WarehouseCost.DeleteReceiptLayer(connection,transaction,lot);
+                }
 
                 List<LoNhapCanXoa> cacLo = LayCacLoCuaPhieu(connection, transaction, maPhieu);
                 List<string> maSanPham = LayDanhSachMaSanPham(cacLo);
@@ -271,6 +276,7 @@ namespace CuahangNongduoc.DataLayer
 
             if (command.ExecuteNonQuery() <= 0)
                 throw new InvalidOperationException("Không thêm được lô " + lo.MaLo + ".");
+            WarehouseCost.AddReceipt(connection,transaction,lo.MaLo);
         }
 
         private static Dictionary<string, TongGiaNhapTheoSanPham> TaoTongHopGiaNhap(

@@ -117,45 +117,28 @@ namespace CuahangNongduoc.DataLayer
         // và không vượt số lượng được hưởng theo số lượng mua cùng phiếu.
         internal void KiemTraHangTang(DataTable details)
         {
-            if (details == null) return;
-            Dictionary<string, int> soMua = new Dictionary<string, int>(StringComparer.Ordinal);
-            Dictionary<string, int> soTang = new Dictionary<string, int>(StringComparer.Ordinal);
-            Dictionary<string, string> loCuaKhoa = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (DataRow line in details.Rows)
-            {
-                if (line.RowState == DataRowState.Deleted) continue;
-                string phieu = Convert.ToString(line["ID_PHIEU_BAN"]);
-                string lo = Convert.ToString(line["ID_MA_SAN_PHAM"]);
-                if (String.IsNullOrEmpty(phieu) || String.IsNullOrEmpty(lo)) continue;
-                string khoa = phieu + "\u0001" + lo;
-                int sl = line["SO_LUONG"] == DBNull.Value ? 0 : Convert.ToInt32(line["SO_LUONG"]);
-                bool tang = line["LA_HANG_TANG"] != DBNull.Value && Convert.ToBoolean(line["LA_HANG_TANG"]);
-                Dictionary<string, int> dich = tang ? soTang : soMua;
-                int cu;
-                dich.TryGetValue(khoa, out cu);
-                dich[khoa] = cu + sl;
-                loCuaKhoa[khoa] = lo;
-            }
-            if (soTang.Count == 0) return;
-
-            IList<CuahangNongduoc.BusinessObject.UuDaiQuyDinh> rules =
+            if(details==null) return;
+            IList<CuahangNongduoc.BusinessObject.UuDaiQuyDinh> rules=
                 CuahangNongduoc.Controller.PhieuBanController.DanhSachUuDaiHieuLuc();
-            foreach (KeyValuePair<string, int> cap in soTang)
-            {
-                if (cap.Value <= 0) continue;
-                string lo = loCuaKhoa[cap.Key];
-                int mua;
-                soMua.TryGetValue(cap.Key, out mua);
-                CuahangNongduoc.BusinessObject.UuDaiQuyDinh quyTac =
-                    CuahangNongduoc.BusinessObject.ChonKhuyenMai.TimQuyTac(rules, lo);
-                if (quyTac == null)
-                    throw new InvalidOperationException(
-                        "Hàng tặng (mã lô " + lo + ") không thuộc chương trình khuyến mãi đang hiệu lực.");
-                int duocHuong = CuahangNongduoc.BusinessObject.ChonKhuyenMai.SoHangTangCanThem(quyTac, mua, 0);
-                if (cap.Value > duocHuong)
-                    throw new InvalidOperationException(
-                        "Hàng tặng (mã lô " + lo + ") vượt số lượng được hưởng: tặng " + cap.Value
-                        + ", tối đa " + duocHuong + " theo số lượng mua.");
+            IDictionary<string,string> products=CuahangNongduoc.Controller.PhieuBanController.SanPhamTheoLo();
+            Dictionary<string,Dictionary<string,int>> invoices=new Dictionary<string,Dictionary<string,int>>();
+            foreach(DataRow line in details.Rows) {
+                if(line.RowState==DataRowState.Deleted || line["LA_HANG_TANG"]==DBNull.Value || !Convert.ToBoolean(line["LA_HANG_TANG"])) continue;
+                string invoice=Convert.ToString(line["ID_PHIEU_BAN"]),lot=Convert.ToString(line["ID_MA_SAN_PHAM"]),product;
+                products.TryGetValue(lot,out product);
+                Dictionary<string,int> budgets;
+                if(!invoices.TryGetValue(invoice,out budgets)) {
+                    string customer="";
+                    foreach(DataRow header in m_Ds.Rows) if(header.RowState!=DataRowState.Deleted && Convert.ToString(header["ID"])==invoice) customer=Convert.ToString(header["ID_KHACH_HANG"]);
+                    string channel=CuahangNongduoc.Controller.PhieuBanController.KenhKhachHang(customer);
+                    List<CuahangNongduoc.BusinessObject.UuDaiQuyDinh> selected=new List<CuahangNongduoc.BusinessObject.UuDaiQuyDinh>();
+                    foreach(CuahangNongduoc.BusinessObject.UuDaiQuyDinh rule in rules) if(rule.DungKenh(channel)) selected.Add(rule);
+                    budgets=CuahangNongduoc.BusinessObject.ChonKhuyenMai.QuyenTang(selected,details,invoice);
+                    invoices[invoice]=budgets;
+                }
+                int quantity=Convert.ToInt32(line["SO_LUONG"]);
+                if(quantity<=0 || CuahangNongduoc.BusinessObject.ChonKhuyenMai.TruHangTang(budgets,lot,product??"",quantity)>0)
+                    throw new InvalidOperationException("Sản phẩm tặng hoặc số lượng tặng không đúng ưu đãi đang có hiệu lực (lô "+lot+").");
             }
         }
 
@@ -163,7 +146,7 @@ namespace CuahangNongduoc.DataLayer
             CuahangNongduoc.BusinessObject.PhieuBan snapshot)
         {
             Dictionary<string, long> allowed = new Dictionary<string, long>(StringComparer.Ordinal);
-            if (AccessControl.Can("ThietLapUuDai")) return allowed;
+
             IList<CuahangNongduoc.BusinessObject.UuDaiQuyDinh> rules =
                 CuahangNongduoc.Controller.PhieuBanController.DanhSachUuDaiHieuLuc();
             foreach (DataRow header in m_Ds.Rows)
@@ -171,6 +154,8 @@ namespace CuahangNongduoc.DataLayer
                 if (header.RowState != DataRowState.Added) continue;
                 string id = Convert.ToString(header["ID"]);
                 decimal money = 0; int quantity = 0;
+                System.Collections.Generic.List<CuahangNongduoc.BusinessObject.DongTinhUuDai> lines =
+                    new System.Collections.Generic.List<CuahangNongduoc.BusinessObject.DongTinhUuDai>();
                 foreach (DataRow line in details.Rows)
                 {
                     if (line.RowState == DataRowState.Deleted || Convert.ToString(line["ID_PHIEU_BAN"]) != id) continue;
@@ -179,14 +164,29 @@ namespace CuahangNongduoc.DataLayer
                     money = checked(money + CuahangNongduoc.BusinessObject.TienTe.ThanhTien(
                         Convert.ToDecimal(line["DON_GIA"]), Convert.ToDecimal(line["SO_LUONG"])));
                     quantity = checked(quantity + Convert.ToInt32(line["SO_LUONG"]));
+                    string lot = Convert.ToString(line["ID_MA_SAN_PHAM"]), product = lot;
+                    foreach (CuahangNongduoc.BusinessObject.UuDaiQuyDinh rule in rules)
+                        if(rule.SanPhamTheoLo != null && rule.SanPhamTheoLo.TryGetValue(lot,out product)) break;
+                    lines.Add(new CuahangNongduoc.BusinessObject.DongTinhUuDai { Lo=lot, SanPham=product,
+                        Tien=CuahangNongduoc.BusinessObject.TienTe.ThanhTien(Convert.ToDecimal(line["DON_GIA"]),Convert.ToDecimal(line["SO_LUONG"])),
+                        SoLuong=Convert.ToInt32(line["SO_LUONG"]) });
                 }
                 long subtotal = checked((long)Decimal.Round(money, 0, MidpointRounding.AwayFromZero));
-                double rate = CuahangNongduoc.BusinessObject.ChonUuDai.PhanTramGiamHoaDon(subtotal, quantity, rules);
-                long discount = new CuahangNongduoc.BusinessObject.GiamGiaPhanTram(rate).TinhTienGiam(subtotal);
-                if (snapshot != null && snapshot.Id == id &&
-                    (snapshot.PhanTramGiamTay != 0 || Math.Abs(snapshot.PhanTramTuDong - rate) > 0.000001 || snapshot.TienGiam != discount))
-                    throw new UnauthorizedAccessException("Cấu hình ưu đãi đã thay đổi. Hãy lập lại phiếu để áp dụng mức hiện hành.");
-                allowed[id] = discount;
+                string channel=CuahangNongduoc.Controller.PhieuBanController.KenhKhachHang(Convert.ToString(header["ID_KHACH_HANG"]));
+                long paid=Convert.ToInt64(header["DA_TRA"]);
+                double manual=snapshot==null?0:snapshot.PhanTramGiamTay;
+                if(manual!=0) AccessControl.DemandCurrent("ThietLapUuDai");
+                long fees=snapshot==null?0:snapshot.PhiVanChuyen;
+                if(snapshot!=null && snapshot.DichVu!=null) foreach(CuahangNongduoc.BusinessObject.DichVuPhieuBan service in snapshot.DichVu) fees=checked(fees+service.TienDV);
+                CuahangNongduoc.BusinessObject.KetQuaChinhSach expected=CuahangNongduoc.BusinessObject.ChonUuDai.TinhTheoKenh(subtotal,quantity,rules,lines,channel,paid,fees,manual);
+                long total=checked(subtotal-expected.TongGiam+fees);
+                if(snapshot==null || snapshot.Id!=id || snapshot.KenhUuDai!=channel || snapshot.ChiTietUuDai==null ||
+                    snapshot.ChiTietUuDai.GiamGia!=expected.GiamGia || snapshot.ChiTietUuDai.ThuongMai!=expected.ThuongMai ||
+                    snapshot.ChiTietUuDai.ThanhToan!=expected.ThanhToan || snapshot.TienGiam!=expected.TongGiam ||
+                    Convert.ToInt64(header["TONG_TIEN"])!=total)
+                    throw new InvalidOperationException("Ưu đãi hoặc thanh toán đã thay đổi. Vui lòng kiểm tra và lưu lại phiếu.");
+                snapshot.ChiTietUuDai=expected;
+                allowed[id]=expected.TongGiam;
             }
             return allowed;
         }
@@ -243,6 +243,20 @@ namespace CuahangNongduoc.DataLayer
         // Ghi phí vận chuyển vào cột TIEN_VAN_CHUYEN của phiếu đang nằm trong bộ nhớ (trước khi lưu giao dịch).
         // Ném lỗi nếu không tìm thấy phiếu, để không lưu thiếu phí.
         // Ghi tiền giảm (tay + tự động) vào phiếu đang sửa, để báo cáo ưu đãi khớp với tổng đã lưu
+        public void DatChiTietUuDai(CuahangNongduoc.BusinessObject.PhieuBan snapshot)
+        {
+            if(snapshot==null || snapshot.ChiTietUuDai==null) return;
+            foreach(DataRow row in m_Ds.Rows) if(row.RowState!=DataRowState.Deleted && Convert.ToString(row["ID"])==snapshot.Id) {
+                row["TIEN_GIAM_RIENG"]=snapshot.ChiTietUuDai.GiamGia;
+                row["TIEN_CK_THUONG_MAI"]=snapshot.ChiTietUuDai.ThuongMai;
+                row["TIEN_CK_THANH_TOAN"]=snapshot.ChiTietUuDai.ThanhToan;
+                row["KENH_UU_DAI"]=snapshot.KenhUuDai; row["CHINH_SACH_UU_DAI"]=snapshot.ChiTietUuDai.QuyTacDaLuu;
+                row["UU_DAI_PHIEN_BAN"]=1; row["PHAN_TRAM_GIAM_TAY"]=snapshot.PhanTramGiamTay;
+                return;
+            }
+            throw new InvalidOperationException("Không tìm thấy phiếu để lưu chi tiết ưu đãi.");
+        }
+
         public void DatTienGiamGia(String id, long tienGiam)
         {
             foreach (DataRow row in m_Ds.Rows)
@@ -285,7 +299,7 @@ namespace CuahangNongduoc.DataLayer
         {
             // A fresh reader sees settings saved by the admin connection immediately.
             using (OleDbConnection connection = new OleDbConnection(DataService.m_ConnectString))
-            using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM UU_DAI WHERE TU_NGAY <= ? AND (DEN_NGAY >= ? OR DEN_NGAY IS NULL)", connection))
+            using (OleDbCommand cmd = new OleDbCommand("SELECT * FROM UU_DAI WHERE LOAI <> 'CK_THANH_TOAN' AND TU_NGAY <= ? AND (DEN_NGAY >= ? OR DEN_NGAY IS NULL) ORDER BY TU_NGAY DESC, ID DESC", connection))
             {
                 cmd.Parameters.Add("tuNgay", OleDbType.Date).Value = ngay.Date;
                 cmd.Parameters.Add("denNgay", OleDbType.Date).Value = ngay.Date;
@@ -299,17 +313,29 @@ namespace CuahangNongduoc.DataLayer
         }
 
         // Ghi dịch vụ của phiếu vào CHI_TIET_DICH_VU trong cùng giao dịch: xóa dòng cũ rồi ghi lại.
-        // Dịch vụ phải có trong danh mục DICH_VU đang sử dụng; nếu không thì ném lỗi và giao dịch được rollback.
+        // Dịch vụ chọn từ danh mục hoặc nhập tự do đều được lưu cùng giao dịch với phiếu.
         public void LuuDichVuTrongGiaoDich(OleDbConnection conn, OleDbTransaction tr, String idPhieu,
             System.Collections.Generic.IList<CuahangNongduoc.BusinessObject.DichVuPhieuBan> dichVu)
         {
+            AccessControl.DemandCurrent("BanHang");
             XoaDichVuTrongGiaoDich(conn, tr, idPhieu);
             if (dichVu == null)
                 return;
+            Dictionary<string, long> charges = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
             foreach (CuahangNongduoc.BusinessObject.DichVuPhieuBan dv in dichVu)
             {
+                if (dv == null) throw new InvalidOperationException("Dòng dịch vụ không hợp lệ.");
                 String moTa = dv.Ten == null ? "" : dv.Ten.Trim();
-                object maDichVu = TimMaDichVu(conn, tr, moTa);
+                if (moTa.Length == 0 || moTa.Length > 100 || dv.TienDV <= 0)
+                    throw new InvalidOperationException("Dịch vụ cần tên (tối đa 100 ký tự) và số tiền lớn hơn 0.");
+                long previous;
+                charges.TryGetValue(moTa, out previous);
+                charges[moTa] = checked(previous + dv.TienDV);
+            }
+            foreach (KeyValuePair<string, long> charge in charges)
+            {
+                string moTa = charge.Key;
+                object maDichVu = TimMaDichVu(conn, tr, moTa, charge.Value);
                 OleDbCommand cmd = new OleDbCommand(
                     "INSERT INTO CHI_TIET_DICH_VU (ID_PHIEU_BAN, ID_DICH_VU, MO_TA, SO_LUONG, DON_GIA, THANH_TIEN) VALUES (?, ?, ?, ?, ?, ?)",
                     conn, tr);
@@ -317,8 +343,8 @@ namespace CuahangNongduoc.DataLayer
                 cmd.Parameters.AddWithValue("idDichVu", maDichVu);
                 cmd.Parameters.Add("moTa", OleDbType.VarWChar, 255).Value = moTa;
                 cmd.Parameters.Add("soLuong", OleDbType.Integer).Value = 1;
-                cmd.Parameters.Add("donGia", OleDbType.Currency).Value = (decimal)dv.TienDV;
-                cmd.Parameters.Add("thanhTien", OleDbType.Currency).Value = (decimal)dv.TienDV;
+                cmd.Parameters.Add("donGia", OleDbType.Currency).Value = (decimal)charge.Value;
+                cmd.Parameters.Add("thanhTien", OleDbType.Currency).Value = (decimal)charge.Value;
                 cmd.ExecuteNonQuery();
             }
         }
@@ -332,16 +358,29 @@ namespace CuahangNongduoc.DataLayer
         }
 
         // Tìm mã dịch vụ trong danh mục DICH_VU đang sử dụng theo tên
-        static object TimMaDichVu(OleDbConnection conn, OleDbTransaction tr, String tenDichVu)
+        static object TimMaDichVu(OleDbConnection conn, OleDbTransaction tr, String tenDichVu, long amount)
         {
             if (tenDichVu.Length == 0)
                 throw new InvalidOperationException("Dịch vụ chưa có tên. Hãy nhập tên dịch vụ hoặc xóa dòng đó.");
             OleDbCommand cmd = new OleDbCommand("SELECT ID FROM DICH_VU WHERE TEN_DICH_VU = ? AND DANG_SU_DUNG = TRUE", conn, tr);
             cmd.Parameters.Add("ten", OleDbType.VarWChar, 255).Value = tenDichVu;
             object ma = cmd.ExecuteScalar();
-            if (ma == null || ma == DBNull.Value)
-                throw new InvalidOperationException("Dịch vụ \"" + tenDichVu + "\" chưa có trong danh mục dịch vụ đang sử dụng. Hãy chọn dịch vụ trong danh mục hoặc thêm vào Danh mục dịch vụ trước.");
-            return ma;
+            if (ma != null && ma != DBNull.Value) return ma;
+            CuahangNongduoc.DataLayer.DichVuFactory.DemandManage();
+            // Ad hoc services satisfy the existing foreign key without becoming selectable catalog items.
+            // Allocate the shared service counter in this same transaction; rollback also removes the ad hoc item.
+            string id;
+            do
+            {
+                if (AccountRepository.Execute(conn, tr,
+                    "UPDATE BO_DEM_MA SET GIA_TRI=GIA_TRI+1 WHERE TEN_BANG='DICH_VU'") != 1)
+                    throw new InvalidOperationException("Chưa khởi tạo bộ đếm dịch vụ. Hãy khởi động lại ứng dụng.");
+                id = Convert.ToString(AccountRepository.Scalar(conn, tr,
+                    "SELECT GIA_TRI FROM BO_DEM_MA WHERE TEN_BANG='DICH_VU'"), System.Globalization.CultureInfo.InvariantCulture);
+            } while (Convert.ToInt32(AccountRepository.Scalar(conn, tr, "SELECT COUNT(*) FROM DICH_VU WHERE ID=?", id)) != 0);
+            AccountRepository.Execute(conn, tr,
+                "INSERT INTO DICH_VU (ID,TEN_DICH_VU,DON_GIA,DANG_SU_DUNG) VALUES (?,?,?,False)", id, tenDichVu, (decimal)amount);
+            return id;
         }
     }
 }

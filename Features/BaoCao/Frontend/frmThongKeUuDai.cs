@@ -81,6 +81,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             ThemCot("GiaVonHangTang", "Giá vốn hàng tặng", 95F, "N0");
             ThemCot("TongUuDai", "Tổng ưu đãi", 90F, "N0");
             ThemCot("GhiChuKhuyenMai", "Ghi chú", 130F);
+            ApDungQuyenGiaVon();
         }
 
         private void ThemCot(string propertyName, string header, float fillWeight)
@@ -224,11 +225,15 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
         // YC-BC-03: hàng tặng nằm ở dòng chi tiết (LA_HANG_TANG = True); gắn số lượng và giá vốn đã lưu vào từng hóa đơn
         private static void GanHangTangVaoHoaDon(List<ThongKeUuDai> rows, DateTime fromDate, DateTime toDate, string employeeId)
         {
+            AccessControl.DemandCurrent("BaoCaoBanHang");
+            bool xemGiaVon = AccessControl.Can("XemGiaVon");
+            if (!AccessControl.Can("XemTatCaPhieuBan")) employeeId = AppSession.CurrentUser.Id;
             Dictionary<string, ThongKeUuDai> theoPhieu = new Dictionary<string, ThongKeUuDai>(StringComparer.Ordinal);
             foreach (ThongKeUuDai row in rows) theoPhieu[row.MaHoaDon] = row;
 
             string employeeCondition = String.IsNullOrEmpty(employeeId) ? String.Empty : " AND PB.ID_NHAN_VIEN = ?";
-            string sql = "SELECT CT.ID_PHIEU_BAN, SUM(CT.SO_LUONG) AS SL_TANG, SUM(CT.THANH_TIEN_GIA_VON) AS GIA_VON_TANG " +
+            string sql = "SELECT CT.ID_PHIEU_BAN, SUM(CT.SO_LUONG) AS SL_TANG, " +
+                (xemGiaVon ? "SUM(CT.THANH_TIEN_GIA_VON)" : "0") + " AS GIA_VON_TANG " +
                 "FROM CHI_TIET_PHIEU_BAN AS CT INNER JOIN PHIEU_BAN AS PB ON CT.ID_PHIEU_BAN = PB.ID " +
                 "WHERE CT.LA_HANG_TANG = True AND PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?" +
                 employeeCondition + " GROUP BY CT.ID_PHIEU_BAN";
@@ -257,6 +262,9 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
 
         private void HienThiKetQuaTheoNhanVien()
         {
+            AccessControl.DemandCurrent("BaoCaoBanHang");
+            if (!AccessControl.Can("XemGiaVon"))
+                foreach (ThongKeUuDai item in ketQua) item.GiaVonHangTang = 0;
             this.dgvThongKeUuDai.Rows.Clear();
             string currentEmployee = null;
             string currentEmployeeName = null;
@@ -292,6 +300,25 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             if (currentEmployee != null)
                 ThemDongTongNhanVien(currentEmployee, currentEmployeeName, invoiceCount, sumTotal,
                     sumDiscount, sumPromotion, sumGiftQty, sumGiftCost);
+            ApDungQuyenGiaVon();
+        }
+
+        // Clear cached costs too, so a permission revoked after viewing cannot leak through export or totals.
+        private void ApDungQuyenGiaVon()
+        {
+            bool allowed = AccessControl.Can("XemGiaVon");
+            DataGridViewColumn cost = dgvThongKeUuDai.Columns["GiaVonHangTang"];
+            if (cost == null) return;
+            cost.Visible = allowed;
+            if (allowed) return;
+            foreach (ThongKeUuDai item in ketQua) item.GiaVonHangTang = 0;
+            foreach (DataGridViewRow row in dgvThongKeUuDai.Rows)
+            {
+                if (row.IsNewRow) continue;
+                row.Cells["GiaVonHangTang"].Value = 0m;
+                row.Cells["TongUuDai"].Value = DocTien(row.Cells["TienChietKhauGiamGia"].Value) +
+                    DocTien(row.Cells["TienKhuyenMai"].Value);
+            }
         }
 
         private void ThemDongTongNhanVien(string employeeId, string employeeName, int count,
@@ -365,17 +392,22 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
         // Dòng 0 là tiêu đề cột; các dòng sau là dữ liệu và dòng tổng từng nhân viên (đúng như đang hiển thị)
         private List<object[]> LayDuLieuXuat()
         {
+            AccessControl.DemandCurrent("BaoCaoBanHang");
+            ApDungQuyenGiaVon();
+            List<DataGridViewColumn> columns = new List<DataGridViewColumn>();
+            foreach (DataGridViewColumn column in dgvThongKeUuDai.Columns)
+                if (column.Visible) columns.Add(column);
             List<object[]> ds = new List<object[]>();
-            object[] tieuDe = new object[this.dgvThongKeUuDai.Columns.Count];
+            object[] tieuDe = new object[columns.Count];
             for (int i = 0; i < tieuDe.Length; i++)
-                tieuDe[i] = this.dgvThongKeUuDai.Columns[i].HeaderText;
+                tieuDe[i] = columns[i].HeaderText;
             ds.Add(tieuDe);
             foreach (DataGridViewRow row in this.dgvThongKeUuDai.Rows)
             {
                 if (row.IsNewRow) continue;
-                object[] dong = new object[row.Cells.Count];
+                object[] dong = new object[columns.Count];
                 for (int i = 0; i < dong.Length; i++)
-                    dong[i] = row.Cells[i].Value;
+                    dong[i] = row.Cells[columns[i].Index].Value;
                 ds.Add(dong);
             }
             return ds;
@@ -439,7 +471,9 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
             MessageBox.Show(this, "Trong hộp thoại in, chọn máy in \"Microsoft Print to PDF\" rồi chọn nơi lưu tệp.",
                 "Xuất PDF", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            float[] trongSo = { 1.0f, 1.0f, 1.0f, 1.6f, 1.3f, 1.5f, 1.3f, 0.9f, 1.3f, 1.3f, 2.0f };
+            List<float> trongSo = new List<float>();
+            foreach (DataGridViewColumn column in dgvThongKeUuDai.Columns)
+                if (column.Visible) trongSo.Add(column.FillWeight);
             Font fChu = new Font("Arial", 8f);
             Font fDam = new Font("Arial", 8f, FontStyle.Bold);
             Font fTieuDe = new Font("Arial", 12f, FontStyle.Bold);
@@ -457,7 +491,7 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
                     RectangleF vung = ev.MarginBounds;
                     float tong = 0;
                     foreach (float t in trongSo) tong += t;
-                    float[] rong = new float[trongSo.Length];
+                    float[] rong = new float[trongSo.Count];
                     for (int i = 0; i < rong.Length; i++) rong[i] = vung.Width * trongSo[i] / tong;
                     float h = fChu.GetHeight(g) + 6;
                     float y = vung.Top;
@@ -511,43 +545,6 @@ namespace CuahangNongduoc.Features.BaoCao.ThongKeUuDai
         {
             if (value is decimal) return ((decimal)value).ToString("#,##0", CultureInfo.InvariantCulture);
             return GiaTriCsv(value);
-        }
-
-        // Bản CSV cũ, không còn được gọi (giữ lại để đối chiếu)
-        private void XuatCsvCu(object sender, EventArgs e)
-        {
-            if (this.dgvThongKeUuDai.Rows.Count == 0) return;
-            using (SaveFileDialog dialog = new SaveFileDialog())
-            {
-                dialog.Title = "Xuất báo cáo ưu đãi";
-                dialog.Filter = "Tệp CSV mở bằng Excel (*.csv)|*.csv";
-                dialog.FileName = "ThongKeUuDai.csv";
-                if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-                try
-                {
-                    using (StreamWriter writer = new StreamWriter(dialog.FileName, false, new UTF8Encoding(true)))
-                    {
-                        writer.WriteLine("Mã hóa đơn,Ngày bán,Mã nhân viên,Nhân viên,Tổng tiền,Chiết khấu/giảm giá,Khuyến mãi,Tổng ưu đãi,Ghi chú");
-                        foreach (DataGridViewRow row in this.dgvThongKeUuDai.Rows)
-                        {
-                            if (row.IsNewRow) continue;
-                            for (int i = 0; i < row.Cells.Count; i++)
-                            {
-                                if (i > 0) writer.Write(",");
-                                writer.Write(EscapeCsv(GiaTriCsv(row.Cells[i].Value)));
-                            }
-                            writer.WriteLine();
-                        }
-                    }
-                    MessageBox.Show(this, "Đã xuất tệp CSV. Bạn có thể mở tệp này bằng Excel.",
-                        "Xuất báo cáo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    HienThiLoi("Không xuất được tệp", ex);
-                }
-            }
         }
 
         private static string GiaTriCsv(object value)

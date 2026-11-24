@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
@@ -18,6 +18,8 @@ namespace CuahangNongduoc
             set { m_Ten = value; }
         }
 
+        public string CanhBao { get; set; }
+
         public decimal? SoTien
         {
             get { return m_SoTien; }
@@ -32,6 +34,7 @@ namespace CuahangNongduoc
             DateTime tuNgay,
             DateTime denNgay)
         {
+            AccessControl.DemandCurrent(AccessControl.Can("BaoCaoBanHang")?"BaoCaoBanHang":"BaoCaoTonKho");
             if (tuNgay.Date > denNgay.Date)
             {
                 throw new ArgumentException(
@@ -42,25 +45,36 @@ namespace CuahangNongduoc
             DateTime den = denNgay.Date.AddDays(1);
             List<KetQuaChiTieu> ketQua = new List<KetQuaChiTieu>();
 
-            ketQua.Add(ChiTieu("Phí vận chuyển",
-                "SELECT SUM(PB.TIEN_VAN_CHUYEN) FROM PHIEU_BAN PB " +
-                "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
+            if(AccessControl.Can("BaoCaoBanHang")) {
+                ketQua.Add(ChiTieu("Doanh số hóa đơn (sau ưu đãi, gồm phí và dịch vụ)",
+                    "SELECT SUM(PB.TONG_TIEN) FROM PHIEU_BAN PB WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?",tu,den));
+                ketQua.Add(ChiTieu("Đã trả lũy kế của các hóa đơn trong kỳ (không phải thu tiền riêng trong kỳ)",
+                    "SELECT SUM(PB.DA_TRA) FROM PHIEU_BAN PB WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?",tu,den));
+                ketQua.Add(ChiTieu("Còn nợ hiện tại của các hóa đơn trong kỳ",
+                    "SELECT SUM(PB.CON_NO) FROM PHIEU_BAN PB WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?",tu,den));
+                if(AccessControl.Can("ThuChi")) ketQua.Add(ChiTieu("Tiền thu theo ngày phiếu thu trong kỳ (toàn cửa hàng)",
+                    "SELECT SUM(TONG_TIEN) FROM PHIEU_THANH_TOAN WHERE NGAY_THANH_TOAN >= ? AND NGAY_THANH_TOAN < ?",tu,den));
 
-            ketQua.Add(ChiTieu("Dịch vụ phụ",
-                "SELECT SUM(DV.THANH_TIEN) FROM CHI_TIET_DICH_VU DV " +
-                "INNER JOIN PHIEU_BAN PB ON DV.ID_PHIEU_BAN = PB.ID " +
-                "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
+                ketQua.Add(ChiTieu("Phí vận chuyển",
+                    "SELECT SUM(PB.TIEN_VAN_CHUYEN) FROM PHIEU_BAN PB " +
+                    "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
 
-            ketQua.Add(ChiTieu("Giảm giá",
-                "SELECT SUM(PB.TIEN_GIAM_GIA) FROM PHIEU_BAN PB " +
-                "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
+                ketQua.Add(ChiTieu("Dịch vụ phụ",
+                    "SELECT SUM(DV.THANH_TIEN) FROM CHI_TIET_DICH_VU DV " +
+                    "INNER JOIN PHIEU_BAN PB ON DV.ID_PHIEU_BAN = PB.ID " +
+                    "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
 
-            ketQua.Add(ChiTieu("Khuyến mãi (giá vốn hàng tặng)",
-                "SELECT SUM(CT.THANH_TIEN_GIA_VON) FROM CHI_TIET_PHIEU_BAN CT " +
-                "INNER JOIN PHIEU_BAN PB ON CT.ID_PHIEU_BAN = PB.ID " +
-                "WHERE CT.LA_HANG_TANG = True AND PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
+                ketQua.Add(ChiTieu("Giảm giá",
+                    "SELECT SUM(PB.TIEN_GIAM_GIA) FROM PHIEU_BAN PB " +
+                    "WHERE PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
 
-            ketQua.Add(TonKhoCuoiKy(denNgay.Date));
+                if(AccessControl.Can("XemGiaVon")) ketQua.Add(ChiTieu("Khuyến mãi (giá vốn hàng tặng)",
+                    "SELECT SUM(CT.THANH_TIEN_GIA_VON) AS GIA_VON_TANG FROM CHI_TIET_PHIEU_BAN CT " +
+                    "INNER JOIN PHIEU_BAN PB ON CT.ID_PHIEU_BAN = PB.ID " +
+                    "WHERE CT.LA_HANG_TANG = True AND PB.NGAY_BAN >= ? AND PB.NGAY_BAN < ?", tu, den));
+
+            }
+            if(AccessControl.Can("BaoCaoTonKho") && AccessControl.Can("XemGiaNhap")) ketQua.Add(TonKhoCuoiKy(denNgay.Date));
             return ketQua;
         }
 
@@ -87,14 +101,9 @@ namespace CuahangNongduoc
         {
             KetQuaChiTieu kq = new KetQuaChiTieu();
             kq.Ten = "Tồn kho cuối kỳ (giá nhập)";
-            try
-            {
-                kq.SoTien = new TonKhoTaiNgayService().LayTonKhoTaiNgay(ngay).TongGiaTri;
-            }
-            catch (Exception)
-            {
-                kq.SoTien = null;
-            }
+            KetQuaTonKho inventory=new TonKhoTaiNgayService().LayTonKhoTaiNgay(ngay);
+            kq.CanhBao=inventory.CanhBao;
+            kq.SoTien=inventory.DuDuLieu?(decimal?)inventory.TongGiaTri:null;
             return kq;
         }
     }

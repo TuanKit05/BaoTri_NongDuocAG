@@ -69,10 +69,38 @@ namespace CuahangNongduoc
             table.Columns.Add("KhachHangHoTen", typeof(string));
             table.Columns.Add("KhachHangDiaChi", typeof(string));
             table.Columns.Add("KhachHangDienThoai", typeof(string));
+            table.Columns.Add("TienHang", typeof(long));
+            table.Columns.Add("PhiVanChuyen", typeof(long));
+            table.Columns.Add("TongDichVu", typeof(long));
+            table.Columns.Add("TienGiam", typeof(long));
+            table.Columns.Add("ChiTietDichVu", typeof(string));
+            table.Columns.Add("TienGiamRieng",typeof(long));
+            table.Columns.Add("ChietKhauThuongMai",typeof(long));
+            table.Columns.Add("ChietKhauThanhToan",typeof(long));
+            table.Columns.Add("KenhBan",typeof(string));
+            table.Columns.Add("NhanGiamGia",typeof(string));
+            long goods = 0, services = 0;
+            if (invoice.ChiTiet != null)
+                foreach (CuahangNongduoc.BusinessObject.ChiTietPhieuBan line in invoice.ChiTiet)
+                    goods = checked(goods + line.ThanhTien);
+            StringBuilder description = new StringBuilder();
+            if (invoice.DichVu != null)
+                foreach (CuahangNongduoc.BusinessObject.DichVuPhieuBan service in invoice.DichVu)
+                {
+                    services = checked(services + service.TienDV);
+                    if (description.Length > 0) description.AppendLine();
+                    description.Append(service.Ten).Append(": ").Append(service.TienDV.ToString("#,##0")).Append(" đồng");
+                }
             CuahangNongduoc.BusinessObject.KhachHang customer = invoice.KhachHang;
             table.Rows.Add(invoice.Id, invoice.NgayBan, invoice.TongTien, invoice.DaTra, invoice.ConNo,
                 customer == null ? "" : customer.HoTen, customer == null ? "" : customer.DiaChi,
-                customer == null ? "" : customer.DienThoai);
+                customer == null ? "" : customer.DienThoai, goods, invoice.PhiVanChuyen, services,
+                invoice.TienGiam, description.ToString(),
+                invoice.ChiTietUuDai==null?invoice.TienGiam:invoice.ChiTietUuDai.GiamGia,
+                invoice.ChiTietUuDai==null?0:invoice.ChiTietUuDai.ThuongMai,
+                invoice.ChiTietUuDai==null?0:invoice.ChiTietUuDai.ThanhToan,
+                invoice.KenhUuDai=="BAN_SI"?"Bán sỉ":invoice.KenhUuDai=="BAN_LE"?"Bán lẻ":"",
+                invoice.ChiTietUuDai==null?"Giảm giá / chiết khấu (phiếu cũ): ":"Giảm giá: ");
             return table;
         }
 

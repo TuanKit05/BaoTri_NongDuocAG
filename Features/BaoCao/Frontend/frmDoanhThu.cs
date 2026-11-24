@@ -77,6 +77,8 @@ namespace CuahangNongduoc
             dgvDoanhThu = new DataGridView();
             dgvDoanhThu.Dock = DockStyle.Fill;
             dgvDoanhThu.ReadOnly = true;
+            dgvDoanhThu.DefaultCellStyle.WrapMode=DataGridViewTriState.True;
+            dgvDoanhThu.AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.AllCells;
             dgvDoanhThu.AllowUserToAddRows = false;
             dgvDoanhThu.AllowUserToDeleteRows = false;
             dgvDoanhThu.RowHeadersVisible = false;
@@ -177,7 +179,7 @@ namespace CuahangNongduoc
                     object soTien = kq.SoTien.HasValue
                         ? (object)kq.SoTien.Value
                         : DBNull.Value;
-                    dt.Rows.Add(kq.Ten, soTien);
+                    dt.Rows.Add(kq.Ten+(String.IsNullOrEmpty(kq.CanhBao)?"":" — "+kq.CanhBao), soTien);
                 }
 
                 dgvDoanhThu.DataSource = dt;

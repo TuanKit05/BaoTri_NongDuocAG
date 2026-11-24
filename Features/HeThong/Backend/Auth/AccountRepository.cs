@@ -28,6 +28,18 @@ namespace CuahangNongduoc
                 AddColumn(c, "TAI_KHOAN", "Salt", "TEXT(32)");
                 AddColumn(c, "TAI_KHOAN", "DoiMatKhau", "YESNO");
                 AddColumn(c, "TAI_KHOAN", "DaXoa", "YESNO");
+                if(c.GetOleDbSchemaTable(OleDbSchemaGuid.Columns,new object[] { null,null,"PHIEU_BAN","UU_DAI_PHIEN_BAN" }).Rows.Count==0) {
+                    string source=new OleDbConnectionStringBuilder(DataService.m_ConnectString).DataSource;
+                    string folder=Path.Combine(Path.GetDirectoryName(source),"Backups"); Directory.CreateDirectory(folder);
+                    File.Copy(source,Path.Combine(folder,"cuahang_truoc_uu_dai_kenh_"+DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")+".mdb"));
+                }
+                AddColumn(c,"PHIEU_BAN","TIEN_GIAM_RIENG","CURRENCY");
+                AddColumn(c,"PHIEU_BAN","TIEN_CK_THUONG_MAI","CURRENCY");
+                AddColumn(c,"PHIEU_BAN","TIEN_CK_THANH_TOAN","CURRENCY");
+                AddColumn(c,"PHIEU_BAN","KENH_UU_DAI","TEXT(20)");
+                AddColumn(c,"PHIEU_BAN","CHINH_SACH_UU_DAI","MEMO");
+                AddColumn(c,"PHIEU_BAN","UU_DAI_PHIEN_BAN","LONG");
+                AddColumn(c,"PHIEU_BAN","PHAN_TRAM_GIAM_TAY","DOUBLE");
                 AddColumn(c, "PHIEU_BAN", "ID_NHAN_VIEN", "TEXT(50)");
                 CreateTable(c, "VAI_TRO", "[MaVaiTro] TEXT(20) PRIMARY KEY, [TenVaiTro] TEXT(100) NOT NULL");
                 CreateTable(c, "QUYEN", "[MaQuyen] TEXT(50) PRIMARY KEY, [TenQuyen] TEXT(100)");
@@ -80,6 +92,7 @@ namespace CuahangNongduoc
                 if (!singleRoleIndex) Execute(c, null, "CREATE UNIQUE INDEX UX_TAI_KHOAN_MOT_VAI_TRO ON TAI_KHOAN_VAI_TRO (ID_TAI_KHOAN)");
                 IdGenerator.EnsureSchema(c);
                 WarehouseSettings.EnsureSchema(c);
+                WarehouseCost.EnsureSchema(c);
             }
         }
 

@@ -95,7 +95,7 @@ namespace CuahangNongduoc
             navigator.Dock = DockStyle.Top;
             foreach (Control child in product.Controls)
                 child.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            Control serviceGrid = fees.Controls["dgvDichVu"];
+            Control serviceGrid = fees.Controls["serviceEditor"] ?? fees.Controls["dgvDichVu"];
             serviceGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             foreach (Control child in Children(content)) ConfigureSaleGrids(child);
             viewport.AutoScrollMinSize = new Size(width, height);

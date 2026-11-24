@@ -21,4 +21,11 @@
     <PhanTramTuDong>0</PhanTramTuDong>
     <TienGiam>13000</TienGiam>
   </Phieu>
+  <Phieu Id="51">
+    <PhiVanChuyen>12000</PhiVanChuyen>
+    <PhanTramGiam>0</PhanTramGiam>
+    <PhanTramGiamTay>0</PhanTramGiamTay>
+    <PhanTramTuDong>0</PhanTramTuDong>
+    <TienGiam>0</TienGiam>
+  </Phieu>
 </PhiHoaDon>

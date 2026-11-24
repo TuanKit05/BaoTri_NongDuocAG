@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
@@ -32,6 +32,7 @@ namespace CuahangNongduoc.Features.BaoCao.Backend
         public List<TonKhoLo> DanhSach { get; set; }
         public long TongSoLuong { get; set; }
         public decimal TongGiaTri { get; set; }
+        public string CanhBao { get; set; }
     }
 
     public sealed class TonKhoTaiNgayService
@@ -45,6 +46,7 @@ namespace CuahangNongduoc.Features.BaoCao.Backend
 
             kq.NgayMoSo = LayNgayMoSo();
             kq.DuDuLieu = kq.NgayMoSo.HasValue && d >= kq.NgayMoSo.Value.Date;
+            kq.CanhBao=kq.DuDuLieu?"":"Thiếu lịch sử biến động trước ngày mở sổ "+(kq.NgayMoSo.HasValue?kq.NgayMoSo.Value.ToString("dd/MM/yyyy"):"(chưa mở sổ)")+"; số liệu chưa đủ căn cứ đối chiếu.";
 
             // Biến động sau ngày D, cộng gộp theo lô
             Dictionary<string, long> sauD = new Dictionary<string, long>(StringComparer.Ordinal);
@@ -84,8 +86,11 @@ namespace CuahangNongduoc.Features.BaoCao.Backend
                     sauD.TryGetValue(maLo, out bd);
                     tonTaiNgay = tonHienTai - bd;
                 }
-                if (tonTaiNgay <= 0)
-                    continue;
+                if(tonTaiNgay<0) {
+                    kq.DuDuLieu=false;
+                    kq.CanhBao+=(kq.CanhBao.Length==0?"":" ")+"Lô "+maLo+" có tồn âm "+tonTaiNgay+"; cần đối chiếu chứng từ.";
+                }
+                if (tonTaiNgay == 0) continue;
 
                 decimal donGia = r["DON_GIA_NHAP"] == DBNull.Value ? 0m : Convert.ToDecimal(r["DON_GIA_NHAP"]);
                 TonKhoLo lo = new TonKhoLo();

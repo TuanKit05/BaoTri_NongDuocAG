@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2005/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
   <DataSources>
     <DataSource Name="DummyDataSource">
@@ -76,7 +76,7 @@
           <DataField>KhachHangDienThoai</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-      </Fields>
+      <Field Name="TienHang"><DataField>TienHang</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="PhiVanChuyen"><DataField>PhiVanChuyen</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="TongDichVu"><DataField>TongDichVu</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="TienGiam"><DataField>TienGiam</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="ChiTietDichVu"><DataField>ChiTietDichVu</DataField><rd:TypeName>System.String</rd:TypeName></Field><Field Name="TienGiamRieng"><DataField>TienGiamRieng</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="ChietKhauThuongMai"><DataField>ChietKhauThuongMai</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="ChietKhauThanhToan"><DataField>ChietKhauThanhToan</DataField><rd:TypeName>System.Int64</rd:TypeName></Field><Field Name="KenhBan"><DataField>KenhBan</DataField><rd:TypeName>System.String</rd:TypeName></Field><Field Name="NhanGiamGia"><DataField>NhanGiamGia</DataField><rd:TypeName>System.String</rd:TypeName></Field></Fields>
       <Query>
         <DataSourceName>DummyDataSource</DataSourceName>
         <CommandText />
@@ -167,7 +167,7 @@
         <Value>Địa chỉ:</Value>
       </Textbox>
       <Textbox Name="textbox18">
-        <Top>9.299999999999999cm</Top>
+        <Top>14.4cm</Top>
         <Width>17.8cm</Width>
         <Style>
           <FontStyle>Italic</FontStyle>
@@ -509,8 +509,152 @@
         <Height>0.65cm</Height>
         <Value>Mã phiếu:</Value>
       </Textbox>
-    </ReportItems>
-    <Height>10.2cm</Height>
+    <Textbox Name="phi_TienHang">
+        <Top>9.3cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>="Tiền hàng: " &amp; Format(Fields!TienHang.Value, "#,##0") &amp; " đồng"</Value>
+      </Textbox><Textbox Name="phi_PhiVanChuyen">
+        <Top>10cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>="Phí vận chuyển: " &amp; Format(Fields!PhiVanChuyen.Value, "#,##0") &amp; " đồng"</Value>
+      </Textbox><Textbox Name="phi_TongDichVu">
+        <Top>10.7cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>="Tổng phí dịch vụ: " &amp; Format(Fields!TongDichVu.Value, "#,##0") &amp; " đồng"</Value>
+      </Textbox><Textbox Name="phi_ChiTietDichVu">
+        <Top>11.4cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>=Fields!ChiTietDichVu.Value</Value>
+      </Textbox><Textbox Name="phi_TienGiam">
+        <Top>12.2cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>=Fields!NhanGiamGia.Value &amp; Format(Fields!TienGiamRieng.Value, "#,##0") &amp; " đồng"</Value>
+      </Textbox><Textbox Name="phi_TongTien">
+        <Top>13.6cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>="Tổng thanh toán: " &amp; Format(Fields!TongTien.Value, "#,##0") &amp; " đồng"</Value>
+      </Textbox><Textbox Name="phi_CKThuongMai">
+        <Top>12.9cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>="Chiết khấu thương mại: " &amp; Format(Fields!ChietKhauThuongMai.Value, "#,##0") &amp; " đồng" &amp; IIF(Fields!ChietKhauThanhToan.Value &gt; 0, vbCrLf &amp; "Chiết khấu thanh toán cũ đã lưu: " &amp; Format(Fields!ChietKhauThanhToan.Value, "#,##0") &amp; " đồng", "")</Value>
+      </Textbox><Textbox Name="phi_KenhBan">
+        <Top>8.5cm</Top>
+        <Width>17.8cm</Width>
+        <Style>
+
+          <FontFamily>Arial</FontFamily>
+          <PaddingLeft>3pt</PaddingLeft>
+          <PaddingRight>3pt</PaddingRight>
+          <PaddingTop>3pt</PaddingTop>
+          <PaddingBottom>3pt</PaddingBottom>
+          <FontSize>10pt</FontSize>
+          <VerticalAlign>Middle</VerticalAlign>
+        </Style>
+        <ZIndex>18</ZIndex>
+        <CanGrow>true</CanGrow>
+        <Left>0cm</Left>
+        <Height>0.6cm</Height>
+        <Value>="Kênh bán: " &amp; Fields!KenhBan.Value</Value>
+      </Textbox></ReportItems>
+    <Height>15.3cm</Height>
   </Body>
   <Language>vi-VN</Language>
   <TopMargin>1.5cm</TopMargin>

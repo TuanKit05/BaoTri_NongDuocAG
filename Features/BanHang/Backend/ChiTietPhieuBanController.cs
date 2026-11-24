@@ -94,6 +94,40 @@ namespace CuahangNongduoc.Controller
     {
         ChiTietPhieuBanFactory factory = new ChiTietPhieuBanFactory();
 
+        public IList<UuDaiQuyDinh> ThemSanPhamVaUuDai(string customer,string product,string lot,string invoice,
+            decimal quantity,decimal price,bool gift,string channel,IList<UuDaiQuyDinh> savedRules)
+        {
+            AccessControl.DemandCurrent("BanHang");
+            if(String.IsNullOrEmpty(customer) || PhieuBanController.KenhKhachHang(customer)!=channel)
+                throw new InvalidOperationException("Vui lòng chọn khách hàng đúng kênh bán.");
+            if(String.IsNullOrEmpty(product)) throw new InvalidOperationException("Vui lòng chọn sản phẩm.");
+            if(quantity<=0) throw new InvalidOperationException("Số lượng mua phải lớn hơn 0.");
+            if(gift) throw new InvalidOperationException("Hàng tặng được thêm tự động theo ưu đãi. Vui lòng thêm sản phẩm mua.");
+            IList<UuDaiQuyDinh> rules=savedRules??PhieuBanController.DanhSachUuDaiHieuLuc(channel);
+            DataTable inventory=DocLoBan();
+            DataTable pending=factory.NewRow().Table;
+            DataTable plan=SalePromotionWorkflow.Plan(pending,inventory,rules,invoice,product,lot,quantity,price,
+                WarehouseSettings.Load()==WarehouseSettings.FirstInFirstOut,gift);
+            SalePromotionWorkflow.Apply(pending,plan,invoice);
+            return rules;
+        }
+        private static DataTable DocLoBan()
+        {
+            using(System.Data.OleDb.OleDbConnection c=new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString)) {
+                c.Open(); return AccountRepository.ReadTable(c,null,
+                    "SELECT ID,ID_SAN_PHAM,SO_LUONG,NGAY_HET_HAN,NGAY_NHAP FROM MA_SAN_PHAM ORDER BY NGAY_HET_HAN,NGAY_NHAP,ID");
+            }
+        }
+        public IList<UuDaiQuyDinh> DongBoHangTang(string invoice,string channel,IList<UuDaiQuyDinh> savedRules)
+        {
+            AccessControl.DemandCurrent("BanHang");
+            IList<UuDaiQuyDinh> rules=savedRules??PhieuBanController.DanhSachUuDaiHieuLuc(channel);
+            DataTable pending=factory.NewRow().Table;
+            DataTable plan=SalePromotionWorkflow.Plan(pending,DocLoBan(),rules,invoice,"","",0,0,true,false);
+            SalePromotionWorkflow.Apply(pending,plan,invoice);
+            return rules;
+        }
+
         public bool ThemTuDong(string customer, string product, string invoice, decimal quantity, decimal price, bool gift = false)
         {
             if (WarehouseSettings.Load() != WarehouseSettings.FirstInFirstOut) return false;
@@ -165,6 +199,8 @@ namespace CuahangNongduoc.Controller
             detail.GiaVon = AccessControl.Can("XemGiaVon") && AccessControl.Can("XemGiaNhap") &&
                 row.Table.Columns.Contains("GIA_VON") && row["GIA_VON"] != DBNull.Value
                 ? (decimal?)Convert.ToDecimal(row["GIA_VON"]) : null;
+            detail.GiaVonThanhTienDaLuu=detail.GiaVon.HasValue && row.Table.Columns.Contains("THANH_TIEN_GIA_VON") && row["THANH_TIEN_GIA_VON"]!=DBNull.Value
+                ?(decimal?)Convert.ToDecimal(row["THANH_TIEN_GIA_VON"]):null;
             detail.PhuongPhapGia = row.Table.Columns.Contains("PHUONG_PHAP_GIA") ? Convert.ToString(row["PHUONG_PHAP_GIA"]) : "";
         }
 

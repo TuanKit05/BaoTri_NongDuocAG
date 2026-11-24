@@ -254,6 +254,8 @@ namespace CuahangNongduoc
 
         private void toolSaoLuu_Click(object sender, EventArgs e)
         {
+            try { DatabaseBackupService.DemandManage(); }
+            catch(UnauthorizedAccessException error) { MessageBox.Show(this,error.Message,"Sao lưu"); return; }
             string defaultName = "cuahang_sao_luu_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".dll";
             using (SaveFileDialog dialog = new SaveFileDialog())
             {
@@ -316,6 +318,16 @@ namespace CuahangNongduoc
 
         private void KhoiTaoMenuTaiKhoan()
         {
+            ToolStripMenuItem services = new ToolStripMenuItem("Dịch vụ");
+            services.Name = "mnuDichVu";
+            services.Visible = AppSession.CurrentUser != null && AccountRoles.IsAdmin(AppSession.CurrentUser.Role);
+            services.Click += delegate {
+                try {
+                    DataLayer.DichVuFactory.DemandManage();
+                    using (frmDichVu form = new frmDichVu()) form.ShowDialog(this);
+                } catch (Exception error) { MessageBox.Show(this, error.Message, "Dịch vụ", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            };
+            mnuQuanLy.DropDownItems.Add(services);
             ToolStripMenuItem discounts = new ToolStripMenuItem("Cấu hình giảm giá và chiết khấu");
             discounts.Name = "mnuCauHinhUuDai";
             discounts.Visible = AppSession.CurrentUser != null && AccountRoles.IsAdmin(AppSession.CurrentUser.Role);
@@ -434,7 +446,7 @@ namespace CuahangNongduoc
             toolThanhtoan.Visible = CoQuyen("ThuChi");
             toolTonKho.Visible = CoQuyen("BaoCaoTonKho");
             // Keep the backup button discoverable; permission is enforced when it is clicked.
-            toolSaoLuu.Visible = true;
+            toolSaoLuu.Visible = CoQuyen("QuanTri") && AccountRoles.IsAdmin(AppSession.CurrentUser.Role);
 
             itemDaiLy.Visible = CoQuyen("DaiLy");
             itemKhachHang.Visible = CoQuyen("KhachHang");

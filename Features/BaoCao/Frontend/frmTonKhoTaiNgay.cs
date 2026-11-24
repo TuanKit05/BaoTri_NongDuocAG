@@ -61,16 +61,7 @@ namespace CuahangNongduoc.Features.BaoCao.Frontend
                 lblTongKet.Text = string.Format(
                     "Ngày {0:dd/MM/yyyy} | Tổng SL tồn: {1:N0} | Tổng giá trị (giá nhập): {2:N0} đ",
                     kq.Ngay, kq.TongSoLuong, kq.TongGiaTri);
-                if (kq.DuDuLieu)
-                {
-                    lblCanhBao.Text = "";
-                }
-                else
-                {
-                    lblCanhBao.Text = "Cảnh báo: sổ biến động kho mở từ "
-                        + (kq.NgayMoSo.HasValue ? kq.NgayMoSo.Value.ToString("dd/MM/yyyy") : "(chưa mở sổ)")
-                        + ". Số liệu ngày trước đó không chính xác vì thiếu lịch sử biến động.";
-                }
+                lblCanhBao.Text=kq.CanhBao;
                 btnXuat.Enabled = dgvTonKho.Rows.Count > 0;
             }
             catch (Exception ex)
@@ -278,8 +269,9 @@ namespace CuahangNongduoc.Features.BaoCao.Frontend
                         y += 20;
                         if (!String.IsNullOrEmpty(lblCanhBao.Text))
                         {
-                            g.DrawString(lblCanhBao.Text, fChu, Brushes.Black, vung.Left, y);
-                            y += 20;
+                            SizeF warningSize=g.MeasureString(lblCanhBao.Text,fChu,(int)vung.Width);
+                            g.DrawString(lblCanhBao.Text,fChu,Brushes.DarkRed,new RectangleF(vung.Left,y,vung.Width,warningSize.Height));
+                            y += warningSize.Height+6;
                         }
                         trangDau = false;
                     }

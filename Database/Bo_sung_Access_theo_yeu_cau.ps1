@@ -54,6 +54,15 @@ try {
  AddColumn 'PHIEU_BAN' 'ID_UU_DAI' 'TEXT(50)'
  AddColumn 'PHIEU_BAN' 'GIAM_GIA_LOAI' 'TEXT(20)'
  AddColumn 'PHIEU_BAN' 'GIAM_GIA_GIA_TRI' 'CURRENCY'
+ AddColumn 'PHIEU_BAN' 'KENH_UU_DAI' 'TEXT(20)'
+ AddColumn 'PHIEU_BAN' 'CHINH_SACH_UU_DAI' 'MEMO'
+ AddColumn 'PHIEU_BAN' 'UU_DAI_PHIEN_BAN' 'LONG'
+ AddColumn 'PHIEU_BAN' 'PHAN_TRAM_GIAM_TAY' 'DOUBLE'
+ foreach($name in @('TIEN_CK_THANH_TOAN','TIEN_CK_THUONG_MAI','TIEN_GIAM_RIENG')){AddColumn 'PHIEU_BAN' $name 'CURRENCY'}
+ AddTable 'LOP_GIA_VON' '[MA_LO] TEXT(50) PRIMARY KEY,[ID_SAN_PHAM] TEXT(50),[NGAY_NHAP] DATETIME,[DON_GIA] CURRENCY,[SO_LUONG] LONG'
+ AddTable 'PHAN_BO_GIA_VON' '[ID] COUNTER PRIMARY KEY,[ID_PHIEU_BAN] TEXT(50),[MA_LO_XUAT] TEXT(50),[LA_HANG_TANG] YESNO,[MA_LO_GIA] TEXT(50),[SO_LUONG] LONG,[DON_GIA] CURRENCY'
+ # Opening layers reflect current stock, never fabricate historical sale allocations.
+ Exec 'INSERT INTO LOP_GIA_VON (MA_LO,ID_SAN_PHAM,NGAY_NHAP,DON_GIA,SO_LUONG) SELECT M.ID,M.ID_SAN_PHAM,M.NGAY_NHAP,M.DON_GIA_NHAP,M.SO_LUONG FROM MA_SAN_PHAM M LEFT JOIN LOP_GIA_VON L ON M.ID=L.MA_LO WHERE L.MA_LO IS NULL'
  AddTable 'DICH_VU' '[ID] TEXT(50) PRIMARY KEY,[TEN_DICH_VU] TEXT(255),[DON_GIA] CURRENCY,[DANG_SU_DUNG] YESNO'
  AddTable 'CHI_TIET_DICH_VU' '[ID] COUNTER PRIMARY KEY,[ID_PHIEU_BAN] TEXT(50),[ID_DICH_VU] TEXT(50),[MO_TA] TEXT(255),[SO_LUONG] LONG,[DON_GIA] CURRENCY,[THANH_TIEN] CURRENCY'
  AddTable 'UU_DAI' '[ID] TEXT(50) PRIMARY KEY,[LOAI] TEXT(20),[PHAM_VI] TEXT(20),[MA_SAN_PHAM] TEXT(50),[DIEU_KIEN] MEMO,[GIA_TRI] DOUBLE,[TU_NGAY] DATETIME,[DEN_NGAY] DATETIME,[NGUOI_THIET_LAP] TEXT(50)'
@@ -67,7 +76,7 @@ try {
   }
  }
  # A gift and a paid row may share one lot. The companion compatibility changes set False on new paid rows.
- $pk=$c.GetOleDbSchemaTable([Data.OleDb.OleDbSchemaGuid]::Primary_Keys,@($null,$null,'CHI_TIET_PHIEU_BAN'))
+ $pkTable=New-Object Data.DataTable; $pkAdapter=New-Object Data.OleDb.OleDbDataAdapter('SELECT * FROM CHI_TIET_PHIEU_BAN WHERE 1=0',$c); $pkAdapter.MissingSchemaAction=[Data.MissingSchemaAction]::AddWithKey; [void]$pkAdapter.Fill($pkTable); $pk=New-Object Data.DataTable; if($pkTable.PrimaryKey.Count -eq 2){throw 'Legacy two-column sale detail key requires a separate reviewed migration.'}
  if($pk.Rows.Count -eq 2){Exec ('ALTER TABLE CHI_TIET_PHIEU_BAN DROP CONSTRAINT ['+$pk.Rows[0].PK_NAME+']');Exec 'ALTER TABLE CHI_TIET_PHIEU_BAN ADD CONSTRAINT PK_CHI_TIET_BAN PRIMARY KEY (ID_PHIEU_BAN,ID_MA_SAN_PHAM,LA_HANG_TANG)'}
  foreach($relation in @(
   @('PHIEU_BAN','ID_KHACH_HANG','KHACH_HANG','ID'),@('PHIEU_NHAP','ID_NHA_CUNG_CAP','NHA_CUNG_CAP','ID'),
@@ -110,6 +119,7 @@ try{$currentHash=[BitConverter]::ToString($sha.ComputeHash($destination));$origi
 if($currentHash -ne $originalHash){$destination.Dispose();throw 'Original database changed during staging; no changes were published. Close the application and rerun.'}
 $destination.Position=0
 try{$verified=[IO.File]::ReadAllBytes($stage);$destination.SetLength(0);$destination.Write($verified,0,$verified.Length);$destination.Flush()}catch{ $destination.SetLength(0);$destination.Write($bytes,0,$bytes.Length);$destination.Flush();throw }finally{$destination.Dispose()}
+Remove-Item -LiteralPath $stage
 $reportPath=Join-Path $backupDir ('Doi_chieu_CSDL_'+$stamp+'.json')
 $report | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 $reportPath
 Write-Output ('UPDATED: '+$DatabasePath)

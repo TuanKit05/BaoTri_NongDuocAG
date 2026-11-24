@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Data.OleDb;
 
@@ -20,7 +20,7 @@ namespace CuahangNongduoc
         public static string Describe(string method, string costMethod, int days)
         {
             return "Xuất kho: " + (method == FirstInFirstOut ? "Nhập trước xuất trước" : "Chỉ định lô") +
-                "; giá vốn: " + (costMethod == WeightedAverage ? "Bình quân gia quyền" : "Giá nhập theo lô xuất") +
+                "; giá vốn: " + (costMethod == WeightedAverage ? "Bình quân gia quyền" : "FIFO theo lớp giá nhập trước") +
                 "; cảnh báo trước " + days + " ngày";
         }
 

@@ -233,14 +233,22 @@ namespace CuahangNongduoc.DataLayer
             if (m_Ds.GetChanges() == null)
                 return true;
 
-            Dictionary<string, long> changes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, long> changes;
             string costMethod = WarehouseSettings.ReadCostMethod(conn, tr);
+            foreach(DataRow changed in m_Ds.Rows) {
+                if(changed.RowState==DataRowState.Unchanged || changed.RowState==DataRowState.Detached || !changed.HasVersion(DataRowVersion.Original) || !WarehouseCost.ChangesQuantity(changed)) continue;
+                WarehouseCost.Restore(conn,tr,Convert.ToString(changed["ID_PHIEU_BAN",DataRowVersion.Original]),
+                    Convert.ToString(changed["ID_MA_SAN_PHAM",DataRowVersion.Original]),
+                    changed["LA_HANG_TANG",DataRowVersion.Original]!=DBNull.Value && Convert.ToBoolean(changed["LA_HANG_TANG",DataRowVersion.Original]),
+                    Convert.ToInt32(changed["SO_LUONG",DataRowVersion.Original]));
+            }
             foreach (DataRow row in m_Ds.Rows)
             {
                 if (row.RowState == DataRowState.Unchanged || row.RowState == DataRowState.Detached) continue;
                 KiemTraQuyenDongPhieu(conn, tr, row, row.RowState == DataRowState.Deleted ? DataRowVersion.Original : DataRowVersion.Current);
                 object savedCost = DBNull.Value;
                 object savedMethod = DBNull.Value;
+                object savedTotal = DBNull.Value;
                 if (row.RowState != DataRowState.Added)
                 {
                     AccessControl.DemandCurrent("SuaPhieuBan");
@@ -248,7 +256,7 @@ namespace CuahangNongduoc.DataLayer
                     string oldLot = Convert.ToString(row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
                     int oldQuantity = Convert.ToInt32(row["SO_LUONG", DataRowVersion.Original]);
                     using (OleDbCommand original = new OleDbCommand(
-                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN,GIA_VON,PHUONG_PHAP_GIA FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=? AND LA_HANG_TANG=?", conn, tr))
+                        "SELECT SO_LUONG,DON_GIA,THANH_TIEN,GIA_VON,PHUONG_PHAP_GIA,THANH_TIEN_GIA_VON FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=? AND ID_MA_SAN_PHAM=? AND LA_HANG_TANG=?", conn, tr))
                     {
                         original.Parameters.Add("invoice", OleDbType.VarWChar, 50).Value = oldInvoice;
                         original.Parameters.Add("lot", OleDbType.VarWChar, 50).Value = oldLot;
@@ -261,9 +269,10 @@ namespace CuahangNongduoc.DataLayer
                                 throw new DBConcurrencyException("Dong phieu da duoc thay doi. Hay tai lai phieu.");
                             savedCost = reader[3];
                             savedMethod = reader[4];
+                            savedTotal = reader[5];
                         }
                     }
-                    AddStockChange(changes, oldLot, oldQuantity);
+
                 }
                 if (row.RowState == DataRowState.Deleted) continue;
                 if (row.RowState == DataRowState.Modified && !Object.Equals(row["ID_PHIEU_BAN"], row["ID_PHIEU_BAN", DataRowVersion.Original]))
@@ -287,12 +296,25 @@ namespace CuahangNongduoc.DataLayer
                     Convert.ToDecimal(row["DON_GIA"]), Convert.ToDecimal(row["SO_LUONG"]));
                 bool newLot = row.RowState == DataRowState.Added ||
                     !Object.Equals(row["ID_MA_SAN_PHAM"], row["ID_MA_SAN_PHAM", DataRowVersion.Original]);
-                row["GIA_VON"] = newLot ? (object)WarehouseCost.UnitCost(conn, tr, Convert.ToString(row["ID_MA_SAN_PHAM"]), costMethod) : savedCost;
-                row["PHUONG_PHAP_GIA"] = newLot ? (object)costMethod : savedMethod;
-                row["GIA_VON_DON_VI"] = row["GIA_VON"];
-                row["THANH_TIEN_GIA_VON"] = row["GIA_VON"] == DBNull.Value ? (object)DBNull.Value : Convert.ToDecimal(row["GIA_VON"]) * Convert.ToInt32(row["SO_LUONG"]);
-                AddStockChange(changes, Convert.ToString(row["ID_MA_SAN_PHAM"]), -Convert.ToInt32(row["SO_LUONG"]));
+                int quantity=Convert.ToInt32(row["SO_LUONG"]);
+                string method=newLot?costMethod:Convert.ToString(savedMethod);
+                bool reallocate=WarehouseCost.ChangesQuantity(row);
+                decimal? totalCost=null;
+                if(reallocate) {
+                    totalCost=WarehouseCost.Allocate(conn,tr,invoice,Convert.ToString(row["ID_MA_SAN_PHAM"]),
+                        row["LA_HANG_TANG"]!=DBNull.Value && Convert.ToBoolean(row["LA_HANG_TANG"]),quantity,method);
+                    if(!newLot && method==WarehouseSettings.WeightedAverage && savedCost!=DBNull.Value) totalCost=Convert.ToDecimal(savedCost)*quantity;
+                    if(!newLot && savedCost==DBNull.Value) { totalCost=null; savedTotal=DBNull.Value; }
+                }
+                row["GIA_VON"]=totalCost.HasValue?(object)Decimal.Round(totalCost.Value/quantity,4,MidpointRounding.AwayFromZero):savedCost;
+                row["PHUONG_PHAP_GIA"]=newLot?(object)costMethod:savedMethod;
+                row["GIA_VON_DON_VI"]=row["GIA_VON"];
+                row["THANH_TIEN_GIA_VON"]=totalCost.HasValue?(object)totalCost.Value:savedTotal!=DBNull.Value?savedTotal:
+                    row["GIA_VON"]==DBNull.Value?(object)DBNull.Value:Convert.ToDecimal(row["GIA_VON"])*quantity;
+
+
             }
+            changes = SalePromotionWorkflow.StockChanges(m_Ds);
             List<string> stockErrors = new List<string>();
             foreach (KeyValuePair<string, long> change in changes)
                 if (change.Value < 0)
@@ -401,6 +423,9 @@ namespace CuahangNongduoc.DataLayer
                     dong.Add(new KeyValuePair<String, int>(Convert.ToString(rd[0]), Convert.ToInt32(rd[1])));
             }
 
+            DataTable costRows=AccountRepository.ReadTable(conn,tr,"SELECT ID_MA_SAN_PHAM,SO_LUONG,LA_HANG_TANG FROM CHI_TIET_PHIEU_BAN WHERE ID_PHIEU_BAN=?",idPhieuBan);
+            foreach(DataRow row in costRows.Rows) WarehouseCost.Restore(conn,tr,idPhieuBan,Convert.ToString(row["ID_MA_SAN_PHAM"]),
+                row["LA_HANG_TANG"]!=DBNull.Value && Convert.ToBoolean(row["LA_HANG_TANG"]),Convert.ToInt32(row["SO_LUONG"]));
             // Hoàn tồn: ngược với lúc bán (bán thì trừ)
             foreach (KeyValuePair<String, int> ct in dong)
             {

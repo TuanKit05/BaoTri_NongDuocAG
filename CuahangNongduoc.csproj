@@ -90,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\DatabaseBackupService.cs" />
+    <Compile Include="Common\InvoiceServiceEditor.cs" />
     <Compile Include="Features\BanHang\Backend\BoTinhUuDai.cs" />
     <Compile Include="Features\BanHang\Backend\ChiTietPhieuBan.cs" />
     <Compile Include="Features\BanHang\Backend\IChienLuocUuDai.cs" />
@@ -655,7 +656,8 @@
   <ItemGroup>
     <Content Include="CuahangNongduoc.ico" />
     <Content Include="Database\cuahang.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory Condition="'$(Configuration)' == 'Debug'">Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory Condition="'$(Configuration)' != 'Debug'">PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Features\QuanLyDanhMuc\Backend\Refactored\README_Refactoring.md" />
     <Content Include="Features\QuanLyDanhMuc\Frontend\README_Frontend_Refactoring.md" />

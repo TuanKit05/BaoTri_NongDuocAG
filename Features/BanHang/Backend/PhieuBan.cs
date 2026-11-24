@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -24,6 +24,9 @@ namespace CuahangNongduoc.BusinessObject
 
     public class PhieuBan
     {
+        public string KenhUuDai="";
+        public KetQuaChinhSach ChiTietUuDai;
+
         private String m_Id;
 
         public String Id
@@ -77,7 +80,7 @@ namespace CuahangNongduoc.BusinessObject
             set { m_ChiTiet = value; }
         }
 
-        // ---- Khoản phát sinh: lưu trong phihoadon.xml, không lưu CSDL ----
+        // Phí và chi tiết ưu đãi lưu trong Access; XML giữ tương thích phiếu cũ.
 
         private long m_PhiVanChuyen;
 
@@ -287,6 +290,36 @@ namespace CuahangNongduoc.BusinessObject
     public class HoaDonDangLap
     {
         public event EventHandler DaThayDoi;
+        public string Kenh="BAN_LE";
+        private long daTra;
+        private long uuDaiThanhToanCu;
+        private KetQuaChinhSach chiTietKhoa;
+        public void DatThanhToan(long paid) { daTra=paid; }
+        private long TongPhi { get { long n=m_PhiVanChuyen; foreach(DichVuPhieuBan service in m_DichVu) n=checked(n+service.TienDV); return n; } }
+        public KetQuaChinhSach ChiTietUuDai {
+            get {
+                if(chiTietKhoa!=null) return chiTietKhoa;
+                if(m_PhanTramTuDongKhoa.HasValue) return new KetQuaChinhSach { GiamGia=new GiamGiaPhanTram(PhanTramGiamHieuLuc).TinhTienGiam(m_TienHang) };
+                KetQuaChinhSach result=ChonUuDai.TinhTheoKenh(m_TienHang,m_TongSoLuong,m_DsUuDai,dongUuDai,Kenh,daTra,TongPhi,m_PhanTramGiamTay);
+                // Historical amounts stay independent of later cash receipts.
+                result.ThanhToan=Math.Min(uuDaiThanhToanCu,Math.Max(0,m_TienHang-result.TongGiam));
+                return result;
+            }
+        }
+        public long SoTienTraDu { get { return TongTien; } }
+        public void MoSuaUuDai(IDictionary<string,string> lots)
+        {
+            if(chiTietKhoa==null || String.IsNullOrEmpty(chiTietKhoa.QuyTacDaLuu)) return;
+            IList<UuDaiQuyDinh> savedRules=ChonUuDai.DocQuyTac(chiTietKhoa.QuyTacDaLuu,lots);
+            List<UuDaiQuyDinh> editable=new List<UuDaiQuyDinh>();
+            foreach(UuDaiQuyDinh rule in savedRules)
+                if(rule.Loai!=UuDaiQuyDinh.LoaiChietKhauThanhToan) editable.Add(rule);
+            m_DsUuDai=editable;
+            chiTietKhoa=null; m_PhanTramTuDongKhoa=null;
+        }
+        public void KhoaChiTiet(KetQuaChinhSach saved)
+        { chiTietKhoa=saved; uuDaiThanhToanCu=saved==null?0:saved.ThanhToan; }
+
 
         private long m_TienHang;
         private long m_PhiVanChuyen;
@@ -322,7 +355,8 @@ namespace CuahangNongduoc.BusinessObject
             {
                 if (m_PhanTramTuDongKhoa.HasValue)
                     return m_PhanTramTuDongKhoa.Value;
-                return ChonUuDai.PhanTramGiamHoaDon(m_TienHang, m_TongSoLuong, m_DsUuDai);
+                KetQuaChinhSach automatic=ChonUuDai.TinhTheoKenh(m_TienHang,m_TongSoLuong,m_DsUuDai,dongUuDai,Kenh,daTra,TongPhi,0);
+                return m_TienHang==0?0:(double)automatic.TongGiam*100/m_TienHang;
             }
         }
 
@@ -341,10 +375,33 @@ namespace CuahangNongduoc.BusinessObject
 
         // Nạp danh sách ưu đãi còn hiệu lực
         // Nạp ưu đãi cho phiếu mới: mở khóa mức tự động của phiếu đã lưu trước đó
+        private IList<DongTinhUuDai> dongUuDai = new List<DongTinhUuDai>();
+        public IList<UuDaiQuyDinh> QuyTacDangDung { get { return m_DsUuDai; } }
+        public void CapNhatUuDai(IList<UuDaiQuyDinh> rules)
+        {
+            m_DsUuDai=rules??new List<UuDaiQuyDinh>();
+            m_PhanTramTuDongKhoa=null; chiTietKhoa=null; uuDaiThanhToanCu=0;
+        }
+        public void DatTienHang(IList<DongTinhUuDai> lines,int quantity,long money)
+        {
+            dongUuDai=lines; m_TongSoLuong=quantity; m_TienHang=money; ThongBao();
+        }
+        public void DatDongUuDai(IList<DongTinhUuDai> lines)
+        {
+            dongUuDai = lines;
+        }
+        public string SanPhamCuaLo(string lot)
+        {
+            string product;
+            foreach (UuDaiQuyDinh rule in m_DsUuDai)
+                if(rule.SanPhamTheoLo != null && rule.SanPhamTheoLo.TryGetValue(lot, out product)) return product;
+            return lot;
+        }
         public void NapUuDai(IList<UuDaiQuyDinh> dsUuDai)
         {
             m_DsUuDai = dsUuDai ?? new List<UuDaiQuyDinh>();
             m_PhanTramTuDongKhoa = null;
+            chiTietKhoa=null; uuDaiThanhToanCu=0; daTra=0;
             ThongBao();
         }
 
@@ -390,12 +447,12 @@ namespace CuahangNongduoc.BusinessObject
 
         public long TienGiam
         {
-            get { return ChienLuoc.TinhTienGiam(m_TienHang); }
+            get { return ChiTietUuDai.TongGiam; }
         }
 
         public long TongTien
         {
-            get { return DungHoaDon.TongThanhToan(m_TienHang, ChienLuoc, m_PhiVanChuyen, m_DichVu); }
+            get { return Math.Max(0,checked(m_TienHang-TienGiam+TongPhi)); }
         }
 
         // Tạo đối tượng PhieuBan để ghi phí vào phihoadon.xml
@@ -403,6 +460,8 @@ namespace CuahangNongduoc.BusinessObject
         {
             PhieuBan ph = new PhieuBan();
             ph.Id = idPhieu;
+            ph.KenhUuDai=Kenh; ph.ChiTietUuDai=ChiTietUuDai;
+            ph.DaTra=daTra; ph.TongTien=TongTien; ph.ConNo=TongTien-daTra;
             ph.PhiVanChuyen = m_PhiVanChuyen;
             ph.PhanTramGiam = PhanTramGiamHieuLuc;
             ph.PhanTramGiamTay = m_PhanTramGiamTay;

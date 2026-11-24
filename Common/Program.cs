@@ -20,10 +20,14 @@ namespace CuahangNongduoc
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            Timer backupTimer=new Timer();
+            backupTimer.Interval=60000;
+            backupTimer.Tick+=delegate { DatabaseBackupService.TryDailyBackup(); };
             try
             {
                 AccountRepository repository = new AccountRepository();
                 repository.EnsureSchema();
+                DatabaseBackupService.TryDailyBackup(); backupTimer.Start();
 
                 AuthService authService = new AuthService(repository);
                 bool runLoginAgain = true;
@@ -52,6 +56,7 @@ namespace CuahangNongduoc
             }
             finally
             {
+                backupTimer.Dispose();
                 AppSession.CurrentUser = null;
             }
         }

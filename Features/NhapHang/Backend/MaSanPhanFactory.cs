@@ -107,6 +107,8 @@ namespace CuahangNongduoc.DataLayer
             // Tính theo sổ biến động kho (BIEN_DONG_KHO) thông qua TonKhoTaiNgayService.
             KetQuaTonKho kq = new TonKhoTaiNgayService().LayTonKhoTaiNgay(denNgay.Date);
             DataTable ketQua = TaoBangTonKho(kq);
+            ketQua.ExtendedProperties["CanhBao"]=kq.CanhBao;
+            ketQua.ExtendedProperties["DuDuLieu"]=kq.DuDuLieu;
             AccessControl.HideCosts(ketQua);
             return ketQua;
         }

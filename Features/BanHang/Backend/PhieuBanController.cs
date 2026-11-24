@@ -67,7 +67,12 @@ namespace CuahangNongduoc.Controller
             bs.EndEdit();
             factory.KiemTraHangTang(ctrlChiTiet.NewRow().Table);
             Dictionary<string, long> configuredDiscounts = factory.KiemTraUuDaiTuDong(ctrlChiTiet.NewRow().Table, phi);
-            if (phi != null) factory.DatTienGiamGia(phi.Id, phi.TienGiam);
+            if (phi != null)
+            {
+                factory.DatChiTietUuDai(phi);
+                factory.DatTienGiamGia(phi.Id, phi.TienGiam);
+                factory.DatTienVanChuyen(phi.Id, phi.PhiVanChuyen);
+            }
             using (System.Data.OleDb.OleDbConnection conn = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString))
             {
                 conn.Open();
@@ -122,6 +127,7 @@ namespace CuahangNongduoc.Controller
                         try
                         {
                             AccessControl.SaleTransaction = tr;
+                            factory.DatChiTietUuDai(phiMoi);
                             factory.DatTienVanChuyen(phiMoi.Id, phiMoi.PhiVanChuyen);
                             factory.DatTienGiamGia(phiMoi.Id, phiMoi.TienGiam);
                             factory.SaveTrongGiaoDich(conn, tr);
@@ -235,12 +241,42 @@ namespace CuahangNongduoc.Controller
         }
 
         // Ưu đãi hiệu lực trong ngày, đã chuyển sang đối tượng để HoaDonDangLap dùng
+        public static IDictionary<string,string> SanPhamTheoLo()
+        {
+            Dictionary<string,string> result = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+            using (System.Data.OleDb.OleDbConnection c = new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString)) {
+                c.Open();
+                using (System.Data.OleDb.OleDbCommand cmd = new System.Data.OleDb.OleDbCommand("SELECT ID,ID_SAN_PHAM FROM MA_SAN_PHAM",c))
+                using (System.Data.OleDb.OleDbDataReader r = cmd.ExecuteReader())
+                    while(r.Read()) result[Convert.ToString(r[0])] = Convert.ToString(r[1]);
+            }
+            return result;
+        }
+
+        public static string KenhKhachHang(string customer)
+        {
+            using(System.Data.OleDb.OleDbConnection c=new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString)) {
+                c.Open(); object value=AccountRepository.Scalar(c,null,"SELECT LOAI_KH FROM KHACH_HANG WHERE ID=?",customer);
+                if(value==null || value==DBNull.Value) throw new InvalidOperationException("Khách hàng không tồn tại hoặc chưa xác định kênh bán.");
+                return Convert.ToBoolean(value)?"BAN_SI":"BAN_LE";
+            }
+        }
+        public static IList<UuDaiQuyDinh> DanhSachUuDaiHieuLuc(string channel)
+        {
+            List<UuDaiQuyDinh> selected=new List<UuDaiQuyDinh>();
+            foreach(UuDaiQuyDinh rule in DanhSachUuDaiHieuLuc()) if(rule.DungKenh(channel)) selected.Add(rule);
+            return selected;
+        }
         public static IList<UuDaiQuyDinh> DanhSachUuDaiHieuLuc()
         {
             List<UuDaiQuyDinh> ds = new List<UuDaiQuyDinh>();
             DataTable tbl = PhieuBanFactory.LayUuDaiHieuLuc(DateTime.Today);
-            foreach (DataRow row in tbl.Rows)
-                ds.Add(UuDaiQuyDinh.TuDataRow(row));
+            IDictionary<string,string> products = SanPhamTheoLo();
+            foreach (DataRow row in tbl.Rows) {
+                UuDaiQuyDinh rule = UuDaiQuyDinh.TuDataRow(row);
+                rule.SanPhamTheoLo = products;
+                ds.Add(rule);
+            }
             return ds;
         }
 
@@ -345,6 +381,23 @@ namespace CuahangNongduoc.Controller
             return Convert.ToInt64(o);
         }
 
+        private static void DocChiTietUuDaiDb(PhieuBan invoice)
+        {
+            using(System.Data.OleDb.OleDbConnection c=new System.Data.OleDb.OleDbConnection(DataService.m_ConnectString)) {
+                c.Open(); DataTable table=AccountRepository.ReadTable(c,null,"SELECT * FROM PHIEU_BAN WHERE ID=?",invoice.Id);
+                if(table.Rows.Count==0 || !table.Columns.Contains("UU_DAI_PHIEN_BAN")) return;
+                DataRow row=table.Rows[0]; if(row["UU_DAI_PHIEN_BAN"]==DBNull.Value || Convert.ToInt32(row["UU_DAI_PHIEN_BAN"])<1) return;
+                invoice.ChiTietUuDai=new KetQuaChinhSach {
+                    GiamGia=row["TIEN_GIAM_RIENG"]==DBNull.Value?0:Convert.ToInt64(row["TIEN_GIAM_RIENG"]),
+                    ThuongMai=row["TIEN_CK_THUONG_MAI"]==DBNull.Value?0:Convert.ToInt64(row["TIEN_CK_THUONG_MAI"]),
+                    ThanhToan=row["TIEN_CK_THANH_TOAN"]==DBNull.Value?0:Convert.ToInt64(row["TIEN_CK_THANH_TOAN"]),
+                    QuyTacDaLuu=Convert.ToString(row["CHINH_SACH_UU_DAI"]) };
+                invoice.KenhUuDai=Convert.ToString(row["KENH_UU_DAI"]);
+                invoice.PhanTramGiamTay=row["PHAN_TRAM_GIAM_TAY"]==DBNull.Value?0:Convert.ToDouble(row["PHAN_TRAM_GIAM_TAY"]);
+                invoice.TienGiam=invoice.ChiTietUuDai.TongGiam;
+            }
+        }
+
         public static PhieuBan DocPhi(String id)
         {
             PhieuBan ph = new PhieuBan();
@@ -354,6 +407,7 @@ namespace CuahangNongduoc.Controller
                 ph.PhiVanChuyen = phiDb.Value;
             // Dịch vụ lấy từ CHI_TIET_DICH_VU; phiếu cũ còn dịch vụ trong XML thì được nối thêm ở dưới
             ph.DichVu = LayDichVuDb(id);
+            DocChiTietUuDaiDb(ph);
             bool coPhanTramTay = false;
             bool coPhanTramTuDong = false;
             String path = ThamSo.LayDuongDanPhiHoaDon();
@@ -410,6 +464,7 @@ namespace CuahangNongduoc.Controller
             // Phiếu lưu trước khi có mục PhanTramTuDong: mức hiệu lực lớn hơn mức tay thì phần chênh lệch là mức tự động
             if (!coPhanTramTuDong)
                 ph.PhanTramTuDong = Math.Max(0, ph.PhanTramGiam - ph.PhanTramGiamTay);
+            DocChiTietUuDaiDb(ph);
             return ph;
         }
 
@@ -487,6 +542,14 @@ namespace CuahangNongduoc.Controller
                 ph.KhachHang = ctrlKH.LayKhachHang(Convert.ToString(tbl.Rows[0]["ID_KHACH_HANG"]));
                 ChiTietPhieuBanController ctrl = new ChiTietPhieuBanController();
                 ph.ChiTiet = ctrl.ChiTietPhieuBan(ph.Id);
+                PhieuBan fees = DocPhi(ph.Id);
+                ph.PhiVanChuyen = fees.PhiVanChuyen;
+                ph.DichVu = fees.DichVu;
+                ph.KenhUuDai=fees.KenhUuDai; ph.ChiTietUuDai=fees.ChiTietUuDai;
+                ph.TienGiam = tbl.Columns.Contains("TIEN_GIAM_GIA") && tbl.Rows[0]["TIEN_GIAM_GIA"] != DBNull.Value
+                    ? Convert.ToInt64(tbl.Rows[0]["TIEN_GIAM_GIA"]) : fees.TienGiam;
+                if (tbl.Columns.Contains("TIEN_CHIET_KHAU") && tbl.Rows[0]["TIEN_CHIET_KHAU"] != DBNull.Value)
+                    ph.TienGiam = checked(ph.TienGiam + Convert.ToInt64(tbl.Rows[0]["TIEN_CHIET_KHAU"]));
             }
             return ph;
         }
