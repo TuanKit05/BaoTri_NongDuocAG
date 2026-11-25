@@ -227,13 +227,6 @@ namespace CuahangNongduoc
             if (!KiemTraQuyen("BaoCaoTonKho")) return;
             ShowChildForm(ref ThongKeTonKho);
         }
-        CuahangNongduoc.Features.BaoCao.Frontend.frmTonKhoTaiNgay TonKhoTaiNgay = null;
-        private ToolStripMenuItem mnuTonKhoTaiNgayItem;
-        private void mnuTonKhoTaiNgay_Click(object sender, EventArgs e)
-        {
-            if (!KiemTraQuyen("BaoCaoTonKho")) return;
-            ShowChildForm(ref TonKhoTaiNgay);
-        }
         frmSoLuongBan SoLuongBan = null;
         private void mnuSoLuongBan_Click(object sender, EventArgs e)
         {
@@ -365,11 +358,6 @@ namespace CuahangNongduoc
                 new CuahangNongduoc.Features.BaoCao.ThongKeUuDai.frmThongKeUuDai().ShowDialog(this);
             };
             mnuBaocao.DropDownItems.Add(report);
-            mnuTonKhoTaiNgayItem = new ToolStripMenuItem("Tồn kho tại ngày");
-            mnuTonKhoTaiNgayItem.Name = "mnuTonKhoTaiNgay";
-            mnuTonKhoTaiNgayItem.Visible = AccessControl.Can("BaoCaoTonKho");
-            mnuTonKhoTaiNgayItem.Click += mnuTonKhoTaiNgay_Click;
-            mnuBaocao.DropDownItems.Add(mnuTonKhoTaiNgayItem);
             ToolStripMenuItem audit = new ToolStripMenuItem("Nhật ký thao tác");
             audit.Visible = AccessControl.Can("XemNhatKy");
             audit.Click += delegate {
@@ -427,7 +415,6 @@ namespace CuahangNongduoc
 
             mnuBaocaoSoluongton.Visible = CoQuyen("BaoCaoTonKho");
             mnuThongKeTonKho.Visible = CoQuyen("BaoCaoTonKho");
-            if (mnuTonKhoTaiNgayItem != null) mnuTonKhoTaiNgayItem.Visible = CoQuyen("BaoCaoTonKho");
             mnuSanphamHethan.Visible = CoQuyen("BaoCaoTonKho");
             mnuSoLuongBan.Visible = CoQuyen("BaoCaoBanHang");
             mnuBaocao.Visible = CoQuyen("BaoCaoTonKho") || CoQuyen("BaoCaoBanHang");

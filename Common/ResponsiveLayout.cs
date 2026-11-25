@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -31,7 +31,8 @@ namespace CuahangNongduoc
                     }));
                 };
             }
-            if (form is frmDanhsachPhieuBanLe || form is frmDanhsachPhieuBanSi || form is frmDanhsachPhieuNhap)
+            if (form is frmDanhsachPhieuBanLe || form is frmDanhsachPhieuBanSi || form is frmDanhsachPhieuNhap
+                || form is CuahangNongduoc.Features.BaoCao.ThongKeUuDai.frmThongKeUuDai)
             {
                 form.WindowState = FormWindowState.Maximized;
                 form.Shown += delegate {

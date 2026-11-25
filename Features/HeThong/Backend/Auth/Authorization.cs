@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
@@ -264,7 +264,7 @@ namespace CuahangNongduoc
             else if (name == "frmBanLe" || name == "frmBanSi" || name.StartsWith("frmDanhsachPhieuBan")) permission = "BanHang";
             else if (name == "frmNhapHang" || name == "frmDanhsachPhieuNhap") permission = "NhapHang";
             else if (name == "frmThanhToan" || name == "frmPhieuChi" || name == "frmDunoKhachhang") permission = "ThuChi";
-            else if (name == "frmSoLuongTon" || name == "frmThongKeTonKho" || name == "frmSanphamHethan" || name == "frmTonKhoTaiNgay") permission = "BaoCaoTonKho";
+            else if (name == "frmSoLuongTon" || name == "frmThongKeTonKho" || name == "frmSanphamHethan") permission = "BaoCaoTonKho";
             else if (name == "frmSoLuongBan" || name == "frmDoanhThu" || name == "frmThongKeUuDai") permission = "BaoCaoBanHang";
             else if (name == "frmThongtinCuahang") permission = "QuanTri";
             if (permission != null && !AccessControl.Can(permission))
